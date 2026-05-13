@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "npx prisma generate --schema=../../packages/database/prisma/schema.prisma && next build",
+    "build": "npx prisma@5.16.1 generate --schema=../../packages/database/prisma/schema.prisma && next build",
     "start": "next start -p 3001",
     "lint": "next lint"
   },
