@@ -12,7 +12,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json ./
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
-# Instala todas as dependências (incluindo devDependencies para tsx)
+# Instala todas as dependências
 RUN pnpm install --frozen-lockfile
 
 # Gera o Prisma Client
@@ -24,5 +24,5 @@ USER appuser
 
 EXPOSE 3333
 
-# Roda com tsx — suporta TypeScript + workspace packages nativamente
-CMD ["node_modules/.bin/tsx", "apps/api/src/index.ts"]
+# Roda com npx tsx para garantir que o binário seja encontrado no monorepo
+CMD ["npx", "tsx", "apps/api/src/index.ts"]
