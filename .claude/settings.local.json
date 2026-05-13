@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /s /b)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\meent\\\\Desktop\\\\mundomagico\\\\.agents\" -Recurse | Select-Object FullName, PSIsContainer | Where-Object { -not $_.PSIsContainer } | Select-Object FullName)",
+      "Bash(ls -la /mnt/c/Users/meent/Desktop/mundomagico/)",
+      "Bash(npm run *)",
+      "Bash(Start-Sleep -Seconds 8)",
+      "Bash(Get-Process node *)",
+      "Bash(Select-Object -First 5 Name, Id)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp"
+    ]
+  }
+}

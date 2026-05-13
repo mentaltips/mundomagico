@@ -1,0 +1,24 @@
+{
+  "name": "@mundo-magico/database",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:generate": "prisma generate",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.16.1",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "prisma": "^5.16.1",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

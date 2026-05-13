@@ -1,0 +1,677 @@
+// =============================================================
+// Mundo Mágico — Schema Prisma
+// Suporta: Escola, Creche, Berçário, Maternal, Espaço Infantil,
+//          Recreação, Contraturno, Escola+Creche, Híbrido
+// =============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// ESCOLA / INSTITUIÇÃO
+// ─────────────────────────────────────────
+
+model School {
+  id              String   @id @default(cuid())
+  name            String
+  cnpj            String?
+  phone           String?
+  email           String?
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+  logoUrl         String?
+  // Tipo da instituição: ESCOLA | CRECHE | BERCARIO | MATERNAL | ESPACO_INFANTIL | RECREACAO | CONTRATURNO | ESCOLA_CRECHE | HIBRIDO
+  institutionType String   @default("ESCOLA")
+  // JSON array de ModuleKey ativos (override do padrão por tipo)
+  activeModules   String   @default("[]")
+  // JSON com terminologia customizada (sobrescreve padrões do tipo)
+  terminology     String   @default("{}")
+  // WhatsApp
+  whatsappToken   String?
+  whatsappPhone   String?
+  // SMTP
+  smtpHost        String?
+  smtpPort        Int?
+  smtpUser        String?
+  smtpPass        String?
+  smtpFrom        String?
+  // Mercado Pago
+  mpAccessToken   String?
+  mpPublicKey     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  users           User[]
+  groups          Group[]
+  children        Child[]
+  students        Student[]
+  dailyReports    ChildDailyReport[]
+  checkInOuts     ChildCheckInOut[]
+  medications     Medication[]
+  childItems      ChildItem[]
+  childPhotos     ChildPhoto[]
+  devReports      DevelopmentReport[]
+  announcements   Announcement[]
+  calendarEvents  CalendarEvent[]
+  invoices        Invoice[]
+}
+
+// ─────────────────────────────────────────
+// USUÁRIOS
+// ─────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  schoolId  String
+  name      String
+  email     String   @unique
+  password  String
+  // ADMIN | DIRECTOR | TEACHER | CAREGIVER | GUARDIAN | STAFF
+  role      String   @default("STAFF")
+  phone     String?
+  avatarUrl String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school       School                     @relation(fields: [schoolId], references: [id])
+  guardians    Guardian[]
+  checkIns     ChildCheckInOut[]          @relation("CheckedBy")
+  medAdmins    MedicationAdministration[] @relation("AdminBy")
+  dailyReports ChildDailyReport[]         @relation("ReportCreatedBy")
+}
+
+// ─────────────────────────────────────────
+// GRUPOS / TURMAS / SALAS
+// ─────────────────────────────────────────
+
+model Group {
+  id        String   @id @default(cuid())
+  schoolId  String
+  name      String
+  // MANHA | TARDE | INTEGRAL | NOTURNO
+  shift     String   @default("MANHA")
+  minAge    Int?     // em meses
+  maxAge    Int?     // em meses
+  capacity  Int?
+  room      String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school   School    @relation(fields: [schoolId], references: [id])
+  children Child[]
+  students Student[]
+}
+
+// ─────────────────────────────────────────
+// CRIANÇA (creche / berçário / espaço infantil)
+// ─────────────────────────────────────────
+
+model Child {
+  id                 String    @id @default(cuid())
+  schoolId           String
+  groupId            String?
+  fullName           String
+  nickname           String?
+  birthDate          DateTime
+  photoUrl           String?
+  gender             String?
+  registrationNumber String?
+  // MANHA | TARDE | INTEGRAL | NOTURNO
+  shift              String    @default("MANHA")
+  contractedHours    String?
+  entryDate          DateTime  @default(now())
+  exitDate           DateTime?
+  // ATIVO | INATIVO | ADAPTACAO | AGUARDANDO_VAGA | CANCELADO
+  status             String    @default("ATIVO")
+  // Saúde
+  bloodType          String?
+  allergies          String?   // JSON array
+  continuousMeds     String?   // JSON array
+  dietaryRestrictions String?  // JSON array
+  healthObservations String?
+  // Rotina
+  usesDiapers        Boolean   @default(false)
+  usesBottle         Boolean   @default(false)
+  usesNipple         Boolean   @default(false)
+  specialSleep       String?
+  observations       String?
+  // Autorização de imagem
+  imageAuthorized    Boolean   @default(false)
+  imageAuthDate      DateTime?
+  imageAuthBy        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  school            School                   @relation(fields: [schoolId], references: [id])
+  group             Group?                   @relation(fields: [groupId], references: [id])
+  guardians         ChildGuardian[]
+  authorizedPickups AuthorizedPickupPerson[]
+  dailyReports      ChildDailyReport[]
+  checkInOuts       ChildCheckInOut[]
+  medications       Medication[]
+  items             ChildItem[]
+  photos            ChildPhoto[]
+  devReports        DevelopmentReport[]
+  documents         ChildDocument[]
+  invoices          Invoice[]
+}
+
+// ─────────────────────────────────────────
+// ALUNO (escola formal)
+// ─────────────────────────────────────────
+
+model Student {
+  id                 String    @id @default(cuid())
+  schoolId           String
+  groupId            String?
+  fullName           String
+  birthDate          DateTime
+  photoUrl           String?
+  registrationNumber String?
+  shift              String    @default("MANHA")
+  entryDate          DateTime  @default(now())
+  status             String    @default("ATIVO")
+  observations       String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  school    School           @relation(fields: [schoolId], references: [id])
+  group     Group?           @relation(fields: [groupId], references: [id])
+  guardians StudentGuardian[]
+  invoices  Invoice[]
+}
+
+// ─────────────────────────────────────────
+// RESPONSÁVEIS
+// ─────────────────────────────────────────
+
+model Guardian {
+  id           String   @id @default(cuid())
+  userId       String?
+  fullName     String
+  cpf          String?
+  rg           String?
+  phone        String
+  phone2       String?
+  email        String?
+  relationship String
+  photoUrl     String?
+  address      String?
+  occupation   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User?            @relation(fields: [userId], references: [id])
+  children ChildGuardian[]
+  students StudentGuardian[]
+}
+
+model ChildGuardian {
+  id           String  @id @default(cuid())
+  childId      String
+  guardianId   String
+  isPrimary    Boolean @default(false)
+  canPickup    Boolean @default(true)
+  receiveNotif Boolean @default(true)
+
+  child    Child    @relation(fields: [childId], references: [id])
+  guardian Guardian @relation(fields: [guardianId], references: [id])
+
+  @@unique([childId, guardianId])
+}
+
+model StudentGuardian {
+  id         String  @id @default(cuid())
+  studentId  String
+  guardianId String
+  isPrimary  Boolean @default(false)
+
+  student  Student  @relation(fields: [studentId], references: [id])
+  guardian Guardian @relation(fields: [guardianId], references: [id])
+
+  @@unique([studentId, guardianId])
+}
+
+// ─────────────────────────────────────────
+// PESSOAS AUTORIZADAS A BUSCAR
+// ─────────────────────────────────────────
+
+model AuthorizedPickupPerson {
+  id           String   @id @default(cuid())
+  childId      String
+  fullName     String
+  cpf          String?
+  rg           String?
+  phone        String
+  relationship String
+  photoUrl     String?
+  // SIM | NAO | TEMPORARIO
+  authorization String  @default("SIM")
+  validUntil   DateTime?
+  observations String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  child Child @relation(fields: [childId], references: [id])
+}
+
+// ─────────────────────────────────────────
+// DIÁRIO DIÁRIO DA CRIANÇA
+// ─────────────────────────────────────────
+
+model ChildDailyReport {
+  id                 String    @id @default(cuid())
+  schoolId           String
+  childId            String
+  date               DateTime
+  isDraft            Boolean   @default(true)
+  sentAt             DateTime?
+  sentVia            String?
+  generalNote        String?
+  teamNote           String?
+  messageToParents   String?
+  importantAlert     String?
+  homeRecommendation String?
+  itemRequests       String?   // JSON array
+  createdBy          String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  school     School           @relation(fields: [schoolId], references: [id])
+  child      Child            @relation(fields: [childId], references: [id])
+  author     User             @relation("ReportCreatedBy", fields: [createdBy], references: [id])
+  meals      DailyMeal[]
+  sleep      DailySleep?
+  hygiene    DailyHygiene?
+  health     DailyHealth?
+  moods      DailyMood[]
+  activities DailyActivity[]
+
+  @@unique([childId, date])
+}
+
+// ─── Alimentação ───
+
+model DailyMeal {
+  id          String @id @default(cuid())
+  reportId    String
+  // breakfast | morningSnack | lunch | afternoonSnack | dinner | bottle | water
+  mealType    String
+  // BEM | POUCO | RECUSOU | NAO_SE_APLICA
+  result      String @default("BEM")
+  description String?
+  observation String?
+  amount      String?
+  time        String?
+
+  report ChildDailyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+// ─── Sono ───
+
+model DailySleep {
+  id          String  @id @default(cuid())
+  reportId    String  @unique
+  slept       Boolean @default(false)
+  sleepTime   String?
+  wakeTime    String?
+  // TRANQUILO | AGITADO | POUCO | NAO_DORMIU
+  quality     String  @default("TRANQUILO")
+  observation String?
+
+  report ChildDailyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+// ─── Higiene ───
+
+model DailyHygiene {
+  id            String  @id @default(cuid())
+  reportId      String  @unique
+  diaperChanges Int     @default(0)
+  pee           Boolean @default(false)
+  poo           Boolean @default(false)
+  bath          Boolean @default(false)
+  brushing      Boolean @default(false)
+  observation   String?
+
+  report ChildDailyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+// ─── Saúde ───
+
+model DailyHealth {
+  id                String  @id @default(cuid())
+  reportId          String  @unique
+  fever             Boolean @default(false)
+  feverTemp         Float?
+  pain              Boolean @default(false)
+  painDescription   String?
+  cough             Boolean @default(false)
+  runnyNose         Boolean @default(false)
+  injury            Boolean @default(false)
+  injuryDescription String?
+  medicationGiven   Boolean @default(false)
+  medicationName    String?
+  medicationDosage  String?
+  medicationTime    String?
+  authorizedBy      String?
+  observation       String?
+
+  report ChildDailyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+// ─── Humor ───
+
+model DailyMood {
+  id       String @id @default(cuid())
+  reportId String
+  // FELIZ | CALMO | AGITADO | CHOROSO | SONOLENTO | IRRITADO | PARTICIPATIVO | CARINHOSO
+  mood     String
+  period   String?
+
+  report ChildDailyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+// ─── Atividades ───
+
+model DailyActivity {
+  id           String @id @default(cuid())
+  reportId     String
+  // games | motor | sensory | music | storytelling | painting | park | outdoor | other
+  activityType String
+  description  String?
+
+  report ChildDailyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────
+// ENTRADA E SAÍDA
+// ─────────────────────────────────────────
+
+model ChildCheckInOut {
+  id                String    @id @default(cuid())
+  schoolId          String
+  childId           String
+  date              DateTime  @default(now())
+  checkInTime       DateTime?
+  broughtBy         String?
+  broughtByDoc      String?
+  broughtByPhoto    String?
+  checkInSignature  String?
+  checkInNote       String?
+  checkOutTime      DateTime?
+  pickedUpBy        String?
+  pickedUpByDoc     String?
+  pickedUpByPhoto   String?
+  checkOutSignature String?
+  checkOutNote      String?
+  // PRESENTE | AUSENTE | SAIU_MAIS_CEDO | AGUARDANDO_RETIRADA
+  status            String    @default("AUSENTE")
+  alertSentIn       Boolean   @default(false)
+  alertSentOut      Boolean   @default(false)
+  checkedById       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  school    School @relation(fields: [schoolId], references: [id])
+  child     Child  @relation(fields: [childId], references: [id])
+  checkedBy User?  @relation("CheckedBy", fields: [checkedById], references: [id])
+
+  @@unique([childId, date])
+}
+
+// ─────────────────────────────────────────
+// MEDICAÇÃO
+// ─────────────────────────────────────────
+
+model Medication {
+  id                    String    @id @default(cuid())
+  schoolId              String
+  childId               String
+  name                  String
+  dosage                String
+  frequency             String?
+  startDate             DateTime
+  endDate               DateTime?
+  prescriptionUrl       String?
+  guardianAuthorization String?
+  guardianAuthDate      DateTime?
+  notes                 String?
+  active                Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  school           School                     @relation(fields: [schoolId], references: [id])
+  child            Child                      @relation(fields: [childId], references: [id])
+  administrations  MedicationAdministration[]
+}
+
+model MedicationAdministration {
+  id             String   @id @default(cuid())
+  medicationId   String
+  administeredAt DateTime
+  administeredBy String
+  dosage         String?
+  notified       Boolean  @default(false)
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  medication Medication @relation(fields: [medicationId], references: [id])
+  admin      User       @relation("AdminBy", fields: [administeredBy], references: [id])
+}
+
+// ─────────────────────────────────────────
+// ITENS DA CRIANÇA
+// ─────────────────────────────────────────
+
+model ChildItem {
+  id               String   @id @default(cuid())
+  schoolId         String
+  childId          String
+  // FRALDA | LENCO_UMEDECIDO | POMADA | ROUPA_EXTRA | MAMADEIRA | CHUPETA | LEITE | TOALHA | COBERTOR | MOCHILA | HIGIENE | OUTRO
+  itemType         String
+  description      String?
+  quantityReceived Int      @default(0)
+  quantityUsed     Int      @default(0)
+  alertThreshold   Int      @default(5)
+  lastReplenished  DateTime?
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  school       School           @relation(fields: [schoolId], references: [id])
+  child        Child            @relation(fields: [childId], references: [id])
+  usageHistory ChildItemUsage[]
+}
+
+model ChildItemUsage {
+  id       String   @id @default(cuid())
+  itemId   String
+  quantity Int
+  usedAt   DateTime @default(now())
+  notes    String?
+
+  item ChildItem @relation(fields: [itemId], references: [id])
+}
+
+// ─────────────────────────────────────────
+// FOTOS DA CRIANÇA
+// ─────────────────────────────────────────
+
+model ChildPhoto {
+  id                String   @id @default(cuid())
+  schoolId          String
+  childId           String?
+  groupId           String?
+  date              DateTime @default(now())
+  url               String
+  caption           String?
+  isPrivate         Boolean  @default(false)
+  sharedWithParents Boolean  @default(false)
+  taggedChildIds    String?  // JSON array
+  createdAt         DateTime @default(now())
+
+  school School @relation(fields: [schoolId], references: [id])
+  child  Child?  @relation(fields: [childId], references: [id])
+}
+
+// ─────────────────────────────────────────
+// RELATÓRIO DE DESENVOLVIMENTO
+// ─────────────────────────────────────────
+
+model DevelopmentReport {
+  id                    String   @id @default(cuid())
+  schoolId              String
+  childId               String
+  // SEMANAL | MENSAL | BIMESTRAL | SEMESTRAL | PERSONALIZADO
+  period                String   @default("MENSAL")
+  startDate             DateTime
+  endDate               DateTime
+  motorCoordination     String?
+  socialization         String?
+  language              String?
+  autonomy              String?
+  feeding               String?
+  sleep                 String?
+  participation         String?
+  adaptation            String?
+  peerInteraction       String?
+  teamObservations      String?
+  parentRecommendations String?
+  isDraft               Boolean  @default(true)
+  publishedAt           DateTime?
+  createdBy             String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id])
+  child  Child  @relation(fields: [childId], references: [id])
+}
+
+// ─────────────────────────────────────────
+// DOCUMENTOS DA CRIANÇA
+// ─────────────────────────────────────────
+
+model ChildDocument {
+  id         String   @id @default(cuid())
+  childId    String
+  name       String
+  docType    String
+  url        String
+  uploadedAt DateTime @default(now())
+
+  child Child @relation(fields: [childId], references: [id])
+}
+
+// ─────────────────────────────────────────
+// COMUNICADOS
+// ─────────────────────────────────────────
+
+model Announcement {
+  id         String    @id @default(cuid())
+  schoolId   String
+  title      String
+  content    String
+  groupId    String?
+  targetRole String?
+  sentVia    String?
+  sentAt     DateTime?
+  isPinned   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id])
+}
+// ─────────────────────────────────────────
+// CALENDÁRIO
+// ─────────────────────────────────────────
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  schoolId    String
+  title       String
+  description String?
+  date        DateTime
+  startTime   String?
+  endTime     String?
+  // EVENTO | REUNIAO | FERIADO | FESTIVIDADE | OUTRO
+  type        String   @default("EVENTO")
+  groupId     String?  // Opcional: evento para turma específica
+  location    String?
+  color       String?  // Cor hexadecimal para o calendário
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id])
+}
+
+// ─────────────────────────────────────────
+// FINANCEIRO — FATURAS E PAGAMENTOS
+// ─────────────────────────────────────────
+
+model Invoice {
+  id          String   @id @default(cuid())
+  schoolId    String
+  // Vinculada a criança ou aluno
+  childId     String?
+  studentId   String?
+  guardianId  String?
+  // Dados da cobrança
+  description String   // Ex: "Mensalidade Maio/2025"
+  amount      Float    // Valor em reais
+  dueDate     DateTime
+  referenceMonth String? // "2025-05" — mês de referência
+  // Status: PENDENTE | PAGO | VENCIDO | CANCELADO
+  status      String   @default("PENDENTE")
+  // Mercado Pago
+  mpPreferenceId  String?  // ID da preferência MP
+  mpPaymentId     String?  // ID do pagamento MP após confirmação
+  mpPaymentStatus String?  // pending | approved | rejected | cancelled
+  // Boleto
+  boletoUrl       String?  // URL do PDF do boleto
+  boletoBarcode   String?  // Linha digitável do boleto
+  boletoExpiry    DateTime?
+  // PIX
+  pixQrCode       String?  // QR code base64
+  pixCopyPaste    String?  // Copia e cola PIX
+  pixExpiry       DateTime?
+  // Checkout Pro (cartão)
+  checkoutUrl     String?  // URL do Checkout Pro MP
+  // Controle
+  paidAt          DateTime?
+  paidAmount      Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  school   School    @relation(fields: [schoolId], references: [id])
+  child    Child?    @relation(fields: [childId], references: [id])
+  student  Student?  @relation(fields: [studentId], references: [id])
+  payments Payment[]
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  invoiceId       String
+  // BOLETO | PIX | CARTAO | MANUAL
+  method          String
+  mpPaymentId     String?  // ID retornado pelo Mercado Pago
+  mpStatus        String?  // pending | approved | rejected
+  amount          Float
+  paidAt          DateTime?
+  // Metadados do webhook
+  webhookData     String?  // JSON raw do webhook MP
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+}
