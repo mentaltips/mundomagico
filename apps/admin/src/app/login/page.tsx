@@ -50,7 +50,7 @@ function LoginForm() {
       <div className="w-full max-w-[460px] relative z-10">
         {/* Header/Logo */}
         <div className="text-center mb-12">
-          <Link href="http://localhost:3000" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 rounded-full text-xs font-black text-gray-400 uppercase tracking-widest mb-10 hover:text-gray-900 transition-colors group">
+          <Link href="https://mundomagicocajamar.com.br" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 rounded-full text-xs font-black text-gray-400 uppercase tracking-widest mb-10 hover:text-gray-900 transition-colors group">
             <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
             Voltar ao Site
           </Link>
@@ -60,8 +60,8 @@ function LoginForm() {
                 <span className="text-2xl font-black italic">M</span>
              </div>
           </div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tightest mb-2">Portal da <span className="text-primary italic">Família</span></h1>
-          <p className="text-gray-500 font-medium italic text-lg">Acompanhe cada descoberta.</p>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tightest mb-2">Portal de <span className="text-primary italic">Acesso</span></h1>
+          <p className="text-gray-500 font-medium italic text-lg">Mundo Mágico</p>
         </div>
 
         {/* Form Card */}

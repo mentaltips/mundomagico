@@ -197,7 +197,7 @@ function UserProfileArea({ collapsed }: { collapsed: boolean }) {
               <p className="text-[10px] font-bold text-muted-foreground truncate">{user?.email ?? ''}</p>
             </div>
             <button
-              onClick={() => signOut({ callbackUrl: 'http://localhost:3000' })}
+              onClick={() => signOut({ callbackUrl: 'https://mundomagicocajamar.com.br' })}
               className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
               title="Sair"
             >
