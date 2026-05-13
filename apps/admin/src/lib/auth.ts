@@ -76,7 +76,7 @@ export async function requireAuth() {
   return session.user
 }
 
-export async function getApiAuth() {
+export async function getApiAuth(_req?: Request) {
   const session = await getServerSession(authOptions)
   
   if (!session?.user) {
