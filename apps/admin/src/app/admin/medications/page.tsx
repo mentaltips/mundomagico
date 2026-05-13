@@ -4,6 +4,8 @@ import { Plus, AlertTriangle, CheckCircle, Clock, Pill } from 'lucide-react'
 import { format } from 'date-fns'
 import { requireAuth } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 export default async function MedicationsPage() {
   const user = await requireAuth()
   const medications = await prisma.medication.findMany({

@@ -1,16 +1,20 @@
 import { ChildForm } from '../_components/ChildForm'
 import { prisma } from '@mundo-magico/database'
 import { notFound } from 'next/navigation'
+import { requireAuth } from '@/lib/auth'
+
+export const dynamic = 'force-dynamic'
 
 export default async function EditChildPage({ params }: { params: { id: string } }) {
+  const user = await requireAuth()
   const [child, groups] = await Promise.all([
     prisma.child.findUnique({
-      where: { id: params.id },
+      where: { id: params.id, schoolId: user.schoolId },
       include: {
         guardians: { include: { guardian: true } },
       }
     }),
-    prisma.group.findMany({ where: { active: true }, orderBy: { name: 'asc' } })
+    prisma.group.findMany({ where: { schoolId: user.schoolId, active: true }, orderBy: { name: 'asc' } })
   ])
 
   if (!child) {
