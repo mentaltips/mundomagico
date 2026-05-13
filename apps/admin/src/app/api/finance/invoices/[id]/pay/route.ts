@@ -53,8 +53,9 @@ export async function POST(
         },
       })
 
-      const boletoUrl = (result as any).transaction_details?.external_resource_url || null
-      const barcode = (result as any).barcode?.content || null
+      const paymentRes: any = result
+      const boletoUrl = paymentRes.transaction_details?.external_resource_url || null
+      const barcode = paymentRes.barcode?.content || null
       const expiry = result.date_of_expiration ? new Date(result.date_of_expiration) : null
 
       await prisma.invoice.update({
@@ -108,7 +109,8 @@ export async function POST(
         },
       })
 
-      const pixData = (result as any).point_of_interaction?.transaction_data
+      const paymentRes: any = result
+      const pixData = paymentRes.point_of_interaction?.transaction_data
       const qrCode = pixData?.qr_code_base64 || null
       const copyPaste = pixData?.qr_code || null
       const expiry = result.date_of_expiration ? new Date(result.date_of_expiration) : null
