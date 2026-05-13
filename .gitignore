@@ -25,6 +25,10 @@ yarn-error.log*
 .env*.local
 .env
 
+# produção — NUNCA commitar!
+.env.prod
+nginx/ssl/
+
 # vercel
 .vercel
 
