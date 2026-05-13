@@ -13,7 +13,7 @@ import {
   DollarSign, Camera, FileText, Clock, Smile, AlertTriangle,
   ChevronRight, Sun, Star, ArrowLeft,
 } from 'lucide-react'
-import { Skeleton, SectionLabel } from '@/components/ui'
+import { Skeleton, SectionLabel } from '@/components/ui/index'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type DashboardData = {

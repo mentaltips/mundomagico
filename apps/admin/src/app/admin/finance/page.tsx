@@ -10,7 +10,7 @@ import {
 import { format, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
-import { Modal, EmptyState, Badge, Skeleton, Avatar } from '@/components/ui'
+import { Modal, EmptyState, Badge, Skeleton, Avatar } from '@/components/ui/index'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Invoice = {

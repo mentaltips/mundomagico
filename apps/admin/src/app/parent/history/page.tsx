@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Calendar as CalendarIcon, ChevronRight, History } from 'lucide-react'
-import { SectionLabel } from '@/components/ui'
+import { SectionLabel } from '@/components/ui/index'
 
 export default function GuardianHistoryPage() {
   const router = useRouter()

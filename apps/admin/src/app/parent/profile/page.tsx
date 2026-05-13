@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { User, Mail, LogOut, ChevronRight, Shield, Bell, HelpCircle, DollarSign, Settings } from 'lucide-react'
-import { SectionLabel } from '@/components/ui'
+import { SectionLabel } from '@/components/ui/index'
 
 export default function GuardianProfilePage() {
   const { data: session } = useSession()

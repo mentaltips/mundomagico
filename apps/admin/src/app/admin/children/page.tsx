@@ -4,7 +4,7 @@ import { prisma } from '@mundo-magico/database'
 import { CHILD_STATUS_COLORS, CHILD_STATUS_LABELS, SHIFT_LABELS } from '@mundo-magico/types'
 import { differenceInMonths, differenceInYears } from 'date-fns'
 import { requireAuth } from '@/lib/auth'
-import { Avatar } from '@/components/ui'
+import { Avatar } from '@/components/ui/index'
 
 function formatAge(birthDate: Date): string {
   const now = new Date()
