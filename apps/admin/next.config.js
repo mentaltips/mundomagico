@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const path = require('path')
+
 const nextConfig = {
   // Permite que o Next.js transpile pacotes do monorepo que
   // exportam TypeScript diretamente (sem compilar antes)
@@ -6,6 +8,16 @@ const nextConfig = {
     '@mundo-magico/types',
     '@mundo-magico/database',
   ],
+
+  // Resolve o alias @/ explicitamente via webpack
+  // Garante que funciona mesmo sem baseUrl no tsconfig
+  webpack(config) {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    }
+    return config
+  },
 
   // Imagens externas permitidas
   images: {
