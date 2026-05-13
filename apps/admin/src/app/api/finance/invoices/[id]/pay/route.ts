@@ -109,6 +109,7 @@ export async function POST(
         },
       })
 
+      // Force fresh build with casted result
       const paymentRes: any = result
       const pixData = paymentRes.point_of_interaction?.transaction_data
       const qrCode = pixData?.qr_code_base64 || null
