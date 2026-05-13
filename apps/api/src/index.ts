@@ -10,6 +10,7 @@ import { requireApiAuth } from './middleware/auth'
 import studentRoutes from './routes/students'
 import groupRoutes from './routes/groups'
 import statsRoutes from './routes/stats'
+import authRoutes from './routes/auth'
 
 const app = express()
 
@@ -25,6 +26,7 @@ app.get('/health', (req, res) => {
 app.use('/api/students', requireApiAuth, studentRoutes)
 app.use('/api/groups', requireApiAuth, groupRoutes)
 app.use('/api/stats', requireApiAuth, statsRoutes)
+app.use('/api/auth', authRoutes)
 
 app.post('/api/whatsapp/send', requireApiAuth, async (req, res) => {
   const { to, templateName, languageCode, components } = req.body

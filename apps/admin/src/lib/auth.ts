@@ -1,7 +1,5 @@
 import { getServerSession, NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { prisma } from '@mundo-magico/database'
-import bcrypt from 'bcryptjs'
 import { redirect } from 'next/navigation'
 
 export const authOptions: NextAuthOptions = {
@@ -15,21 +13,29 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        })
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+            method: 'POST',
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+            headers: { 'Content-Type': 'application/json' },
+          })
 
-        if (!user || !user.password) return null
+          const data = await res.json()
 
-        const isValid = await bcrypt.compare(credentials.password, user.password)
-        if (!isValid) return null
+          if (res.ok && data.user) {
+            return {
+              ...data.user,
+              accessToken: data.token,
+            }
+          }
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          schoolId: user.schoolId,
+          return null
+        } catch (error) {
+          console.error('[Auth] Login error:', error)
+          return null
         }
       },
     }),
@@ -37,8 +43,9 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
-        token.schoolId = user.schoolId
+        token.role = (user as any).role
+        token.schoolId = (user as any).schoolId
+        token.accessToken = (user as any).accessToken
       }
       return token
     },
@@ -47,6 +54,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.sub as string
         session.user.role = token.role as string
         session.user.schoolId = token.schoolId as string
+        ;(session as any).accessToken = token.accessToken
       }
       return session
     },
@@ -55,8 +63,8 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
   },
   session: { strategy: 'jwt' },
+  secret: process.env.NEXTAUTH_SECRET,
 }
-
 
 export async function requireAuth() {
   const session = await getServerSession(authOptions)
@@ -68,7 +76,7 @@ export async function requireAuth() {
   return session.user
 }
 
-export async function getApiAuth(req: Request) {
+export async function getApiAuth() {
   const session = await getServerSession(authOptions)
   
   if (!session?.user) {
