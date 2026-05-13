@@ -27,5 +27,5 @@ USER appuser
 
 EXPOSE 3333
 
-# Tenta rodar o tsx que já está no node_modules para evitar npx
-CMD ["./node_modules/.bin/tsx", "apps/api/src/index.ts"]
+# Usa pnpm exec para resolver os binários do workspace corretamente
+CMD ["pnpm", "--filter", "@mundo-magico/api", "exec", "tsx", "src/index.ts"]
