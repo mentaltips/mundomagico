@@ -10,13 +10,25 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 
+interface Group {
+  id: string
+  name: string
+  room?: string
+  capacity?: number
+  shift: string
+  _count: {
+    students: number
+    children: number
+  }
+}
+
 export default function GroupsPage() {
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ name: '', shift: 'MANHA', capacity: '', room: '' })
 
-  const { data: groups, isLoading, error } = useQuery({
+  const { data: groups, isLoading, error } = useQuery<Group[]>({
     queryKey: ['groups'],
     queryFn: () => fetch('/api/groups').then(r => r.json())
   })
