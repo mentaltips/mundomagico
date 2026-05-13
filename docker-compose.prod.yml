@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ─── Banco de Dados ───────────────────────────────────────────
   postgres:
@@ -58,6 +56,8 @@ services:
     networks:
       - internal
       - public
+    ports:
+      - "3333:3333"
 
   # ─── Nginx Reverse Proxy ──────────────────────────────────────
   nginx:

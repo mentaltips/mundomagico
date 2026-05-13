@@ -50,6 +50,6 @@ app.post('/api/whatsapp/send', requireApiAuth, async (req, res) => {
 
 const PORT = process.env.API_PORT || 3002
 
-app.listen(PORT, () => {
+app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`🚀 API Server running on port ${PORT}`)
 })
