@@ -13,7 +13,7 @@ import {
 } from 'recharts'
 import { useQuery } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
-import { StatCard, LoadingState, EmptyState, Skeleton } from '@/components/ui/index'
+import { StatCard, LoadingState, EmptyState, Skeleton } from '../../../components/ui'
 import Link from 'next/link'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
