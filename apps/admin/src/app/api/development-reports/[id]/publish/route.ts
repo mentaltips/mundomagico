@@ -1,23 +1,9 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@mundo-magico/database'
-import { getApiAuth } from '../../../../../lib/auth'
+import { proxyRequest } from '@/lib/api-proxy'
+import { NextRequest } from 'next/server'
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const user = await getApiAuth(req)
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const GET = (req: NextRequest) => proxyRequest(req)
+export const POST = (req: NextRequest) => proxyRequest(req)
+export const PATCH = (req: NextRequest) => proxyRequest(req)
+export const PUT = (req: NextRequest) => proxyRequest(req)
+export const DELETE = (req: NextRequest) => proxyRequest(req)
 
-  const existing = await prisma.developmentReport.findFirst({
-    where: { id: params.id, schoolId: user.schoolId },
-  })
-  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
-  const report = await prisma.developmentReport.update({
-    where: { id: params.id },
-    data: {
-      isDraft:     false,
-      publishedAt: new Date(),
-    },
-  })
-
-  return NextResponse.json(report)
-}

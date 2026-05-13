@@ -1,7 +1,7 @@
-import { prisma } from '@mundo-magico/database'
 import { format } from 'date-fns'
 import { CheckInOutPanel } from './_components/CheckInOutPanel'
 import { requireAuth } from '@/lib/auth'
+import { apiGet } from '@/lib/server-api'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,63 +12,27 @@ export default async function CheckInOutPage({
 }) {
   const user = await requireAuth()
   const today = searchParams.date ?? format(new Date(), 'yyyy-MM-dd')
+
+  const groupsQuery = new URLSearchParams({ active: 'true' })
+  const childrenQuery = new URLSearchParams({
+    status: 'ATIVO,ADAPTACAO',
+    date: today,
+    ...(searchParams.groupId ? { groupId: searchParams.groupId } : {}),
+  })
+
+  const [groups, childrenData] = await Promise.all([
+    apiGet<any[]>(`/api/groups?${groupsQuery}`).catch(() => []),
+    apiGet<any[]>(`/api/check-in-out/children?${childrenQuery}`).catch(() => []),
+  ])
+
   const date = new Date(today + 'T00:00:00')
 
-  const groups = await prisma.group.findMany({
-    where: { schoolId: user.schoolId, active: true },
-    orderBy: { name: 'asc' },
-  })
-
-  const children = await prisma.child.findMany({
-    where: {
-      schoolId: user.schoolId,
-      status: { in: ['ATIVO', 'ADAPTACAO'] },
-      ...(searchParams.groupId ? { groupId: searchParams.groupId } : {}),
-    },
-    include: {
-      group: true,
-      checkInOuts: { where: { date } },
-      guardians: {
-        include: { guardian: true },
-        where: { canPickup: true },
-      },
-      authorizedPickups: { where: { authorization: { in: ['SIM', 'TEMPORARIO'] } } },
-    },
-    orderBy: { fullName: 'asc' },
-  })
-
   const stats = {
-    present:  children.filter((c) => c.checkInOuts[0]?.status === 'PRESENTE').length,
-    absent:   children.filter((c) => !c.checkInOuts[0] || c.checkInOuts[0]?.status === 'AUSENTE').length,
-    left:     children.filter((c) => c.checkInOuts[0]?.status === 'SAIU_MAIS_CEDO').length,
-    waiting:  children.filter((c) => c.checkInOuts[0]?.status === 'AGUARDANDO_RETIRADA').length,
+    present: childrenData.filter((c: any) => c.checkInOut?.status === 'PRESENTE').length,
+    absent:  childrenData.filter((c: any) => !c.checkInOut || c.checkInOut?.status === 'AUSENTE').length,
+    left:    childrenData.filter((c: any) => c.checkInOut?.status === 'SAIU_MAIS_CEDO').length,
+    waiting: childrenData.filter((c: any) => c.checkInOut?.status === 'AGUARDANDO_RETIRADA').length,
   }
-
-  const childrenData = children.map((child) => ({
-    id: child.id,
-    fullName: child.fullName,
-    nickname: child.nickname,
-    photoUrl: child.photoUrl,
-    groupName: child.group?.name ?? null,
-    usesDiapers: child.usesDiapers,
-    checkInOut: child.checkInOuts[0] ?? null,
-    authorizedPersons: [
-      ...child.guardians.map((cg) => ({
-        name: cg.guardian.fullName,
-        relationship: cg.guardian.relationship,
-        phone: cg.guardian.phone,
-        cpf: cg.guardian.cpf,
-        type: 'guardian' as const,
-      })),
-      ...child.authorizedPickups.map((ap) => ({
-        name: ap.fullName,
-        relationship: ap.relationship,
-        phone: ap.phone,
-        cpf: ap.cpf,
-        type: 'authorized' as const,
-      })),
-    ],
-  }))
 
   return (
     <div className="p-6 space-y-6">
@@ -87,7 +51,7 @@ export default async function CheckInOutPage({
           <input type="date" name="date" defaultValue={today} className="input w-44" />
           <select name="groupId" defaultValue={searchParams.groupId} className="input w-44">
             <option value="">Todos os grupos</option>
-            {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+            {groups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
           <button type="submit" className="btn-primary">Buscar</button>
         </form>

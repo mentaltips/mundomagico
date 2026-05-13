@@ -1,19 +1,9 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@mundo-magico/database'
-import { getApiAuth } from '../../../../lib/auth'
+import { proxyRequest } from '@/lib/api-proxy'
+import { NextRequest } from 'next/server'
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const user = await getApiAuth(req)
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const GET = (req: NextRequest) => proxyRequest(req)
+export const POST = (req: NextRequest) => proxyRequest(req)
+export const PATCH = (req: NextRequest) => proxyRequest(req)
+export const PUT = (req: NextRequest) => proxyRequest(req)
+export const DELETE = (req: NextRequest) => proxyRequest(req)
 
-  const doc = await prisma.childDocument.findFirst({
-    where: { id: params.id },
-    include: { child: { select: { schoolId: true } } },
-  })
-  if (!doc || doc.child.schoolId !== user.schoolId) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
-
-  await prisma.childDocument.delete({ where: { id: params.id } })
-  return NextResponse.json({ ok: true })
-}

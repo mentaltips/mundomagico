@@ -1,24 +1,14 @@
-import { prisma } from '@mundo-magico/database'
 import Link from 'next/link'
 import { Plus, AlertTriangle, CheckCircle, Clock, Pill } from 'lucide-react'
 import { format } from 'date-fns'
 import { requireAuth } from '@/lib/auth'
+import { apiGet } from '@/lib/server-api'
 
 export const dynamic = 'force-dynamic'
 
 export default async function MedicationsPage() {
   const user = await requireAuth()
-  const medications = await prisma.medication.findMany({
-    where: { schoolId: user.schoolId, active: true },
-    include: {
-      child: { select: { id: true, fullName: true, photoUrl: true, group: { select: { name: true } } } },
-      administrations: {
-        orderBy: { administeredAt: 'desc' },
-        take: 1,
-      },
-    },
-    orderBy: { child: { fullName: 'asc' } },
-  })
+  const medications = await apiGet<any[]>('/api/health/medications').catch(() => [])
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -46,8 +36,8 @@ export default async function MedicationsPage() {
             <p className="font-semibold text-orange-800">Medicações aguardando administração hoje</p>
           </div>
           <div className="space-y-2">
-            {medications.map((med) => {
-              const lastAdmin = med.administrations[0]
+            {medications.map((med: any) => {
+              const lastAdmin = med.administrations?.[0]
               const adminToday = lastAdmin && new Date(lastAdmin.administeredAt) >= today
               return (
                 <div key={med.id} className={`flex items-center justify-between p-3 rounded-lg border ${
@@ -61,7 +51,7 @@ export default async function MedicationsPage() {
                     )}
                     <div>
                       <p className="font-medium text-gray-900">
-                        {med.child.fullName} — {med.name}
+                        {med.child?.fullName} — {med.name}
                       </p>
                       <p className="text-xs text-gray-500">
                         {med.dosage} · {med.frequency}
@@ -97,18 +87,18 @@ export default async function MedicationsPage() {
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
-            {medications.map((med) => (
+            {medications.map((med: any) => (
               <div key={med.id} className="p-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  {med.child.photoUrl ? (
+                  {med.child?.photoUrl ? (
                     <img src={med.child.photoUrl} className="w-10 h-10 rounded-full object-cover" alt={med.child.fullName} />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-sm">
-                      {med.child.fullName.charAt(0)}
+                      {med.child?.fullName?.charAt(0) ?? '?'}
                     </div>
                   )}
                   <div>
-                    <p className="font-medium text-gray-900">{med.child.fullName}</p>
+                    <p className="font-medium text-gray-900">{med.child?.fullName}</p>
                     <p className="text-sm text-gray-600">
                       {med.name} — <span className="font-medium">{med.dosage}</span>
                     </p>

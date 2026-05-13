@@ -1,10 +1,12 @@
-import { prisma } from '@mundo-magico/database'
 import { notFound } from 'next/navigation'
 import { DailyRoutineForm } from '../_components/DailyRoutineForm'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { apiGet } from '@/lib/server-api'
+
+export const dynamic = 'force-dynamic'
 
 export default async function ChildDailyRoutinePage({
   params,
@@ -14,26 +16,15 @@ export default async function ChildDailyRoutinePage({
   searchParams: { date?: string }
 }) {
   const today = searchParams.date ?? format(new Date(), 'yyyy-MM-dd')
-  const date = new Date(today + 'T00:00:00')
 
-  const child = await prisma.child.findUnique({
-    where: { id: params.childId },
-    include: {
-      group: true,
-      guardians: {
-        include: { guardian: true },
-        where: { receiveNotif: true },
-      },
-      dailyReports: {
-        where: { date },
-        include: { meals: true, sleep: true, hygiene: true, health: true, moods: true, activities: true },
-      },
-    },
-  })
+  const child = await apiGet<any>(
+    `/api/daily-routine/child/${params.childId}?date=${today}`
+  ).catch(() => null)
 
   if (!child) notFound()
 
-  const existingReport = child.dailyReports[0] ?? null
+  const date = new Date(today + 'T00:00:00')
+  const existingReport = child.dailyReports?.[0] ?? null
 
   return (
     <div className="p-6 space-y-5">
@@ -67,12 +58,12 @@ export default async function ChildDailyRoutinePage({
             <div className="flex gap-2 mt-1 flex-wrap">
               {child.allergies && (
                 <span className="badge bg-red-100 text-red-700 text-xs">
-                  ⚠️ Alergias: {JSON.parse(child.allergies).join(', ')}
+                  ⚠️ Alergias: {(typeof child.allergies === 'string' ? JSON.parse(child.allergies) : child.allergies).join(', ')}
                 </span>
               )}
               {child.dietaryRestrictions && (
                 <span className="badge bg-orange-100 text-orange-700 text-xs">
-                  🚫 Restrições: {JSON.parse(child.dietaryRestrictions).join(', ')}
+                  🚫 Restrições: {(typeof child.dietaryRestrictions === 'string' ? JSON.parse(child.dietaryRestrictions) : child.dietaryRestrictions).join(', ')}
                 </span>
               )}
             </div>
@@ -87,10 +78,10 @@ export default async function ChildDailyRoutinePage({
         usesDiapers={child.usesDiapers}
         usesBottle={child.usesBottle}
         existingReport={existingReport}
-        guardians={child.guardians.map((cg) => ({
-          id: cg.guardian.id,
-          name: cg.guardian.fullName,
-          phone: cg.guardian.phone,
+        guardians={(child.guardians ?? []).map((cg: any) => ({
+          id: cg.guardian?.id ?? cg.id,
+          name: cg.guardian?.fullName ?? cg.fullName,
+          phone: cg.guardian?.phone ?? cg.phone,
         }))}
       />
     </div>

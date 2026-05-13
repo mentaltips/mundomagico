@@ -1,2 +1,1 @@
-import { prisma } from '@mundo-magico/database'
-export { prisma }
+// Prisma removido - admin usa API HTTP

@@ -1,12 +1,12 @@
 import { ChildForm } from '../_components/ChildForm'
-import { prisma } from '@mundo-magico/database'
 import { requireAuth } from '@/lib/auth'
+import { apiGet } from '@/lib/server-api'
 
 export const dynamic = 'force-dynamic'
 
 export default async function NewChildPage() {
   const user = await requireAuth()
-  const groups = await prisma.group.findMany({ where: { schoolId: user.schoolId, active: true }, orderBy: { name: 'asc' } })
+  const groups = await apiGet<any[]>('/api/groups?active=true').catch(() => [])
 
   return (
     <div className="p-6">

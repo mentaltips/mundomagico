@@ -1,15 +1,16 @@
 import Link from 'next/link'
 import { Plus, Search, Baby, ChevronRight } from 'lucide-react'
-import { prisma } from '@mundo-magico/database'
 import { CHILD_STATUS_COLORS, CHILD_STATUS_LABELS, SHIFT_LABELS } from '@mundo-magico/types'
 import { differenceInMonths, differenceInYears } from 'date-fns'
 import { requireAuth } from '@/lib/auth'
+import { apiGet } from '@/lib/server-api'
 import { Avatar } from '@/components/ui/index'
 
-function formatAge(birthDate: Date): string {
+function formatAge(birthDate: string): string {
+  const date = new Date(birthDate)
   const now = new Date()
-  const years = differenceInYears(now, birthDate)
-  const months = differenceInMonths(now, birthDate) % 12
+  const years = differenceInYears(now, date)
+  const months = differenceInMonths(now, date) % 12
   if (years === 0) return `${months}m`
   if (months === 0) return `${years}a`
   return `${years}a ${months}m`
@@ -29,6 +30,8 @@ const SHIFT_BADGE: Record<string, string> = {
   NOTURNO:  'bg-gray-100 text-gray-600',
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function ChildrenPage({
   searchParams,
 }: {
@@ -37,22 +40,15 @@ export default async function ChildrenPage({
   const user = await requireAuth()
   const { q, status, groupId, shift } = searchParams
 
+  const query = new URLSearchParams()
+  if (q) query.set('q', q)
+  if (status) query.set('status', status)
+  if (groupId) query.set('groupId', groupId)
+  if (shift) query.set('shift', shift)
+
   const [children, groups] = await Promise.all([
-    prisma.child.findMany({
-      where: {
-        schoolId: user.schoolId,
-        ...(q ? { fullName: { contains: q, mode: 'insensitive' } } : {}),
-        ...(status ? { status } : {}),
-        ...(groupId ? { groupId } : {}),
-        ...(shift ? { shift } : {}),
-      },
-      include: {
-        group: true,
-        guardians: { include: { guardian: true }, where: { isPrimary: true }, take: 1 },
-      },
-      orderBy: { fullName: 'asc' },
-    }),
-    prisma.group.findMany({ where: { schoolId: user.schoolId, active: true }, orderBy: { name: 'asc' } }),
+    apiGet<any[]>(`/api/children?${query}`).catch(() => []),
+    apiGet<any[]>('/api/groups?active=true').catch(() => []),
   ])
 
   const counts = {
@@ -114,7 +110,7 @@ export default async function ChildrenPage({
           </select>
           <select name="groupId" defaultValue={groupId} className="select min-w-[160px]">
             <option value="">Todas as turmas</option>
-            {groups.map((g) => (
+            {groups.map((g: any) => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </select>
@@ -154,9 +150,8 @@ export default async function ChildrenPage({
       {children.length > 0 && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:hidden">
-            {children.map((child) => {
-              const guardian = child.guardians[0]?.guardian
-              const shiftKey = child.shift as keyof typeof SHIFT_LABELS
+            {children.map((child: any) => {
+              const guardian = child.guardians?.[0]?.guardian
               return (
                 <Link
                   key={child.id}
@@ -175,7 +170,7 @@ export default async function ChildrenPage({
                       )}
                     </div>
                     <p className="text-[10px] text-gray-400 font-medium mt-1">
-                      {formatAge(new Date(child.birthDate))}
+                      {formatAge(child.birthDate)}
                       {guardian ? ` · ${guardian.fullName.split(' ')[0]}` : ''}
                     </p>
                   </div>
@@ -199,8 +194,8 @@ export default async function ChildrenPage({
                 </tr>
               </thead>
               <tbody>
-                {children.map((child, idx) => {
-                  const guardian = child.guardians[0]?.guardian
+                {children.map((child: any, idx: number) => {
+                  const guardian = child.guardians?.[0]?.guardian
                   return (
                     <tr
                       key={child.id}
@@ -219,7 +214,7 @@ export default async function ChildrenPage({
                       </td>
                       <td className="table-cell">
                         <p className="text-sm font-bold text-gray-700">{child.group?.name ?? '—'}</p>
-                        <p className="text-[11px] text-gray-400 font-medium mt-0.5">{formatAge(new Date(child.birthDate))}</p>
+                        <p className="text-[11px] text-gray-400 font-medium mt-0.5">{formatAge(child.birthDate)}</p>
                       </td>
                       <td className="table-cell">
                         <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg ${SHIFT_BADGE[child.shift] ?? 'bg-gray-100 text-gray-600'}`}>
