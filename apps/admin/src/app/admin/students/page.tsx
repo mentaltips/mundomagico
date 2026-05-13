@@ -11,10 +11,21 @@ import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
+interface Student {
+  id: string
+  fullName: string
+  group?: {
+    name: string
+  }
+  registrationNumber?: string
+  createdAt: string
+  status: string
+}
+
 export default function StudentsPage() {
   const [search, setSearch] = useState('')
 
-  const { data: students, isLoading, error } = useQuery({
+  const { data: students, isLoading, error } = useQuery<Student[]>({
     queryKey: ['students'],
     queryFn: () => fetch('/api/students').then(r => r.json())
   })

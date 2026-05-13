@@ -36,17 +36,29 @@ const today = new Date().toLocaleDateString('pt-BR', {
   weekday: 'long', day: '2-digit', month: 'long',
 })
 
+interface DashboardStats {
+  activeAlunos: number
+  totalGroups: number
+  pendingInvoices: number
+  overdueInvoices: number
+  attendanceRate: string
+  totalPaid: number
+  presentToday: number
+  absentToday: number
+  weeklyAttendance: { day: string; val: number }[]
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { data: session } = useSession()
   const firstName = session?.user?.name?.split(' ')[0] ?? 'Admin'
 
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ['stats'],
     queryFn: () => fetch('/api/stats').then((r) => r.json()),
   })
 
-  const { data: notifData } = useQuery({
+  const { data: notifData } = useQuery<{ notifications: any[]; unreadCount: number }>({
     queryKey: ['admin-notifications'],
     queryFn: () => fetch('/api/notifications').then((r) => r.json()),
     refetchInterval: 30_000,
