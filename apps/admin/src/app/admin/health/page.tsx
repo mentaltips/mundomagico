@@ -30,7 +30,7 @@ export default function HealthPage() {
       const res = await fetch('/api/health')
       if (res.ok) {
         const data = await res.json()
-        setMedications(data)
+        setMedications(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       toast.error('Erro ao carregar dados de saúde')

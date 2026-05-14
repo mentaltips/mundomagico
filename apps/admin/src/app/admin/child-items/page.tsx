@@ -30,15 +30,17 @@ export default function ChildItemsPage() {
     childId: '', itemType: 'FRALDA', quantityReceived: '10', alertThreshold: '5', notes: '',
   })
 
-  const { data: items = [], isLoading } = useQuery<ChildItem[]>({
+  const { data: rawItems, isLoading } = useQuery({
     queryKey: ['child-items'],
     queryFn: () => fetch('/api/child-items').then((r) => r.json()),
   })
+  const items: ChildItem[] = Array.isArray(rawItems) ? rawItems : []
 
-  const { data: children = [] } = useQuery<{ id: string; fullName: string }[]>({
+  const { data: rawChildren } = useQuery({
     queryKey: ['children-list'],
     queryFn: () => fetch('/api/children').then((r) => r.json()),
   })
+  const children: { id: string; fullName: string }[] = Array.isArray(rawChildren) ? rawChildren : []
 
   const lowItems = items.filter((item) => item.quantityReceived - item.quantityUsed <= item.alertThreshold)
 

@@ -25,7 +25,7 @@ export default function DailyRoutinePage() {
       const res = await fetch('/api/daily-routine')
       if (res.ok) {
         const data = await res.json()
-        setChildren(data)
+        setChildren(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       toast.error('Erro ao carregar crianças')
