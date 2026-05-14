@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   CreditCard, TrendingUp, DollarSign, Plus, X, Check, Loader2,
@@ -48,11 +49,12 @@ const fmtBRL = (v: number) =>
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function FinancePage() {
+  const searchParams = useSearchParams()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [children, setChildren] = useState<any[]>([])
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(false)
-  const [filterStatus, setFilterStatus] = useState('')
+  const [filterStatus, setFilterStatus] = useState(searchParams.get('status') ?? '')
   const [showModal, setShowModal]       = useState(false)
   const [showBatchModal, setShowBatchModal] = useState(false)
 
@@ -156,12 +158,14 @@ export default function FinancePage() {
     if (!confirm('Deseja excluir permanentemente esta fatura?')) return
     try {
       const res = await fetch(`/api/finance/invoices/${id}`, { method: 'DELETE' })
-      if (res.ok) {
+      if (res.ok || res.status === 404) {
+        // 204 = deletado agora | 404 = já havia sido deletado antes
         toast.success('Fatura excluída!')
         fetchInvoices()
       } else {
-        const data = await res.json()
-        toast.error(data.error || 'Erro ao excluir')
+        let msg = 'Erro ao excluir'
+        try { const d = await res.json(); msg = d.error || msg } catch {}
+        toast.error(msg)
       }
     } catch { toast.error('Erro ao excluir') }
   }

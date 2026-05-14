@@ -3,17 +3,12 @@ import { prisma } from '@mundo-magico/database'
 
 const router = Router()
 
-// GET / - List guardians (those linked to children or students of this school)
+// GET / - List guardians of this school
 router.get('/', async (req, res) => {
   try {
-    const schoolId = req.user?.schoolId
+    const schoolId = req.user?.schoolId!
     const guardians = await prisma.guardian.findMany({
-      where: {
-        OR: [
-          { children: { some: { child: { schoolId } } } },
-          { students: { some: { student: { schoolId } } } },
-        ]
-      },
+      where: { schoolId },
       include: {
         children: { include: { child: { select: { id: true, fullName: true } } } },
         students: { include: { student: { select: { id: true, fullName: true } } } }
@@ -30,9 +25,10 @@ router.get('/', async (req, res) => {
 // POST / - Create guardian
 router.post('/', async (req, res) => {
   try {
+    const schoolId = req.user?.schoolId!
     const { childId, studentId, isPrimary, canPickup, receiveNotif, ...guardianData } = req.body
     const guardian = await prisma.guardian.create({
-      data: guardianData
+      data: { ...guardianData, schoolId }
     })
 
     if (childId) {

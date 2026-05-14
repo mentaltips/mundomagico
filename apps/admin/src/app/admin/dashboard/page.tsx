@@ -159,7 +159,7 @@ export default function DashboardPage() {
           
           <div className="h-[240px] w-full">
             {mounted ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart data={stats?.weeklyAttendance ?? weekData} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                   <XAxis 
@@ -309,11 +309,11 @@ export default function DashboardPage() {
           
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Pago',   value: stats?.totalPaid ?? 0, icon: CheckCircle2, color: 'text-emerald-500 bg-emerald-500/10', prefix: 'R$ ' },
-              { label: 'Aberto', value: stats?.pendingInvoices ?? 0, icon: Clock, color: 'text-amber-500 bg-amber-500/10' },
-              { label: 'Atraso', value: stats?.overdueInvoices ?? 0, icon: AlertCircle, color: 'text-rose-500 bg-rose-500/10' },
+              { label: 'Pago',   value: stats?.totalPaid ?? 0, icon: CheckCircle2, color: 'text-emerald-500 bg-emerald-500/10', prefix: 'R$ ', href: '/admin/finance?status=PAGO' },
+              { label: 'Aberto', value: stats?.pendingInvoices ?? 0, icon: Clock, color: 'text-amber-500 bg-amber-500/10', href: '/admin/finance?status=PENDENTE' },
+              { label: 'Atraso', value: stats?.overdueInvoices ?? 0, icon: AlertCircle, color: 'text-rose-500 bg-rose-500/10', href: '/admin/finance?status=VENCIDO' },
             ].map((item, i) => (
-              <div key={i} className="flex flex-col items-center text-center p-4 rounded-2xl bg-accent/20 border border-border/50 gap-2">
+              <Link key={i} href={item.href} className="flex flex-col items-center text-center p-4 rounded-2xl bg-accent/20 border border-border/50 gap-2 hover:border-primary/40 hover:bg-primary/5 transition-all active:scale-95">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.color}`}>
                   <item.icon size={14} />
                 </div>
@@ -321,7 +321,7 @@ export default function DashboardPage() {
                   {item.prefix || ''}{item.value.toLocaleString('pt-BR')}
                 </p>
                 <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">{item.label}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

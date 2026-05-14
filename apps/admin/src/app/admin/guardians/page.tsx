@@ -25,7 +25,7 @@ export default function GuardiansPage() {
   const [credentials, setCredentials] = useState<{ email: string, password: string } | null>(null)
   const [generatingFor, setGeneratingFor] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState({ fullName: '', cpf: '', phone: '', email: '' })
+  const [formData, setFormData] = useState({ fullName: '', cpf: '', phone: '', email: '', relationship: 'Mae' })
 
   const fetchGuardians = async () => {
     setLoading(true)
@@ -49,15 +49,16 @@ export default function GuardiansPage() {
   const handleOpenModal = (guardian?: Guardian) => {
     if (guardian) {
       setEditingGuardian(guardian)
-      setFormData({ 
-        fullName: guardian.fullName, 
+      setFormData({
+        fullName: guardian.fullName,
         cpf: guardian.cpf || '',
         phone: guardian.phone || '',
-        email: guardian.email || ''
+        email: guardian.email || '',
+        relationship: (guardian as any).relationship || 'Mae',
       })
     } else {
       setEditingGuardian(null)
-      setFormData({ fullName: '', cpf: '', phone: '', email: '' })
+      setFormData({ fullName: '', cpf: '', phone: '', email: '', relationship: 'Mae' })
     }
     setShowModal(true)
   }
@@ -68,9 +69,10 @@ export default function GuardiansPage() {
     
     const payload = {
       fullName: formData.fullName,
+      relationship: formData.relationship,
       cpf: formData.cpf || undefined,
       phone: formData.phone || undefined,
-      email: formData.email || undefined
+      email: formData.email || undefined,
     }
 
     try {
@@ -282,6 +284,22 @@ export default function GuardiansPage() {
               className="input"
               placeholder="Ex: Maria da Silva"
             />
+          </div>
+          <div>
+            <label className="label">Parentesco *</label>
+            <select
+              required
+              value={formData.relationship}
+              onChange={(e) => setFormData({...formData, relationship: e.target.value})}
+              className="input"
+            >
+              <option value="Mae">Mãe</option>
+              <option value="Pai">Pai</option>
+              <option value="Avo">Avó / Avô</option>
+              <option value="Tio">Tio / Tia</option>
+              <option value="Responsavel">Responsável Legal</option>
+              <option value="Outro">Outro</option>
+            </select>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
