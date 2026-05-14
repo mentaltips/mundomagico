@@ -194,7 +194,7 @@ export default async function ChildrenPage({
                             )}
                           </div>
                         ) : (
-                          <span className="text-xs text-muted-foreground/50 italic">Não cadastrado</span>
+                          <span className="text-xs text-muted-foreground/30 italic">Não cadastrado</span>
                         )}
                       </td>
                       <td className="table-cell">

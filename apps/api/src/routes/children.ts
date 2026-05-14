@@ -18,6 +18,7 @@ router.get('/', async (req, res) => {
       },
       orderBy: { fullName: 'asc' }
     })
+
     res.json(children)
   } catch (error) {
     req.log.error(error)
