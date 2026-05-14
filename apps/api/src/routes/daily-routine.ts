@@ -74,7 +74,9 @@ router.post('/', async (req, res) => {
       activities,
     } = req.body
 
-    const reportDate = new Date(date)
+    // Normalize date to midnight UTC to ensure consistency in upsert/unique constraint
+    const d = new Date(date)
+    const reportDate = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
 
     const report = await prisma.childDailyReport.upsert({
       where: {
@@ -190,9 +192,8 @@ router.get('/child/:childId', async (req, res) => {
     const { childId } = req.params
     const { date } = req.query
 
-    const dateObj = date
-      ? new Date((date as string) + 'T00:00:00')
-      : new Date(new Date().setHours(0, 0, 0, 0))
+    const d = date ? new Date(date as string) : new Date()
+    const dateObj = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
 
     const child = await prisma.child.findFirst({
       where: { id: childId, schoolId },

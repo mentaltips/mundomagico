@@ -221,7 +221,7 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
 
               {/* Body scrollável */}
               <div
-                className="px-6 sm:px-8 py-6 pb-28 sm:pb-6 overflow-y-auto flex-1 min-h-0"
+                className="px-6 sm:px-8 py-6 overflow-y-auto flex-1 min-h-0"
                 style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}
               >
                 {children}

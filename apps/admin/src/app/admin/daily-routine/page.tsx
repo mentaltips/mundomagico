@@ -212,6 +212,10 @@ export default function DailyRoutinePage() {
       >
         {selectedChild && (
           <DailyRoutineForm 
+            onSuccess={() => {
+              setSelectedChild(null)
+              fetchChildren()
+            }}
             childId={selectedChild.id}
             date={new Date().toISOString()}
             usesDiapers={selectedChild.usesDiapers || false}

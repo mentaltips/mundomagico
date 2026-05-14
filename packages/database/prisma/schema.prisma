@@ -592,6 +592,8 @@ model Announcement {
   title      String
   content    String
   groupId    String?
+  type       String    @default("GERAL") // GERAL | TURMA
+  priority   String    @default("NORMAL") // NORMAL | URGENTE
   targetRole String?
   sentVia    String?
   sentAt     DateTime?

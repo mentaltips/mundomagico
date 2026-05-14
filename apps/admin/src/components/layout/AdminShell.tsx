@@ -342,7 +342,7 @@ function NotificationDropdown() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2 w-80 bg-card rounded-[2rem] shadow-2xl border border-border overflow-hidden z-[200]"
+            className="fixed inset-x-4 top-24 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-80 bg-card rounded-[2rem] shadow-2xl border border-border overflow-hidden z-[200]"
           >
             <div className="flex items-center justify-between px-6 py-5 border-b border-border bg-accent/20">
               <div>
@@ -359,7 +359,7 @@ function NotificationDropdown() {
               </button>
             </div>
 
-            <div className="max-h-[400px] overflow-y-auto divide-y divide-border custom-scrollbar">
+            <div className="max-h-[60vh] sm:max-h-[500px] overflow-y-auto divide-y divide-border custom-scrollbar">
               {notifications.length === 0 ? (
                 <div className="py-12 text-center opacity-40">
                   <CheckCheck className="h-10 w-10 text-primary mx-auto mb-3" />

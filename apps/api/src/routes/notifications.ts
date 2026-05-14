@@ -19,12 +19,14 @@ router.get('/', async (req, res) => {
 
     lowStockItems.forEach((item: any) => {
       notifications.push({
-        type: 'LOW_STOCK',
-        severity: 'warning',
-        itemId: item.id,
-        childId: item.childId,
-        message: `Item "${item.itemType}" com estoque baixo`,
+        id: `low-stock-${item.id}`,
+        type: 'alert',
+        priority: 'NORMAL',
+        title: 'Estoque Baixo',
+        body: `Item "${item.itemType}" está com estoque baixo`,
+        time: item.updatedAt,
         createdAt: item.updatedAt,
+        href: '/admin/child-items'
       })
     })
 
@@ -45,36 +47,65 @@ router.get('/', async (req, res) => {
 
       overdueInvoices.forEach((inv: any) => {
         notifications.push({
-          type: 'OVERDUE_INVOICE',
-          severity: 'error',
-          invoiceId: inv.id,
-          message: `Fatura vencida: ${inv.description}`,
+          id: `invoice-${inv.id}`,
+          type: 'payment',
+          priority: 'URGENTE',
+          title: 'Fatura Vencida',
+          body: `A fatura de ${inv.child?.fullName || inv.student?.fullName || 'aluno'} venceu`,
+          time: inv.updatedAt,
           createdAt: inv.updatedAt,
+          href: '/admin/finance'
         })
       })
     }
 
-    // Recent pinned announcements
-    const pinned = await prisma.announcement.findMany({
-      where: { schoolId, isPinned: true },
+    // Recent announcements (Pinned or last 3 days)
+    const recentDate = new Date()
+    recentDate.setDate(recentDate.getDate() - 3)
+
+    const recentAnnouncements = await prisma.announcement.findMany({
+      where: {
+        schoolId,
+        OR: [
+          { isPinned: true },
+          { createdAt: { gte: recentDate } }
+        ]
+      },
       orderBy: { createdAt: 'desc' },
-      take: 5
+      take: 10
     })
 
-    pinned.forEach((ann: any) => {
+    recentAnnouncements.forEach((ann: any) => {
       notifications.push({
-        type: 'PINNED_ANNOUNCEMENT',
-        severity: 'info',
-        announcementId: ann.id,
-        message: ann.title,
+        id: `announcement-${ann.id}`,
+        type: 'announcement',
+        priority: ann.priority === 'URGENTE' ? 'URGENTE' : 'NORMAL',
+        title: ann.priority === 'URGENTE' ? 'Aviso Urgente' : 'Novo Comunicado',
+        body: ann.title,
+        time: ann.createdAt,
         createdAt: ann.createdAt,
+        href: '/admin/announcements'
       })
     })
 
-    // Sort by createdAt desc
-    notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    // Sort: Priority first (URGENTE), then Type (announcements first), then Date
+    notifications.sort((a, b) => {
+      // 1. Urgency
+      if (a.priority === 'URGENTE' && b.priority !== 'URGENTE') return -1
+      if (a.priority !== 'URGENTE' && b.priority === 'URGENTE') return 1
+      
+      // 2. Type (Announcements first)
+      if (a.type === 'announcement' && b.type !== 'announcement') return -1
+      if (a.type !== 'announcement' && b.type === 'announcement') return 1
 
-    res.json(notifications)
+      // 3. Date
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+
+    res.json({
+      notifications: notifications.slice(0, 15), // Show more items
+      unreadCount: notifications.length
+    })
   } catch (error) {
     req.log.error(error)
     res.status(500).json({ error: 'Internal server error' })

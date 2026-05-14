@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import pino from 'pino-http'
+import path from 'path'
 
 import './workers/whatsapp.worker'
 import { whatsappQueue, isRedisHealthy } from './services/queue'
@@ -65,6 +66,10 @@ app.use(cors({
 
 app.use(express.json())
 app.use(pino())
+
+// Static files
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads')
+app.use('/uploads', express.static(UPLOAD_DIR))
 
 app.get('/health', (req, res) => {
   const redis = isRedisHealthy()

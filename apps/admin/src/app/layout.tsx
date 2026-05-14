@@ -34,7 +34,14 @@ export default function RootLayout({
               {children}
             </QueryProvider>
           </AuthProvider>
-          <Toaster position="top-right" />
+          <Toaster 
+            position="top-right" 
+            toastOptions={{
+              style: {
+                zIndex: 999999,
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

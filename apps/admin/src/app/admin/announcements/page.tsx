@@ -23,7 +23,8 @@ export default function AnnouncementsPage() {
     content: '',
     type: 'GERAL',
     groupId: '',
-    priority: 'NORMAL'
+    priority: 'NORMAL',
+    isPinned: false
   })
 
   const fetchAnnouncements = async () => {
@@ -32,6 +33,13 @@ export default function AnnouncementsPage() {
       const res = await fetch('/api/announcements')
       if (res.ok) {
         const data = await res.json()
+        // Sort: Priority first (URGENTE), then Pin status, then Date
+        data.sort((a: any, b: any) => {
+          if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1
+          if (a.priority === 'URGENTE' && b.priority !== 'URGENTE') return -1
+          if (a.priority !== 'URGENTE' && b.priority === 'URGENTE') return 1
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        })
         setAnnouncements(data)
       }
     } catch (error) {
@@ -69,6 +77,22 @@ export default function AnnouncementsPage() {
     fetchGroups()
   }, [])
 
+  const handleTogglePin = async (id: string, currentPin: boolean) => {
+    try {
+      const res = await fetch(`/api/announcements/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPinned: !currentPin })
+      })
+      if (res.ok) {
+        toast.success(currentPin ? 'Removido do topo' : 'Fixado no topo! 📌')
+        fetchAnnouncements()
+      }
+    } catch {
+      toast.error('Erro ao atualizar comunicado')
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title || !formData.content) {
@@ -87,7 +111,7 @@ export default function AnnouncementsPage() {
       if (res.ok) {
         toast.success('Comunicado enviado! 🎉')
         setShowModal(false)
-        setFormData({ title: '', content: '', type: 'GERAL', groupId: '', priority: 'NORMAL' })
+        setFormData({ title: '', content: '', type: 'GERAL', groupId: '', priority: 'NORMAL', isPinned: false })
         fetchAnnouncements()
       }
     } catch (error) {
@@ -182,14 +206,29 @@ export default function AnnouncementsPage() {
                     <h3 className="text-lg font-black text-foreground tracking-tight line-clamp-1">{ann.title}</h3>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleDelete(ann.id)}
-                  className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all ml-2"
-                  title="Excluir"
-                >
-                  <Trash2 size={18} />
-                </button>
+                <div className="flex items-center gap-1 ml-2">
+                  <button
+                    onClick={() => handleTogglePin(ann.id, ann.isPinned)}
+                    className={`p-2 rounded-xl transition-all ${ann.isPinned ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10'}`}
+                    title={ann.isPinned ? 'Desafixar' : 'Fixar no topo'}
+                  >
+                    <Plus size={18} className={ann.isPinned ? 'rotate-45' : ''} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(ann.id)}
+                    className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                    title="Excluir"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
+
+              {ann.isPinned && (
+                <div className="absolute top-3 right-12 bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-md shadow-sm">
+                  Fixado
+                </div>
+              )}
 
               <p className="text-sm text-muted-foreground font-medium leading-relaxed mb-6 line-clamp-3">
                 {ann.content}
@@ -215,8 +254,20 @@ export default function AnnouncementsPage() {
         onClose={() => setShowModal(false)}
         title="Novo Comunicado"
         subtitle="Envie uma mensagem importante para os pais e responsáveis."
+        footer={
+          <div className="flex gap-3 w-full">
+            <button type="button" onClick={() => setShowModal(false)} className="btn-ghost flex-1">Cancelar</button>
+            <button 
+              onClick={() => (document.getElementById('ann-form') as HTMLFormElement)?.requestSubmit()}
+              disabled={saving}
+              className="btn-primary flex-1 gap-2"
+            >
+              {saving ? <Loader2 size={18} className="animate-spin" /> : <><Send size={18} /> Enviar Aviso</>}
+            </button>
+          </div>
+        }
       >
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form id="ann-form" onSubmit={handleSubmit} className="space-y-5 pb-4">
           <div>
             <label className="label">Título do Comunicado *</label>
             <input 
@@ -280,16 +331,19 @@ export default function AnnouncementsPage() {
             </motion.div>
           )}
 
-          <div className="pt-4 flex gap-3 border-t border-border">
-            <button type="button" onClick={() => setShowModal(false)} className="btn-ghost flex-1">Cancelar</button>
-            <button 
-              type="submit"
-              disabled={saving}
-              className="btn-primary flex-1 gap-2"
-            >
-              {saving ? <Loader2 size={18} className="animate-spin" /> : <><Send size={18} /> Enviar Aviso</>}
-            </button>
-          </div>
+          <label className="flex items-center gap-3 p-4 bg-accent/20 rounded-2xl cursor-pointer border border-transparent hover:border-primary/20 transition-all">
+            <input 
+              type="checkbox"
+              checked={formData.isPinned}
+              onChange={e => setFormData({...formData, isPinned: e.target.checked})}
+              className="w-5 h-5 rounded-lg border-border text-primary focus:ring-primary/20"
+            />
+            <div className="flex-1">
+              <p className="text-xs font-black text-foreground">Fixar no topo</p>
+              <p className="text-[10px] text-muted-foreground font-medium">Este comunicado aparecerá em destaque nas notificações.</p>
+            </div>
+          </label>
+
         </form>
       </Modal>
     </div>

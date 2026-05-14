@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, 
   Plus, Clock, MapPin, Users, Info, X, Check,
-  Star, Coffee, PartyPopper, GraduationCap, AlertCircle, Loader2
+  Star, Coffee, PartyPopper, GraduationCap, AlertCircle, Loader2, Trash2
 } from 'lucide-react'
 import { 
   format, addMonths, subMonths, startOfMonth, endOfMonth, 
@@ -75,6 +75,21 @@ export default function CalendarPage() {
     } catch { toast.error('Erro ao salvar evento') }
     finally { setSaving(false) }
   }
+  
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este evento?')) return
+    try {
+      const res = await fetch(`/api/calendar/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Evento excluído')
+        fetchEvents(currentMonth)
+      } else {
+        toast.error('Erro ao excluir evento')
+      }
+    } catch {
+      toast.error('Erro ao excluir evento')
+    }
+  }
 
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
@@ -92,7 +107,13 @@ export default function CalendarPage() {
         subtitle="Eventos, reuniões e datas importantes da escola."
         icon={<CalendarIcon size={24} />}
         actions={
-          <button onClick={() => setShowModal(true)} className="btn-primary">
+          <button 
+            onClick={() => {
+              setNewEvent(prev => ({ ...prev, date: format(selectedDate, 'yyyy-MM-dd') }))
+              setShowModal(true)
+            }} 
+            className="btn-primary"
+          >
             <Plus size={18} /> Novo Evento
           </button>
         }
@@ -204,11 +225,19 @@ export default function CalendarPage() {
                 events.filter(e => isSameDay(parseISO(e.date), selectedDate)).map(event => (
                   <div 
                     key={event.id}
-                    className="p-4 rounded-2xl border border-border bg-accent/20 hover:bg-accent/40 transition-colors"
+                    className="p-4 rounded-2xl border border-border bg-accent/20 hover:bg-accent/40 transition-colors group"
                   >
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: event.color }} />
-                      <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{event.type}</span>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: event.color }} />
+                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{event.type}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleDeleteEvent(event.id)}
+                        className="p-1.5 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                     <h4 className="font-black text-sm text-foreground mb-1">{event.title}</h4>
                     <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{event.description}</p>
@@ -222,7 +251,10 @@ export default function CalendarPage() {
             </div>
 
             <button 
-              onClick={() => setShowModal(true)}
+              onClick={() => {
+                setNewEvent(prev => ({ ...prev, date: format(selectedDate, 'yyyy-MM-dd') }))
+                setShowModal(true)
+              }}
               className="btn-primary w-full mt-8 py-4 text-xs tracking-widest"
             >
               <Plus size={18} /> Novo Evento

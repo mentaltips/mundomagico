@@ -52,9 +52,16 @@ router.patch('/', async (req, res) => {
       smtpPass,
       ...safeData
     } = req.body
+
     const school = await prisma.school.update({
       where: { id: schoolId },
-      data: safeData,
+      data: {
+        ...safeData,
+        ...(whatsappToken && { whatsappToken }),
+        ...(mpAccessToken && { mpAccessToken }),
+        ...(mpPublicKey && { mpPublicKey }),
+        ...(smtpPass && { smtpPass }),
+      },
     })
     res.json(school)
   } catch (error) {

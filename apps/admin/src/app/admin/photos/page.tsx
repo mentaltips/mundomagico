@@ -127,7 +127,7 @@ export default function PhotosPage() {
             className="select sm:w-64"
           >
             <option value="">Todas as crianças</option>
-            {(children as { id: string; fullName: string }[]).map(c => (
+            {Array.isArray(children) && (children as { id: string; fullName: string }[]).map(c => (
               <option key={c.id} value={c.id}>{c.fullName}</option>
             ))}
           </select>
@@ -142,7 +142,7 @@ export default function PhotosPage() {
       {/* Grid */}
       {isLoading ? (
         <LoadingState label="Carregando fotos..." />
-      ) : photos.length === 0 ? (
+      ) : (!Array.isArray(photos) || photos.length === 0) ? (
         <EmptyState
           icon={<Camera size={32} />}
           title="Nenhuma foto cadastrada"
@@ -151,7 +151,7 @@ export default function PhotosPage() {
         />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {photos.map(photo => (
+          {Array.isArray(photos) && photos.map(photo => (
             <div
               key={photo.id}
               className="relative group cursor-pointer rounded-2xl overflow-hidden aspect-square bg-accent"
@@ -219,7 +219,7 @@ export default function PhotosPage() {
             <label className="label">Criança (opcional)</label>
             <select value={form.childId} onChange={e => setForm(p => ({ ...p, childId: e.target.value }))} className="select">
               <option value="">Geral / Toda a turma</option>
-              {(children as { id: string; fullName: string }[]).map(c => (
+              {Array.isArray(children) && (children as { id: string; fullName: string }[]).map(c => (
                 <option key={c.id} value={c.id}>{c.fullName}</option>
               ))}
             </select>

@@ -29,9 +29,10 @@ interface Props {
   usesBottle: boolean
   existingReport: any | null
   guardians: { id: string; name: string; phone: string }[]
+  onSuccess?: () => void
 }
 
-export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, existingReport, guardians }: Props) {
+export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, existingReport, guardians, onSuccess }: Props) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('meals')
   const [saving, setSaving] = useState(false)
@@ -137,7 +138,8 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
       })
       if (!res.ok) throw new Error()
       toast.success(isDraft ? 'Rascunho salvo!' : 'Diário finalizado!')
-      router.refresh()
+      if (onSuccess) onSuccess()
+      else router.refresh()
     } catch {
       toast.error('Erro ao salvar. Tente novamente.')
     } finally {
