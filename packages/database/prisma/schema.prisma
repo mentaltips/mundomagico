@@ -149,6 +149,9 @@ model Child {
   imageAuthorized    Boolean   @default(false)
   imageAuthDate      DateTime?
   imageAuthBy        String?
+  // Financeiro
+  monthlyFee         Float?    // Valor da mensalidade em reais
+  dueDay             Int?      @default(10) // Dia do vencimento (1-28)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -182,6 +185,9 @@ model Student {
   entryDate          DateTime  @default(now())
   status             String    @default("ATIVO")
   observations       String?
+  // Financeiro
+  monthlyFee         Float?    // Valor da mensalidade em reais
+  dueDay             Int?      @default(10) // Dia do vencimento (1-28)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
