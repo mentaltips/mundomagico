@@ -34,6 +34,8 @@ import parentRoutes from './routes/parent'
 import teacherRoutes from './routes/teacher'
 import dailyReportsRoutes from './routes/daily-reports'
 import documentsRoutes from './routes/documents'
+import billingRoutes from './routes/billing'
+import reportsRoutes from './routes/reports'
 
 const app = express()
 
@@ -101,6 +103,8 @@ app.use('/api/parent', requireApiAuth, parentRoutes)
 app.use('/api/teacher', requireApiAuth, teacherRoutes)
 app.use('/api/daily-reports', requireApiAuth, dailyReportsRoutes)
 app.use('/api/documents', requireApiAuth, documentsRoutes)
+app.use('/api/billing', requireApiAuth, billingRoutes)
+app.use('/api/reports', requireApiAuth, reportsRoutes)
 
 app.post('/api/whatsapp/send', requireApiAuth, async (req, res) => {
   const { to, templateName, languageCode, components } = req.body
