@@ -22,7 +22,7 @@ export default async function EditChildPage({ params }: { params: { id: string }
         <h1 className="page-title">Editar Aluno: {child.fullName}</h1>
         <p className="text-sm text-gray-500 mt-1">Atualize as informações do aluno e de seus responsáveis</p>
       </div>
-      <ChildForm groups={groups} child={child} />
+      <ChildForm groups={groups} defaultValues={child} childId={params.id} />
     </div>
   )
 }

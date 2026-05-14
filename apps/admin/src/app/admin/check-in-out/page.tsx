@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { CheckInOutPanel } from './_components/CheckInOutPanel'
 import { requireAuth } from '@/lib/auth'
 import { apiGet } from '@/lib/server-api'
@@ -40,7 +41,7 @@ export default async function CheckInOutPage({
         <div>
           <h1 className="page-title">Entrada e Saída</h1>
           <p className="text-sm text-gray-500 capitalize">
-            {format(date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: require('date-fns/locale/pt-BR').ptBR })}
+            {format(date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
       </div>
