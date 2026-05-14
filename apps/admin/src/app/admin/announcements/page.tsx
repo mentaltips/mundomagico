@@ -161,30 +161,31 @@ export default function AnnouncementsPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="card-hover p-6 flex flex-col group relative"
+              className="card-hover p-6 flex flex-col group relative border border-border/40 hover:border-primary/20"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${ann.type === 'GERAL' ? 'bg-primary/10 text-primary' : 'bg-blue-500/10 text-blue-500'}`}>
-                    {ann.type === 'GERAL' ? <Globe size={20} /> : <Users size={20} />}
+              <div className="flex justify-between items-start mb-5">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${ann.type === 'GERAL' ? 'bg-primary/10 text-primary' : 'bg-blue-500/10 text-blue-500'}`}>
+                    {ann.type === 'GERAL' ? <Globe size={24} /> : <Users size={24} />}
                   </div>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">
                         {ann.type === 'GERAL'
                           ? 'Público Geral'
                           : `Turma: ${groups.find(g => g.id === ann.groupId)?.name ?? ann.groupId ?? '—'}`}
-                      </p>
+                      </span>
                       {ann.priority === 'URGENTE' && (
                         <Badge label="Urgente" variant="red" size="sm" />
                       )}
                     </div>
-                    <h3 className="text-lg font-black text-foreground truncate max-w-[200px]">{ann.title}</h3>
+                    <h3 className="text-lg font-black text-foreground tracking-tight line-clamp-1">{ann.title}</h3>
                   </div>
                 </div>
                 <button
                   onClick={() => handleDelete(ann.id)}
-                  className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"
+                  className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all ml-2"
+                  title="Excluir"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -194,13 +195,13 @@ export default function AnnouncementsPage() {
                 {ann.content}
               </p>
 
-              <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  <Clock size={14} />
+              <div className="mt-auto pt-5 border-t border-border/50 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                  <Clock size={12} />
                   {new Date(ann.createdAt).toLocaleDateString('pt-BR')} às {new Date(ann.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                 </div>
-                <button className="text-xs font-black text-primary flex items-center gap-1 hover:underline">
-                  Ver Mais <ChevronRight size={14} />
+                <button className="text-xs font-black text-primary flex items-center gap-1 group/btn transition-transform hover:translate-x-1">
+                  Ver Mais <ChevronRight size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />
                 </button>
               </div>
             </motion.div>

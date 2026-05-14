@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
-import { LogIn, LogOut, Shield, AlertTriangle, Search, Clock, Users, X, CheckCircle2 } from 'lucide-react'
+import { LogIn, LogOut, Shield, AlertTriangle, Search, Clock, Users, X, CheckCircle2, Loader2 } from 'lucide-react'
 import { Modal, Avatar, Badge, BadgeVariant } from '@/components/ui'
 
 interface AuthorizedPerson {
@@ -37,8 +37,31 @@ interface Props {
   children: ChildData[]
 }
 
-export function CheckInOutPanel({ date, children }: Props) {
+export function CheckInOutPanel({ date, children: initialChildren }: Props) {
+  console.log('CheckInOutPanel render:', { date, childrenCount: initialChildren.length, statuses: initialChildren.map(c => c.checkInOut?.status) })
   const router = useRouter()
+  const [childrenList, setChildrenList] = useState<ChildData[]>(initialChildren)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  
+  // Sincronizar estado local quando os props mudam (ex: após router.refresh)
+  // Mantém o estado otimista se o servidor ainda não confirmou a mudança
+  const STATUS_RANK: Record<string, number> = {
+    AUSENTE: 0, PRESENTE: 1, AGUARDANDO_RETIRADA: 2, SAIU_MAIS_CEDO: 3
+  }
+  useEffect(() => {
+    setChildrenList(prev =>
+      initialChildren.map(serverChild => {
+        const local = prev.find(c => c.id === serverChild.id)
+        // Se o estado local é mais avançado que o servidor (race condition), mantém o local
+        const localRank  = STATUS_RANK[local?.checkInOut?.status ?? 'AUSENTE'] ?? 0
+        const serverRank = STATUS_RANK[serverChild.checkInOut?.status ?? 'AUSENTE'] ?? 0
+        if (local && localRank > serverRank) return local
+        return serverChild
+      })
+    )
+    setIsRefreshing(false)
+  }, [initialChildren])
+
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState<{
     type: 'in' | 'out'
@@ -47,13 +70,20 @@ export function CheckInOutPanel({ date, children }: Props) {
   const [form, setForm] = useState({ personName: '', personDoc: '', note: '' })
   const [loading, setLoading] = useState(false)
 
-  const filtered = children.filter((c) =>
+  const filtered = childrenList.filter((c) =>
     (c.fullName || '').toLowerCase().includes(search.toLowerCase())
   )
 
   const getStatus = (child: ChildData) => {
-    if (!child.checkInOut) return 'AUSENTE'
-    return child.checkInOut.status
+    const record = child.checkInOut
+    if (!record) return 'AUSENTE'
+    
+    // Fallback: se tiver horário de entrada mas não de saída, está presente
+    if (record.status === 'PRESENTE' || (record.checkInTime && !record.checkOutTime)) {
+      return 'PRESENTE'
+    }
+    
+    return record.status || 'AUSENTE'
   }
 
   const openModal = (type: 'in' | 'out', child: ChildData) => {
@@ -110,10 +140,32 @@ export function CheckInOutPanel({ date, children }: Props) {
           ? `✅ ${modal.child.fullName} deu entrada!`
           : `👋 ${modal.child.fullName} foi embora!`
       )
+      // Atualização otimista local para feedback instantâneo
+      const newStatus = modal.type === 'in' ? 'PRESENTE' : 'AGUARDANDO_RETIRADA'
+      setChildrenList((prev: ChildData[]) => prev.map((c: ChildData) => 
+        c.id === modal.child.id 
+          ? { 
+              ...c, 
+              checkInOut: { 
+                ...(c.checkInOut || { id: 'temp', status: 'AUSENTE' }), 
+                status: newStatus,
+                ...(modal.type === 'in' ? { checkInTime: new Date(), broughtBy: form.personName } : { checkOutTime: new Date(), pickedUpBy: form.personName })
+              } 
+            } 
+          : c
+      ))
+
       setModal(null)
-      router.refresh()
-    } catch {
+      setIsRefreshing(true)
+      
+      // Delay de 1 segundo para garantir que o banco persistiu e o cache limpou
+      setTimeout(() => {
+        router.refresh()
+      }, 1000)
+    } catch (err) {
+      console.error('Check-in error:', err)
       toast.error('Erro ao registrar. Tente novamente.')
+      setIsRefreshing(false)
     } finally {
       setLoading(false)
     }
@@ -128,6 +180,19 @@ export function CheckInOutPanel({ date, children }: Props) {
 
   return (
     <>
+      {/* Overlay de Sincronização */}
+      {isRefreshing && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
+          <div className="bg-accent/90 border border-white/10 p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 animate-in zoom-in duration-300">
+            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            <div className="text-center">
+              <h3 className="font-bold text-lg">Sincronizando Dados</h3>
+              <p className="text-sm text-muted-foreground">Confirmando presença com o servidor...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Busca */}
       <div className="relative group mb-2">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -223,22 +288,34 @@ export function CheckInOutPanel({ date, children }: Props) {
       >
         {modal && (
           <div className="space-y-6">
-            {/* Pessoas autorizadas */}
-            {modal.type === 'out' && modal.child.authorizedPersons.length > 0 && (
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Shield className="w-4 h-4 text-emerald-500" />
-                  <p className="text-xs font-black text-emerald-500 uppercase tracking-widest">Pessoas autorizadas</p>
+            {/* Pessoas autorizadas/responsáveis */}
+            {modal.child.authorizedPersons.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Responsáveis Autorizados</p>
                 </div>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {modal.child.authorizedPersons.map((p, i) => (
                     <button
                       key={i}
                       type="button"
-                      onClick={() => setForm((prev) => ({ ...prev, personName: p.name }))}
-                      className="w-full text-left text-xs text-emerald-600/80 hover:text-emerald-500 py-2 px-3 rounded-xl hover:bg-emerald-500/10 transition-all border border-transparent hover:border-emerald-500/20"
+                      onClick={() => setForm((prev) => ({ 
+                        ...prev, 
+                        personName: p.name,
+                        personDoc: p.cpf || prev.personDoc
+                      }))}
+                      className={`group w-full text-left p-3 rounded-2xl border transition-all flex flex-col gap-1 ${
+                        form.personName === p.name 
+                          ? 'bg-primary/10 border-primary shadow-lg shadow-primary/10' 
+                          : 'bg-accent/20 border-border/40 hover:border-primary/30 hover:bg-accent/40'
+                      }`}
                     >
-                      <span className="font-bold">{p.name}</span> — {p.relationship}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-foreground">{p.name}</span>
+                        {p.type === 'guardian' && <Badge label="Pai/Mãe" variant="primary" size="sm" />}
+                      </div>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{p.relationship}</span>
                     </button>
                   ))}
                 </div>

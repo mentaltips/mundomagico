@@ -1,0 +1,8 @@
+[2026-05-14T17:11:42.971Z] serverFetch - URL: http://127.0.0.1:3002/api/groups?active=true, Token present: true
+[2026-05-14T17:11:42.973Z] serverFetch - URL: http://127.0.0.1:3002/api/check-in-out/children?status=ATIVO%2CADAPTACAO&date=2026-05-14, Token present: true
+[2026-05-14T17:11:48.892Z] serverFetch - URL: http://127.0.0.1:3002/api/groups?active=true, Token present: true
+[2026-05-14T17:11:48.893Z] serverFetch - URL: http://127.0.0.1:3002/api/check-in-out/children?status=ATIVO%2CADAPTACAO&date=2026-05-14, Token present: true
+[2026-05-14T17:11:51.148Z] serverFetch - URL: http://127.0.0.1:3002/api/groups?active=true, Token present: true
+[2026-05-14T17:11:51.150Z] serverFetch - URL: http://127.0.0.1:3002/api/check-in-out/children?status=ATIVO%2CADAPTACAO&date=2026-05-14, Token present: true
+[2026-05-14T17:13:15.123Z] serverFetch - URL: http://127.0.0.1:3002/api/groups?active=true, Token present: true
+[2026-05-14T17:13:15.125Z] serverFetch - URL: http://127.0.0.1:3002/api/check-in-out/children?status=ATIVO%2CADAPTACAO&date=2026-05-14, Token present: true

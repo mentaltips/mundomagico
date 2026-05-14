@@ -172,15 +172,15 @@ export default function GuardiansPage() {
         }
       />
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <div className="relative group flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input 
             type="text" 
             placeholder="Buscar por nome, e-mail ou telefone..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="input pl-10"
+            className="input pl-12 w-full bg-accent/30 border-transparent focus:bg-accent/50 focus:border-primary/30 h-14 text-sm font-bold"
           />
         </div>
       </div>
@@ -205,44 +205,49 @@ export default function GuardiansPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGuardians.map(g => (
-            <div key={g.id} className="card-hover p-6 flex flex-col group">
-              <div className="flex items-center gap-4 mb-6">
-                <Avatar name={g.fullName} photoUrl={(g as any).photoUrl} size="md" />
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-black text-foreground leading-tight truncate">{g.fullName}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    {g.userId ? (
-                      <Badge label="Acesso Ativo" variant="green" size="sm" dot />
-                    ) : (
-                      <Badge label="Sem Acesso" variant="gray" size="sm" />
-                    )}
+            <div key={g.id} className="card-hover p-6 flex flex-col group border border-border/40 hover:border-primary/20">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-4 min-w-0">
+                  <Avatar name={g.fullName} photoUrl={(g as any).photoUrl} size="md" />
+                  <div className="min-w-0">
+                    <h3 className="font-black text-foreground leading-tight truncate text-base">{g.fullName}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      {g.userId ? (
+                        <Badge label="Ativo" variant="green" size="sm" dot />
+                      ) : (
+                        <Badge label="Sem Acesso" variant="gray" size="sm" />
+                      )}
+                      <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{(g as any).relationship || 'Responsável'}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button 
                     onClick={() => handleOpenModal(g)}
                     className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
+                    title="Editar"
                   >
                     <Edit size={16} />
                   </button>
                   <button 
                     onClick={() => handleDelete(g.id)}
                     className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                    title="Excluir"
                   >
                     <Trash size={16} />
                   </button>
                 </div>
               </div>
 
-              <div className="space-y-3 mb-6">
+              <div className="space-y-3 mb-8 bg-accent/20 p-4 rounded-2xl border border-border/20">
                 <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                  <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 shadow-sm">
                     <Phone size={14} className="text-primary" />
                   </div>
                   <span className="truncate">{g.phone || '—'}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                  <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 shadow-sm">
                     <Mail size={14} className="text-primary" />
                   </div>
                   <span className="truncate">{g.email || '—'}</span>
@@ -254,13 +259,13 @@ export default function GuardiansPage() {
                   <button 
                     onClick={() => handleGenerateAccess(g)}
                     disabled={generatingFor === g.id}
-                    className="w-full btn-secondary py-2.5 text-xs gap-2"
+                    className="w-full btn-primary py-3 text-xs font-black gap-2 shadow-lg shadow-primary/10 active:scale-95 transition-transform"
                   >
-                    {generatingFor === g.id ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
-                    Liberar Acesso
+                    {generatingFor === g.id ? <Loader2 size={14} className="animate-spin" /> : <Key size={14} />}
+                    Liberar Acesso Portal
                   </button>
                 ) : (
-                  <div className="flex items-center justify-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/5 py-2 rounded-xl border border-emerald-500/10">
+                  <div className="flex items-center justify-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/5 py-3 rounded-xl border border-emerald-500/10">
                     <CheckCircle2 size={12} /> Portal da Família Ativo
                   </div>
                 )}

@@ -219,28 +219,40 @@ export default function FinancePage() {
         />
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-        {FILTERS.map(f => (
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative group flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <input 
+            type="text" 
+            placeholder="Buscar por aluno ou descrição..."
+            className="input pl-12 w-full bg-accent/30 border-transparent focus:bg-accent/50 focus:border-primary/30 h-14 text-sm font-bold"
+            // Filter is currently handled by status, but we can add local filtering if needed
+          />
+        </div>
+        
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar sm:pb-0">
+          {FILTERS.map(f => (
+            <button
+              key={f.value}
+              onClick={() => setFilterStatus(f.value)}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap h-14 min-w-[100px] transition-all border ${
+                filterStatus === f.value
+                  ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
+                  : 'bg-card text-muted-foreground border-border hover:border-primary/50'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
           <button
-            key={f.value}
-            onClick={() => setFilterStatus(f.value)}
-            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${
-              filterStatus === f.value
-                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                : 'bg-card text-muted-foreground border border-border hover:border-primary/50'
-            }`}
+            onClick={fetchInvoices}
+            className="w-14 h-14 bg-card text-muted-foreground border border-border rounded-xl flex items-center justify-center p-0 shrink-0 hover:border-primary/50 transition-colors"
+            title="Atualizar"
           >
-            {f.label}
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
-        ))}
-        <button
-          onClick={fetchInvoices}
-          className="ml-auto w-10 h-10 btn-ghost rounded-xl flex items-center justify-center p-0 border border-border bg-card shrink-0"
-          title="Atualizar"
-        >
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-        </button>
+        </div>
       </div>
 
       {loading ? (

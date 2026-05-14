@@ -98,6 +98,7 @@ app.use('/api/development-reports', requireApiAuth, developmentReportsRoutes)
 app.use('/api/finance', requireApiAuth, financeRoutes)
 app.use('/api/guardians', requireApiAuth, guardiansRoutes)
 app.use('/api/health', requireApiAuth, healthRoutes)
+app.use('/api/upload', requireApiAuth, uploadRoutes)
 app.use('/api/photos', requireApiAuth, photosRoutes)
 app.use('/api/settings', requireApiAuth, settingsRoutes)
 app.use('/api/users', requireApiAuth, usersRoutes)
@@ -108,39 +109,8 @@ app.use('/api/daily-reports', requireApiAuth, dailyReportsRoutes)
 app.use('/api/documents', requireApiAuth, documentsRoutes)
 app.use('/api/billing', requireApiAuth, billingRoutes)
 app.use('/api/reports', requireApiAuth, reportsRoutes)
-app.use('/api/upload', requireApiAuth, uploadRoutes)
-
-// Serve arquivos de upload (fotos) como estático
-import path from 'path'
-import fs from 'fs'
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads')
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true })
-app.use('/uploads', express.static(UPLOAD_DIR))
-
-app.post('/api/whatsapp/send', requireApiAuth, async (req, res) => {
-  const { to, templateName, languageCode, components } = req.body
-
-  if (!to || !templateName) {
-    return res.status(400).json({ error: 'Missing required fields: to, templateName' })
-  }
-
-  try {
-    const job = await whatsappQueue.add('send-notification', {
-      to,
-      templateName,
-      languageCode: languageCode || 'pt_BR',
-      components: components || []
-    })
-
-    res.status(202).json({ success: true, jobId: job.id })
-  } catch (error) {
-    req.log.error(error, 'Error enqueueing whatsapp message')
-    res.status(500).json({ error: 'Failed to enqueue message' })
-  }
-})
 
 const PORT = process.env.API_PORT || 3002
-
-app.listen(Number(PORT), '0.0.0.0', () => {
-  console.log(`🚀 API Server running on port ${PORT}`)
+app.listen(PORT, () => {
+  console.log(`🚀 API rodando em http://localhost:${PORT}`)
 })
