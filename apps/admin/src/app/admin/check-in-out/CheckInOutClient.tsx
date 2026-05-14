@@ -7,9 +7,9 @@ import { PageHeader, StatCard } from '@/components/ui'
 import { ClipboardCheck, CheckCircle2, Clock, Users, ArrowRightLeft, BarChart2 } from 'lucide-react'
 import Link from 'next/link'
 
-export const dynamic = 'force-dynamic'
 
-export default async function CheckInOutPage({
+
+export default async function CheckInOutClient({
   searchParams,
 }: {
   searchParams: { date?: string; groupId?: string }
