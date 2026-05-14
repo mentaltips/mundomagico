@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Settings as SettingsIcon, Save, Loader2, Building2, MessageCircle, Mail, CreditCard, Download, ArrowRight } from 'lucide-react'
+import { Settings as SettingsIcon, Save, Loader2, Building2, MessageCircle, Mail, CreditCard, Download, ArrowRight, AlertCircle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
@@ -26,6 +26,9 @@ type SchoolSettings = {
   smtpUser: string | null
   smtpFrom: string | null
   mpPublicKey: string | null
+  autoGenerateInvoices: boolean
+  billingGenerationDay: number
+  invoiceDescription: string
 }
 
 type Tab = 'institution' | 'whatsapp' | 'email' | 'payments' | 'export'
@@ -41,6 +44,12 @@ export default function SettingsPage() {
     queryFn: () => fetch('/api/settings').then((r) => r.json()),
   })
 
+  const { data: pendingData } = useQuery<{ pending: any[] }>({
+    queryKey: ['pending-config'],
+    queryFn: () => fetch('/api/stats/pending-config').then((r) => r.json()),
+    enabled: activeTab === 'payments'
+  })
+
   useEffect(() => {
     if (settings) setForm(settings)
   }, [settings])
@@ -49,7 +58,7 @@ export default function SettingsPage() {
     setSaving(true)
     try {
       const res = await fetch('/api/settings', {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
@@ -330,6 +339,93 @@ export default function SettingsPage() {
                     /api/webhooks/mercadopago
                   </code>
                 </div>
+
+                <div className="pt-8 border-t border-border">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-amber-500/10 text-amber-600 rounded-xl flex items-center justify-center">
+                      <CreditCard size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-black text-foreground">Automação de Mensalidades</h4>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Geração automática de faturas recorrentes</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between p-6 rounded-3xl bg-accent/20 border border-border">
+                      <div>
+                        <h4 className="font-black text-sm text-foreground">Ativar Geração Automática</h4>
+                        <p className="text-xs text-muted-foreground">O sistema criará as faturas mensalmente para alunos ativos</p>
+                      </div>
+                      <button
+                        onClick={() => setForm(p => ({ ...p, autoGenerateInvoices: !p.autoGenerateInvoices }))}
+                        className={`w-12 h-6 rounded-full transition-colors relative ${form.autoGenerateInvoices ? 'bg-primary' : 'bg-muted'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${form.autoGenerateInvoices ? 'left-7' : 'left-1'}`} />
+                      </button>
+                    </div>
+
+                    {form.autoGenerateInvoices && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
+                        <div className="space-y-1.5">
+                          <label className="label">Dia de Geração</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="28"
+                            value={form.billingGenerationDay ?? 25}
+                            onChange={(e) => setForm(p => ({ ...p, billingGenerationDay: parseInt(e.target.value) }))}
+                            className="input"
+                            placeholder="Ex: 25"
+                          />
+                          <p className="text-[10px] text-muted-foreground">Dia do mês em que o sistema criará as faturas</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="label">Descrição Padrão</label>
+                          <input
+                            type="text"
+                            value={form.invoiceDescription ?? ''}
+                            onChange={(e) => setForm(p => ({ ...p, invoiceDescription: e.target.value }))}
+                            className="input"
+                            placeholder="Ex: Mensalidade {month}/{year}"
+                          />
+                          <p className="text-[10px] text-muted-foreground">Use {'{month}'} e {'{year}'} para preenchimento dinâmico</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {pendingData && pendingData.pending.length > 0 && (
+                  <div className="pt-8 border-t border-border animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 bg-rose-500/10 text-rose-600 rounded-xl flex items-center justify-center">
+                        <AlertCircle size={20} />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-black text-foreground">Atenção: Alunos sem Mensalidade</h4>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Estes alunos não terão faturas geradas automaticamente</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {pendingData.pending.map((p: any) => (
+                        <div key={p.id} className="flex items-center justify-between p-4 rounded-2xl bg-rose-500/5 border border-rose-500/10">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black text-foreground">{p.name}</span>
+                            <span className="text-[10px] font-bold text-rose-500/60 uppercase tracking-widest">{p.type}</span>
+                          </div>
+                          <Link 
+                            href={p.type === 'Criança' ? `/admin/children` : `/admin/children`} 
+                            className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"
+                          >
+                            <ArrowRight size={16} />
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

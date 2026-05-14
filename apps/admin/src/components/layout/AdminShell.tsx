@@ -11,7 +11,7 @@ import {
   HeartPulse, Calendar, FileText, ShieldAlert,
   SearchIcon, Command, Camera, ClipboardList, Package, ShieldCheck,
   AlertCircle, Megaphone, BarChart2, CheckCheck, Sparkles, Heart,
-  LayoutGrid, LogIn, Image, BarChart
+  LayoutGrid, LogIn, Image, BarChart, MousePointer2
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -34,6 +34,7 @@ const menuItems = [
   { icon: <CreditCard size={20} />,     label: 'Financeiro',        href: '/admin/finance',       group: 'operacional' },
   { icon: <Calendar size={20} />,       label: 'Calendário',        href: '/admin/calendar',      group: 'operacional' },
   { icon: <BarChart size={20} />,       label: 'Relatórios',        href: '/admin/reports',       group: 'operacional' },
+  { icon: <MousePointer2 size={20} />,  label: 'Acessos',           href: '/admin/analytics',     group: 'operacional' },
   { icon: <Settings size={20} />,       label: 'Configurações',     href: '/admin/settings',      group: 'operacional' },
 ]
 

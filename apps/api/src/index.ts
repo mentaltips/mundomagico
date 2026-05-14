@@ -8,6 +8,7 @@ import path from 'path'
 import './workers/whatsapp.worker'
 import { whatsappQueue, isRedisHealthy } from './services/queue'
 import { requireApiAuth } from './middleware/auth'
+import { analyticsMiddleware } from './middlewares/analytics'
 
 // Existing routes
 import studentRoutes from './routes/students'
@@ -38,6 +39,7 @@ import documentsRoutes from './routes/documents'
 import billingRoutes from './routes/billing'
 import reportsRoutes from './routes/reports'
 import uploadRoutes from './routes/upload'
+import analyticsRoutes from './routes/analytics'
 
 const app = express()
 
@@ -66,6 +68,7 @@ app.use(cors({
 
 app.use(express.json())
 app.use(pino())
+app.use(analyticsMiddleware)
 
 // Static files
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads')
@@ -114,6 +117,7 @@ app.use('/api/daily-reports', requireApiAuth, dailyReportsRoutes)
 app.use('/api/documents', requireApiAuth, documentsRoutes)
 app.use('/api/billing', requireApiAuth, billingRoutes)
 app.use('/api/reports', requireApiAuth, reportsRoutes)
+app.use('/api/analytics', requireApiAuth, analyticsRoutes)
 
 const PORT = process.env.API_PORT || 3002
 app.listen(PORT, () => {

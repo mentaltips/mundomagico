@@ -4,6 +4,8 @@ import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '../components/AuthProvider'
 import { QueryProvider } from '../components/QueryProvider'
+import { CookieBanner } from '../components/CookieBanner'
+import { AnalyticsTracker } from '../components/AnalyticsTracker'
 
 import { ThemeProvider } from '../components/ThemeProvider'
 
@@ -32,6 +34,8 @@ export default function RootLayout({
           <AuthProvider>
             <QueryProvider>
               {children}
+              <CookieBanner />
+              <AnalyticsTracker />
             </QueryProvider>
           </AuthProvider>
           <Toaster 

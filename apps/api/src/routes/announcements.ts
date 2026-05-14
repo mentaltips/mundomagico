@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { prisma } from '@mundo-magico/database'
+import { createWhatsAppService } from '../services/whatsapp'
 
 const router = Router()
 
@@ -22,7 +23,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
-    const { sentAt, ...rest } = req.body
+    const { sentAt, sendWhatsApp, ...rest } = req.body
+    
     const announcement = await prisma.announcement.create({
       data: {
         ...rest,
@@ -30,6 +32,45 @@ router.post('/', async (req, res) => {
         ...(sentAt && { sentAt: new Date(sentAt) }),
       }
     })
+
+    // Se marcado para enviar via WhatsApp
+    if (sendWhatsApp) {
+      const school = await prisma.school.findUnique({ where: { id: schoolId } })
+      // @ts-ignore
+      const whatsapp = createWhatsAppService({ token: school?.whatsappToken, phoneNumberId: school?.whatsappPhone })
+      
+      if (whatsapp) {
+        // Buscar todos os responsáveis da escola
+        const [children, students] = await Promise.all([
+          prisma.child.findMany({ 
+            where: { schoolId, status: 'ATIVO' },
+            include: { guardians: { include: { guardian: true } } }
+          }),
+          prisma.student.findMany({ 
+            where: { schoolId, status: 'ATIVO' },
+            include: { guardians: { include: { guardian: true } } }
+          })
+        ])
+
+        const phones = new Set<string>()
+        const allGuardians = [
+          ...children.flatMap(c => c.guardians.map(g => g.guardian)),
+          ...students.flatMap(s => s.guardians.map(g => g.guardian))
+        ]
+
+        allGuardians.forEach(g => {
+          if (g?.phone) phones.add(g.phone)
+        })
+
+        const message = `📢 *COMUNICADO: ${announcement.title}*\n\n${announcement.content}\n\n_Enviado por Mundo Mágico_`
+        
+        // Enviar para todos (idealmente via fila/worker, mas vamos direto para teste)
+        for (const phone of Array.from(phones)) {
+          await whatsapp.sendTextMessage(phone, message)
+        }
+      }
+    }
+
     res.status(201).json(announcement)
   } catch (error) {
     req.log.error(error)

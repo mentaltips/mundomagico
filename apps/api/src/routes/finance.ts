@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { prisma } from '@mundo-magico/database'
 import { MercadoPagoConfig, Payment, Preference } from 'mercadopago'
+import { createWhatsAppService } from '../services/whatsapp'
 
 const router = Router()
 
@@ -107,9 +108,10 @@ router.get('/invoices/:id', async (req, res) => {
     const invoice = await prisma.invoice.findFirst({
       where: { id: req.params.id, schoolId },
       include: {
-        child: { select: { id: true, fullName: true } },
+        child: { include: { guardians: true } },
         student: { select: { id: true, fullName: true } },
-        payments: true
+        payments: true,
+        school: true
       }
     })
     if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
@@ -150,7 +152,25 @@ router.post('/invoices/:id/pay', async (req, res) => {
     const schoolId = req.user?.schoolId
     const invoice = await prisma.invoice.findFirst({ 
       where: { id: req.params.id, schoolId },
-      include: { school: true }
+      include: { 
+        school: true,
+        child: {
+          include: {
+            guardians: {
+              where: { isPrimary: true },
+              include: { guardian: true }
+            }
+          }
+        },
+        student: {
+          include: {
+            guardians: {
+              where: { isPrimary: true },
+              include: { guardian: true }
+            }
+          }
+        }
+      }
     })
     if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
 
@@ -190,12 +210,14 @@ router.post('/invoices/:id/pay', async (req, res) => {
     const mpPayment = new Payment(client)
     const mpPreference = new Preference(client)
 
-    // Dados do pagador (simplificado para o exemplo)
+    // Busca o responsável principal (da criança ou do aluno)
+    const primaryGuardian = invoice.child?.guardians[0]?.guardian || invoice.student?.guardians[0]?.guardian
+    
     const payer = {
-      email: 'pagador@exemplo.com', // No futuro, buscar do banco
+      email: primaryGuardian?.email || 'financeiro@mundomagicocajamar.com.br',
       identification: {
         type: 'CPF',
-        number: payerCpf?.replace(/\D/g, '') || '00000000000',
+        number: payerCpf?.replace(/\D/g, '') || primaryGuardian?.cpf?.replace(/\D/g, '') || '00000000000',
       }
     }
 
@@ -302,6 +324,105 @@ router.post('/invoices/:id/pay', async (req, res) => {
   } catch (error: any) {
     req.log.error(error)
     res.status(500).json({ error: error.message || 'Erro ao processar pagamento com Mercado Pago' })
+  }
+})
+
+// POST /automation/run - Run billing automation for all schools
+router.post('/automation/run', async (req, res) => {
+  try {
+    const today = new Date()
+    const currentDay = today.getDate()
+    
+    // 1. Buscar todas as escolas com automação ativa e que o dia de geração seja HOJE
+    const schools = await prisma.school.findMany({
+      // @ts-ignore
+      where: { autoGenerateInvoices: true, billingGenerationDay: currentDay }
+    })
+
+    const results = []
+    
+    // Iniciar serviço de WhatsApp (padrão global ou por escola se necessário)
+    // Aqui vamos instanciar dentro do loop de cada escola usando as configs dela
+    
+    for (const school of schools) {
+      // @ts-ignore
+      const whatsapp = createWhatsAppService({ token: school.whatsappToken, phoneNumberId: school.whatsappPhone })
+
+      // 2. Buscar todos os alunos/crianças ativos que tenham mensalidade cadastrada
+      const [children, students] = await Promise.all([
+        prisma.child.findMany({
+          where: { schoolId: school.id, status: 'ATIVO', monthlyFee: { gt: 0 } },
+          include: { guardians: { where: { isPrimary: true }, include: { guardian: true } } }
+        }),
+        prisma.student.findMany({
+          where: { schoolId: school.id, status: 'ATIVO', monthlyFee: { gt: 0 } },
+          include: { guardians: { where: { isPrimary: true }, include: { guardian: true } } }
+        })
+      ])
+
+      const referenceMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+        .toISOString().slice(0, 7) // Próximo mês no formato YYYY-MM
+      
+      // @ts-ignore
+      const description = school.invoiceDescription
+        .replace('{month}', (today.getMonth() + 2).toString().padStart(2, '0'))
+        .replace('{year}', today.getFullYear().toString())
+
+      // 3. Gerar faturas para quem não tem ainda para o mês de referência
+      const billingData = [...children, ...students].map(p => ({
+        schoolId: school.id,
+        childId: (p as any).groupId ? p.id : null, // Simplificação: se tem groupId é Child
+        studentId: (p as any).groupId ? null : p.id,
+        guardianId: (p as any).guardians?.[0]?.guardianId || null,
+        description,
+        amount: p.monthlyFee || 0,
+        dueDate: new Date(today.getFullYear(), today.getMonth() + 1, p.dueDay || 10),
+        referenceMonth,
+        status: 'PENDENTE',
+        guardian: (p as any).guardians?.[0]?.guardian // Passando info do guardian para o loop de envio
+      }))
+
+      for (const data of billingData) {
+        const { guardian, ...invoiceData } = data as any
+        
+        const exists = await prisma.invoice.findFirst({
+          where: { 
+            schoolId: invoiceData.schoolId, 
+            referenceMonth: invoiceData.referenceMonth,
+            OR: [
+              { childId: invoiceData.childId },
+              { studentId: invoiceData.studentId }
+            ]
+          }
+        })
+
+        if (!exists && invoiceData.amount > 0) {
+          const created = await prisma.invoice.create({ data: invoiceData })
+          results.push({ school: school.name, target: invoiceData.childId || invoiceData.studentId, status: 'CREATED' })
+
+          // DISPARAR WHATSAPP
+          if (whatsapp && guardian?.phone) {
+            const dueDateStr = new Date(invoiceData.dueDate).toLocaleDateString('pt-BR')
+            const amountStr = invoiceData.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+            const paymentLink = `${process.env.ADMIN_URL || 'https://admin.mundomagico.com'}/parent/payments?invoice=${created.id}`
+
+            await whatsapp.sendInvoiceNotification(
+              guardian.phone,
+              guardian.name || 'Responsável',
+              amountStr,
+              dueDateStr,
+              invoiceData.description,
+              paymentLink
+            )
+          }
+        }
+      }
+    }
+
+    res.json({ message: 'Automação concluída', results })
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Erro na automação de faturamento' })
   }
 })
 

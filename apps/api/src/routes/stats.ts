@@ -3,6 +3,47 @@ import { prisma } from '@mundo-magico/database'
 
 const router = Router()
 
+// GET /pending-config - Alunos sem mensalidade ou responsável principal
+router.get('/pending-config', async (req, res) => {
+  try {
+    const schoolId = req.user?.schoolId
+    
+    const [children, students] = await Promise.all([
+      prisma.child.findMany({
+        where: { 
+          schoolId, 
+          status: 'ATIVO',
+          OR: [
+            { monthlyFee: 0 },
+            { monthlyFee: null }
+          ]
+        },
+        select: { id: true, name: true }
+      }),
+      prisma.student.findMany({
+        where: { 
+          schoolId, 
+          status: 'ATIVO',
+          OR: [
+            { monthlyFee: 0 },
+            { monthlyFee: null }
+          ]
+        },
+        select: { id: true, name: true }
+      })
+    ])
+
+    res.json({
+      pending: [
+        ...children.map(c => ({ ...c, type: 'Criança' })),
+        ...students.map(s => ({ ...s, type: 'Estudante' }))
+      ]
+    })
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar pendências' })
+  }
+})
+
 router.get('/', async (req, res) => {
   try {
     const schoolId = req.user?.schoolId!
@@ -36,8 +77,16 @@ router.get('/', async (req, res) => {
         where: { schoolId, status: 'ATIVO' },
       }),
       prisma.group.count({ where: { schoolId } }),
-      prisma.invoice.count({ where: { schoolId, status: 'PENDENTE' } }),
-      prisma.invoice.count({ where: { schoolId, status: 'VENCIDO' } }),
+      prisma.invoice.count({ where: { schoolId, status: 'PENDENTE', dueDate: { gte: startOfDay } } }),
+      prisma.invoice.count({ 
+        where: { 
+          schoolId, 
+          OR: [
+            { status: 'VENCIDO' },
+            { status: 'PENDENTE', dueDate: { lt: startOfDay } }
+          ]
+        } 
+      }),
       prisma.invoice.aggregate({
         where: { schoolId, status: 'PAGO', paidAt: { gte: startOfMonth } },
         _sum: { paidAmount: true },

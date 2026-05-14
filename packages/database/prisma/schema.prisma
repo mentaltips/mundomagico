@@ -46,6 +46,10 @@ model School {
   // Mercado Pago
   mpAccessToken   String?
   mpPublicKey     String?
+  // Automação Financeira
+  autoGenerateInvoices   Boolean  @default(false)
+  billingGenerationDay  Int      @default(25) // Dia do mês para gerar
+  invoiceDescription    String   @default("Mensalidade {month}/{year}")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -54,6 +58,7 @@ model School {
   children        Child[]
   students        Student[]
   dailyReports    ChildDailyReport[]
+  pageVisits      PageVisit[]
   checkInOuts     ChildCheckInOut[]
   medications     Medication[]
   childItems      ChildItem[]
@@ -685,4 +690,24 @@ model Payment {
   updatedAt       DateTime @updatedAt
 
   invoice Invoice @relation(fields: [invoiceId], references: [id])
+}
+
+model PageVisit {
+  id        String   @id @default(cuid())
+  path      String
+  ip        String?
+  userAgent String?
+  schoolId  String?
+  createdAt DateTime @default(now())
+
+  school    School?  @relation(fields: [schoolId], references: [id])
+}
+
+model PrivacyConsent {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  accepted  Boolean  @default(false)
+  ip        String?
+  version   String   @default("1.0")
+  acceptedAt DateTime @default(now())
 }

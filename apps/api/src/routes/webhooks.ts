@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import crypto from 'crypto'
 import { prisma } from '@mundo-magico/database'
+import { MercadoPagoConfig, Payment } from 'mercadopago'
 
 const router = Router()
 
@@ -73,12 +74,12 @@ router.post('/mercadopago', async (req, res) => {
   // 2. Processa o evento de forma assíncrona
   try {
     if (type === 'payment') {
-      const paymentId = data?.id
+      const paymentId = data?.id || req.query.id
       if (!paymentId) return
 
       console.log(`[Webhook MP] Evento de pagamento recebido: ${paymentId}`)
 
-      // Busca a fatura vinculada ao ID de pagamento do MP
+      // 1. Busca a fatura vinculada
       const invoice = await prisma.invoice.findFirst({
         where: {
           OR: [
@@ -86,6 +87,7 @@ router.post('/mercadopago', async (req, res) => {
             { mpPreferenceId: String(paymentId) },
           ],
         },
+        include: { school: true }
       })
 
       if (!invoice) {
@@ -93,8 +95,16 @@ router.post('/mercadopago', async (req, res) => {
         return
       }
 
-      // Atualiza status da fatura com base no status MP
-      const mpStatus = req.body.status || 'approved'
+      // 2. Consulta o Mercado Pago para confirmar o status real
+      const accessToken = invoice.school.mpAccessToken || process.env.MP_ACCESS_TOKEN
+      if (!accessToken) return
+
+      const client = new MercadoPagoConfig({ accessToken })
+      const mpPayment = new Payment(client)
+      const mpData = await mpPayment.get({ id: String(paymentId) })
+
+      const mpStatus = mpData.status
+      console.log(`[Webhook MP] Status consultado no MP para ${paymentId}: ${mpStatus}`)
 
       if (mpStatus === 'approved') {
         await prisma.$transaction([
@@ -105,28 +115,27 @@ router.post('/mercadopago', async (req, res) => {
               mpPaymentId: String(paymentId),
               mpPaymentStatus: mpStatus,
               paidAt: new Date(),
-              paidAmount: invoice.amount,
+              paidAmount: mpData.transaction_amount || invoice.amount,
             },
           }),
           prisma.payment.create({
             data: {
               invoiceId: invoice.id,
-              method: 'PIX',
+              method: mpData.payment_method_id?.toUpperCase() || 'PIX',
               mpPaymentId: String(paymentId),
               mpStatus,
-              amount: invoice.amount,
+              amount: mpData.transaction_amount || invoice.amount,
               paidAt: new Date(),
-              webhookData: JSON.stringify(req.body),
+              webhookData: JSON.stringify(mpData),
             },
           }),
         ])
-        console.log(`[Webhook MP] ✅ Fatura ${invoice.id} marcada como PAGA via MP.`)
-      } else if (mpStatus === 'rejected' || mpStatus === 'cancelled') {
+        console.log(`[Webhook MP] ✅ Fatura ${invoice.id} marcada como PAGA após consulta ao MP.`)
+      } else {
         await prisma.invoice.update({
           where: { id: invoice.id },
           data: { mpPaymentStatus: mpStatus },
         })
-        console.log(`[Webhook MP] Pagamento ${paymentId} com status: ${mpStatus}`)
       }
     }
   } catch (err) {

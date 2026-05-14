@@ -23,17 +23,32 @@ router.get('/', async (req, res) => {
         institutionType: true,
         activeModules: true,
         terminology: true,
+        whatsappToken: true,
         whatsappPhone: true,
         smtpHost: true,
         smtpPort: true,
         smtpUser: true,
         smtpFrom: true,
+        mpPublicKey: true,
+        // @ts-ignore - Prisma client refresh delay
+        autoGenerateInvoices: true,
+        // @ts-ignore
+        billingGenerationDay: true,
+        // @ts-ignore
+        invoiceDescription: true,
         createdAt: true,
         updatedAt: true,
       }
     })
     if (!school) return res.status(404).json({ error: 'School not found' })
-    res.json(school)
+
+    const formatted = {
+      ...school,
+      activeModules: school.activeModules ? JSON.parse(school.activeModules) : [],
+      terminology: school.terminology ? JSON.parse(school.terminology) : {},
+    }
+
+    res.json(formatted)
   } catch (error) {
     req.log.error(error)
     res.status(500).json({ error: 'Internal server error' })
@@ -44,23 +59,26 @@ router.get('/', async (req, res) => {
 router.patch('/', async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
-    // Remove sensitive tokens from direct update; use specific endpoints for those
     const {
-      whatsappToken,
-      mpAccessToken,
-      mpPublicKey,
-      smtpPass,
-      ...safeData
+      name, cnpj, phone, email, address, city, state, zipCode, logoUrl,
+      whatsappToken, whatsappPhone, smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom,
+      mpAccessToken, mpPublicKey,
+      autoGenerateInvoices, billingGenerationDay, invoiceDescription
     } = req.body
 
     const school = await prisma.school.update({
       where: { id: schoolId },
       data: {
-        ...safeData,
-        ...(whatsappToken && { whatsappToken }),
-        ...(mpAccessToken && { mpAccessToken }),
-        ...(mpPublicKey && { mpPublicKey }),
+        name, cnpj, phone, email, address, city, state, zipCode, logoUrl,
+        whatsappToken, whatsappPhone, smtpHost, 
+        smtpPort: smtpPort ? parseInt(smtpPort) : undefined, 
+        smtpUser, smtpFrom,
         ...(smtpPass && { smtpPass }),
+        ...(mpAccessToken && { mpAccessToken }),
+        mpPublicKey,
+        autoGenerateInvoices,
+        billingGenerationDay: billingGenerationDay ? parseInt(billingGenerationDay) : undefined,
+        invoiceDescription
       },
     })
     res.json(school)
@@ -79,7 +97,14 @@ router.get('/institution-type', async (req, res) => {
       select: { institutionType: true, activeModules: true, terminology: true }
     })
     if (!school) return res.status(404).json({ error: 'School not found' })
-    res.json(school)
+
+    const formatted = {
+      institutionType: school.institutionType,
+      activeModules: school.activeModules ? JSON.parse(school.activeModules) : [],
+      terminology: school.terminology ? JSON.parse(school.terminology) : {},
+    }
+
+    res.json(formatted)
   } catch (error) {
     req.log.error(error)
     res.status(500).json({ error: 'Internal server error' })
@@ -95,11 +120,19 @@ router.patch('/institution-type', async (req, res) => {
       where: { id: schoolId },
       data: {
         ...(institutionType && { institutionType }),
-        ...(activeModules !== undefined && { activeModules }),
-        ...(terminology !== undefined && { terminology }),
+        ...(activeModules !== undefined && { 
+          activeModules: Array.isArray(activeModules) ? JSON.stringify(activeModules) : (activeModules || "[]") 
+        }),
+        ...(terminology !== undefined && { 
+          terminology: typeof terminology === 'object' ? JSON.stringify(terminology) : (terminology || "{}") 
+        }),
       }
     })
-    res.json({ institutionType: school.institutionType, activeModules: school.activeModules, terminology: school.terminology })
+    res.json({ 
+      institutionType: school.institutionType, 
+      activeModules: school.activeModules ? JSON.parse(school.activeModules) : [], 
+      terminology: school.terminology ? JSON.parse(school.terminology) : {} 
+    })
   } catch (error) {
     req.log.error(error)
     res.status(500).json({ error: 'Internal server error' })

@@ -87,6 +87,30 @@ export class WhatsAppService {
     const message = `👋 *${childName}* saiu da *${schoolName}* às *${time}* com ${pickedUpBy}. Até amanhã!`
     return this.sendTextMessage(guardianPhone, message)
   }
+
+  async sendInvoiceNotification(
+    guardianPhone: string,
+    guardianName: string,
+    amount: string,
+    dueDate: string,
+    description: string,
+    paymentLink: string
+  ): Promise<boolean> {
+    const message = [
+      `Olá, *${guardianName}*! 👋`,
+      ``,
+      `A fatura de *${description}* já está disponível.`,
+      ``,
+      `💰 *Valor:* R$ ${amount}`,
+      `📅 *Vencimento:* ${dueDate}`,
+      ``,
+      `Você pode realizar o pagamento através do link abaixo:`,
+      `🔗 ${paymentLink}`,
+      ``,
+      `Obrigado! 🙏`
+    ].join('\n')
+    return this.sendTextMessage(guardianPhone, message)
+  }
 }
 
 export function createWhatsAppService(config?: { token?: string | null; phoneNumberId?: string | null }): WhatsAppService | null {

@@ -36,19 +36,15 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
 
-  // Proxy para a API no VPS (Exceto Auth que roda no Next.js)
-  /* async rewrites() {
+  // Proxy para a API (Porta 3002)
+  async rewrites() {
     return [
       {
-        source: '/api/auth/:path*',
-        destination: '/api/auth/:path*', // Mantém local
-      },
-      {
-        source: '/api/:path*',
-        destination: 'https://api.mundomagicocajamar.com.br/api/:path*',
+        source: '/api/:path((?!auth).*)', // Tudo exceto auth
+        destination: 'http://localhost:3002/api/:path*',
       },
     ]
-  }, */
+  },
 }
 
 module.exports = nextConfig

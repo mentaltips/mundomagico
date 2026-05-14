@@ -69,7 +69,7 @@ export default function InstitutionTypeSettingsPage() {
     setSaving(true)
     try {
       const res = await fetch('/api/settings/institution-type', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           institutionType: selectedType,

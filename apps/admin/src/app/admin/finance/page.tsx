@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   CreditCard, TrendingUp, DollarSign, Plus, X, Check, Loader2,
-  Clock, CheckCircle2, AlertCircle, Barcode, QrCode,
+  Clock, CheckCircle2, AlertCircle, Barcode, QrCode, Printer,
   RefreshCw, Users, Banknote, Trash2, Search, Filter, ChevronRight
 } from 'lucide-react'
 import { format, addDays } from 'date-fns'
@@ -59,9 +59,10 @@ export default function FinancePage() {
   const [showBatchModal, setShowBatchModal] = useState(false)
 
   const [form, setForm] = useState({
-    childId: '', description: '',
+    childId: '', guardianId: '', description: '',
     amount: '', dueDate: format(addDays(new Date(), 10), 'yyyy-MM-dd'),
     referenceMonth: format(new Date(), 'yyyy-MM'),
+    boletoUrl: '', boletoBarcode: '',
   })
 
   const [batch, setBatch] = useState({
@@ -99,12 +100,22 @@ export default function FinancePage() {
       const res = await fetch('/api/finance/invoices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),
+        body: JSON.stringify({ 
+          ...form, 
+          amount: parseFloat(form.amount),
+          ...(form.boletoUrl && { boletoUrl: form.boletoUrl }),
+          ...(form.boletoBarcode && { boletoBarcode: form.boletoBarcode }),
+        }),
       })
       if (res.ok) {
         toast.success('Fatura criada!')
         setShowModal(false)
-        setForm({ childId: '', description: '', amount: '', dueDate: format(addDays(new Date(), 10), 'yyyy-MM-dd'), referenceMonth: format(new Date(), 'yyyy-MM') })
+        setForm({ 
+          childId: '', guardianId: '', description: '', amount: '', 
+          dueDate: format(addDays(new Date(), 10), 'yyyy-MM-dd'),
+          referenceMonth: format(new Date(), 'yyyy-MM'),
+          boletoUrl: '', boletoBarcode: '' 
+        })
         fetchInvoices()
       } else toast.error('Erro ao criar fatura')
     } catch { toast.error('Erro ao criar fatura') }
@@ -118,11 +129,17 @@ export default function FinancePage() {
     }
     setSaving(true)
     try {
-      const payload = batch.selectedIds.map(id => ({
-        childId: id, description: batch.description,
-        amount: parseFloat(batch.amount), dueDate: batch.dueDate,
-        referenceMonth: batch.referenceMonth,
-      }))
+      const payload = batch.selectedIds.map(id => {
+        const child = children.find(c => c.id === id)
+        return {
+          childId: id,
+          guardianId: child?.guardians?.[0]?.guardianId || '',
+          description: batch.description,
+          amount: parseFloat(batch.amount),
+          dueDate: batch.dueDate,
+          referenceMonth: batch.referenceMonth,
+        }
+      })
       const res = await fetch('/api/finance/invoices', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -154,6 +171,39 @@ export default function FinancePage() {
     } catch { toast.error('Erro ao cancelar') }
   }
 
+  const handleMarkAsPaid = async (id: string) => {
+    if (!confirm('Deseja marcar esta fatura como PAGA manualmente?')) return
+    try {
+      const res = await fetch(`/api/finance/invoices/${id}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method: 'MANUAL' }),
+      })
+      if (res.ok) {
+        toast.success('Fatura marcada como paga!')
+        fetchInvoices()
+      } else toast.error('Erro ao processar baixa')
+    } catch { toast.error('Erro ao processar baixa') }
+  }
+
+  const handleGeneratePayment = async (id: string, method: 'PIX' | 'BOLETO') => {
+    const toastId = toast.loading(`Gerando ${method} no Mercado Pago...`)
+    try {
+      const res = await fetch(`/api/finance/invoices/${id}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method }),
+      })
+      if (res.ok) {
+        toast.success(`${method} gerado com sucesso!`, { id: toastId })
+        fetchInvoices()
+      } else {
+        const d = await res.json()
+        toast.error(d.error || `Erro ao gerar ${method}`, { id: toastId })
+      }
+    } catch { toast.error(`Erro ao gerar ${method}`, { id: toastId }) }
+  }
+
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja excluir permanentemente esta fatura?')) return
     try {
@@ -170,9 +220,10 @@ export default function FinancePage() {
     } catch { toast.error('Erro ao excluir') }
   }
 
+  const now = new Date()
   const totalPaid    = invoices.filter(i => i.status === 'PAGO').reduce((s, i) => s + i.amount, 0)
   const totalPending = invoices.filter(i => i.status === 'PENDENTE').reduce((s, i) => s + i.amount, 0)
-  const totalOverdue = invoices.filter(i => i.status === 'VENCIDO').reduce((s, i) => s + i.amount, 0)
+  const totalOverdue = invoices.filter(i => i.status === 'PENDENTE' && new Date(i.dueDate) < now).reduce((s, i) => s + i.amount, 0)
   const studentName  = (inv: Invoice) => inv.child?.fullName || inv.student?.fullName || '—'
 
   return (
@@ -317,11 +368,22 @@ export default function FinancePage() {
                       />
                     </td>
                     <td className="table-cell text-right">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-2 pr-2">
                         {inv.status === 'PENDENTE' && (
-                          <button onClick={() => handleCancel(inv.id)} className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-xl transition-colors" title="Cancelar">
-                            <X size={16} />
-                          </button>
+                          <>
+                            <button onClick={() => handleGeneratePayment(inv.id, 'PIX')} className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-xl transition-colors" title="Gerar PIX no Mercado Pago">
+                              <QrCode size={16} />
+                            </button>
+                            <button onClick={() => handleGeneratePayment(inv.id, 'BOLETO')} className="p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors" title="Gerar Boleto no Mercado Pago">
+                              <Barcode size={16} />
+                            </button>
+                            <button onClick={() => handleMarkAsPaid(inv.id)} className="p-2 text-emerald-600 hover:bg-emerald-500/10 rounded-xl transition-colors" title="Baixa Manual">
+                              <CheckCircle2 size={16} />
+                            </button>
+                            <button onClick={() => handleCancel(inv.id)} className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-xl transition-colors" title="Cancelar">
+                              <X size={16} />
+                            </button>
+                          </>
                         )}
                         {inv.status !== 'PAGO' && (
                           <button onClick={() => handleDelete(inv.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors" title="Excluir">
@@ -338,6 +400,15 @@ export default function FinancePage() {
                             <QrCode size={16} />
                           </button>
                         )}
+                        <a 
+                          href={`/admin/finance/invoice/${inv.id}/print`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-xl transition-colors" 
+                          title="Imprimir Recibo/Boleto"
+                        >
+                          <Printer size={16} />
+                        </a>
                       </div>
                     </td>
                   </tr>
@@ -358,11 +429,35 @@ export default function FinancePage() {
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
             <label className="label">Aluno *</label>
-            <select value={form.childId} onChange={e => setForm(p => ({ ...p, childId: e.target.value }))} className="select">
+            <select 
+              value={form.childId} 
+              onChange={e => {
+                const childId = e.target.value
+                const child = children.find(c => c.id === childId)
+                const firstGuardianId = child?.guardians?.[0]?.guardianId || ''
+                setForm(p => ({ ...p, childId, guardianId: firstGuardianId }))
+              }} 
+              className="select"
+            >
               <option value="">Selecione o aluno...</option>
               {children.map(c => <option key={c.id} value={c.id}>{c.fullName}</option>)}
             </select>
           </div>
+          {form.childId && (
+            <div>
+              <label className="label">Responsável Financeiro *</label>
+              <select 
+                value={form.guardianId} 
+                onChange={e => setForm(p => ({ ...p, guardianId: e.target.value }))} 
+                className="select"
+              >
+                <option value="">Selecione o responsável...</option>
+                {children.find(c => c.id === form.childId)?.guardians?.map((g: any) => (
+                  <option key={g.guardianId} value={g.guardianId}>{g.guardian.fullName}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <label className="label">Descrição *</label>
             <input type="text" placeholder="Ex: Mensalidade Junho/2025"
@@ -386,6 +481,24 @@ export default function FinancePage() {
             <label className="label">Mês de Referência</label>
             <input type="month" value={form.referenceMonth}
               onChange={e => setForm(p => ({ ...p, referenceMonth: e.target.value }))} className="input" />
+          </div>
+
+          <div className="pt-4 border-t space-y-4">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Boleto Externo (Opcional)</p>
+            <div className="space-y-4">
+              <div>
+                <label className="label">URL do Boleto (Link PDF)</label>
+                <input type="url" placeholder="https://..."
+                  value={form.boletoUrl} onChange={e => setForm(p => ({ ...p, boletoUrl: e.target.value }))}
+                  className="input" />
+              </div>
+              <div>
+                <label className="label">Código de Barras</label>
+                <input type="text" placeholder="000000.00000..."
+                  value={form.boletoBarcode} onChange={e => setForm(p => ({ ...p, boletoBarcode: e.target.value }))}
+                  className="input" />
+              </div>
+            </div>
           </div>
           <div className="pt-4 flex justify-end gap-3 border-t">
             <button type="button" onClick={() => setShowModal(false)} className="btn-ghost" disabled={saving}>Cancelar</button>

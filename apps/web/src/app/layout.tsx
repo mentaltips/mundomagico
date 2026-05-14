@@ -11,6 +11,8 @@ export const metadata: Metadata = {
 }
 
 import { Providers } from '../components/Providers'
+import { CookieBanner } from '../components/CookieBanner'
+import { AnalyticsTracker } from '../components/AnalyticsTracker'
 
 export default function RootLayout({
   children,
@@ -22,6 +24,8 @@ export default function RootLayout({
       <body className="font-fredoka antialiased text-gray-900 bg-white selection:bg-primary/20 selection:text-primary">
         <Providers>
           {children}
+          <CookieBanner />
+          <AnalyticsTracker />
         </Providers>
       </body>
     </html>
