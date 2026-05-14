@@ -192,31 +192,31 @@ export default function FinancePage() {
 
       {/* ── Summary cards ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="card p-5 flex items-center gap-4">
-          <div className="w-11 h-11 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center shrink-0">
+        <div className="card p-5 flex items-center gap-4 bg-card border-border">
+          <div className="w-11 h-11 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center shrink-0">
             <CheckCircle2 size={20} />
           </div>
           <div>
-            <p className="text-xl font-black text-gray-900">{fmtBRL(totalPaid)}</p>
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Recebido</p>
-            <p className="text-[10px] text-emerald-600 font-bold mt-0.5">
+            <p className="text-xl font-black text-foreground">{fmtBRL(totalPaid)}</p>
+            <p className="label mt-0.5">Recebido</p>
+            <p className="text-[10px] text-emerald-500 font-bold mt-0.5">
               {invoices.filter(i => i.status === 'PAGO').length} fatura(s) paga(s)
             </p>
           </div>
         </div>
-        <div className="card p-5 flex items-center gap-4">
-          <div className="w-11 h-11 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center shrink-0">
+        <div className="card p-5 flex items-center gap-4 bg-card border-border">
+          <div className="w-11 h-11 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center shrink-0">
             <Clock size={20} />
           </div>
           <div>
-            <p className="text-xl font-black text-gray-900">{fmtBRL(totalPending)}</p>
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">A Receber</p>
-            <p className="text-[10px] text-amber-600 font-bold mt-0.5">
+            <p className="text-xl font-black text-foreground">{fmtBRL(totalPending)}</p>
+            <p className="label mt-0.5">A Receber</p>
+            <p className="text-[10px] text-amber-500 font-bold mt-0.5">
               {invoices.filter(i => i.status === 'PENDENTE').length} pendente(s)
             </p>
           </div>
         </div>
-        <div className="bg-rose-600 rounded-2xl p-5 flex items-center gap-4 shadow-sm shadow-rose-200">
+        <div className="bg-rose-600 rounded-2xl p-5 flex items-center gap-4 shadow-lg shadow-rose-600/20">
           <div className="w-11 h-11 bg-white/20 text-white rounded-xl flex items-center justify-center shrink-0">
             <AlertCircle size={20} />
           </div>
@@ -238,8 +238,8 @@ export default function FinancePage() {
             onClick={() => setFilterStatus(f.value)}
             className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wide transition-all ${
               filterStatus === f.value
-                ? 'bg-gray-900 text-white shadow-sm'
-                : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                : 'bg-card text-muted-foreground border border-border hover:border-primary/50'
             }`}
           >
             {f.label}
@@ -247,7 +247,7 @@ export default function FinancePage() {
         ))}
         <button
           onClick={fetchInvoices}
-          className="ml-auto w-9 h-9 btn-ghost rounded-xl flex items-center justify-center p-0"
+          className="ml-auto w-9 h-9 btn-ghost rounded-xl flex items-center justify-center p-0 border border-border bg-card"
           title="Atualizar"
         >
           <RefreshCw size={15} />
@@ -255,7 +255,7 @@ export default function FinancePage() {
       </div>
 
       {/* ── Table ───────────────────────────────────────────────────────── */}
-      <div className="table-container">
+      <div className="table-container bg-card border-border">
         {loading ? (
           <div className="p-6 space-y-3">
             {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14 w-full" />)}
@@ -274,14 +274,14 @@ export default function FinancePage() {
         ) : (
           <>
             {/* Desktop header */}
-            <div className="hidden md:grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-5 py-3 bg-gray-50/70 border-b border-gray-100">
+            <div className="hidden md:grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-5 py-3 bg-accent/20 border-b border-border">
               <span className="table-header text-left">Aluno</span>
               <span className="table-header">Descrição</span>
               <span className="table-header">Valor</span>
               <span className="table-header">Vencimento</span>
               <span className="table-header">Status</span>
             </div>
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-border">
               {invoices.map((inv, i) => {
                 const s = STATUS[inv.status] ?? STATUS.PENDENTE
                 const Icon = s.icon
@@ -291,16 +291,16 @@ export default function FinancePage() {
                     key={inv.id}
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     transition={{ delay: i * 0.02 }}
-                    className="flex items-center gap-3 md:gap-4 px-5 py-3.5 hover:bg-gray-50/50 transition-colors group"
+                    className="flex items-center gap-3 md:gap-4 px-5 py-3.5 hover:bg-accent/10 transition-colors group"
                   >
                     <Avatar name={name} photoUrl={inv.child?.photoUrl} size="sm" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-black text-gray-900 text-sm truncate">{name}</p>
-                      <p className="text-[11px] text-gray-400 font-medium truncate">{inv.description}</p>
+                      <p className="font-black text-foreground text-sm truncate">{name}</p>
+                      <p className="text-[11px] text-muted-foreground font-medium truncate">{inv.description}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-black text-gray-900 text-sm">{fmtBRL(inv.amount)}</p>
-                      <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                      <p className="font-black text-foreground text-sm">{fmtBRL(inv.amount)}</p>
+                      <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
                         {format(new Date(inv.dueDate), 'dd/MM/yy')}
                       </p>
                     </div>
@@ -310,25 +310,25 @@ export default function FinancePage() {
                     <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                       {inv.status === 'PENDENTE' && (
                         <button onClick={() => handleCancel(inv.id)}
-                          className="w-8 h-8 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center hover:bg-amber-100 transition-colors" title="Cancelar">
+                          className="w-8 h-8 bg-amber-500/10 text-amber-500 rounded-lg flex items-center justify-center hover:bg-amber-500/20 transition-colors" title="Cancelar">
                           <X size={14} />
                         </button>
                       )}
                       {inv.status !== 'PAGO' && (
                         <button onClick={() => handleDelete(inv.id)}
-                          className="w-8 h-8 bg-red-50 text-red-600 rounded-lg flex items-center justify-center hover:bg-red-100 transition-colors" title="Excluir">
+                          className="w-8 h-8 bg-red-500/10 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-500/20 transition-colors" title="Excluir">
                           <Trash2 size={14} />
                         </button>
                       )}
                       {inv.boletoUrl && (
                         <a href={inv.boletoUrl} target="_blank" rel="noreferrer"
-                          className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-100 transition-colors" title="Boleto">
+                          className="w-8 h-8 bg-blue-500/10 text-blue-500 rounded-lg flex items-center justify-center hover:bg-blue-500/20 transition-colors" title="Boleto">
                           <Barcode size={14} />
                         </a>
                       )}
                       {inv.pixCopyPaste && (
                         <button onClick={() => { navigator.clipboard.writeText(inv.pixCopyPaste!); toast.success('PIX copiado!') }}
-                          className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center hover:bg-emerald-100 transition-colors" title="Copiar PIX">
+                          className="w-8 h-8 bg-emerald-500/10 text-emerald-500 rounded-lg flex items-center justify-center hover:bg-emerald-500/20 transition-colors" title="Copiar PIX">
                           <QrCode size={14} />
                         </button>
                       )}

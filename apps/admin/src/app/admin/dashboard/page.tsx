@@ -255,8 +255,8 @@ export default function DashboardPage() {
           <div className="flex-1 space-y-3 overflow-y-auto max-h-[280px] pr-1">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <CheckCircle2 className="text-gray-200 mb-2" size={28} />
-                <p className="text-xs text-gray-400 font-bold">Tudo em dia!</p>
+                <CheckCircle2 className="text-muted/20 mb-2" size={28} />
+                <p className="text-xs text-muted-foreground font-bold">Tudo em dia!</p>
               </div>
             ) : (
               notifications.slice(0, 6).map((n, i) => {
@@ -266,21 +266,21 @@ export default function DashboardPage() {
                     key={n.id}
                     href={n.href ?? '#'}
                     className={`flex items-start gap-3 p-3 rounded-xl transition-colors group ${
-                      isUrgent ? 'bg-rose-50 hover:bg-rose-100' : 'hover:bg-gray-50'
+                      isUrgent ? 'bg-rose-500/10 hover:bg-rose-500/20' : 'hover:bg-accent/50'
                     }`}
                   >
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      isUrgent ? 'bg-rose-100 text-rose-600' : 'bg-gray-100 text-gray-500'
+                      isUrgent ? 'bg-rose-500/20 text-rose-500' : 'bg-accent text-muted-foreground'
                     }`}>
                       <Activity size={13} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-black truncate ${isUrgent ? 'text-rose-800' : 'text-gray-800'}`}>
+                      <p className={`text-xs font-black truncate ${isUrgent ? 'text-rose-500' : 'text-foreground'}`}>
                         {n.title}
                       </p>
-                      <p className="text-[10px] text-gray-400 font-medium mt-0.5 line-clamp-1">{n.body}</p>
+                      <p className="text-[10px] text-muted-foreground font-medium mt-0.5 line-clamp-1">{n.body}</p>
                     </div>
-                    <ChevronRight size={12} className="text-gray-300 shrink-0 mt-1 group-hover:text-gray-500 transition-colors" />
+                    <ChevronRight size={12} className="text-muted/30 shrink-0 mt-1 group-hover:text-foreground transition-colors" />
                   </Link>
                 )
               })
@@ -298,7 +298,7 @@ export default function DashboardPage() {
 
       {/* ── Quick Actions ────────────────────────────────────────────────── */}
       <div>
-        <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Acesso Rápido</p>
+        <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4">Acesso Rápido</p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {quickActions.map((action, i) => {
             const Icon = action.icon
@@ -311,7 +311,7 @@ export default function DashboardPage() {
               >
                 <Link
                   href={action.href}
-                  className="card-interactive p-5 flex items-center gap-4 group"
+                  className="card-interactive p-5 flex items-center gap-4 group bg-card border-border"
                 >
                   <div className={`w-11 h-11 ${action.color} shadow-lg ${action.shadow} rounded-xl flex items-center justify-center shrink-0 text-white group-hover:scale-110 transition-transform`}>
                     <Icon size={20} />
@@ -333,11 +333,11 @@ export default function DashboardPage() {
         {/* Pending invoices summary */}
         <motion.div
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-          className="card p-5"
+          className="card p-5 bg-card border-border"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-black text-gray-900 text-sm">Financeiro</h3>
-            <Link href="/admin/finance" className="text-[10px] font-black text-lime-600 hover:text-lime-700 flex items-center gap-0.5">
+            <h3 className="font-black text-foreground text-sm">Financeiro</h3>
+            <Link href="/admin/finance" className="text-[10px] font-black text-primary hover:text-primary/80 flex items-center gap-0.5">
               Ver tudo <ChevronRight size={12} />
             </Link>
           </div>
@@ -349,18 +349,18 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: 'Recebido',  value: `R$ ${(stats?.totalPaid ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,  color: 'text-emerald-600 bg-emerald-50', icon: CheckCircle2 },
-                { label: 'Pendente', value: `${stats?.pendingInvoices ?? 0} fat.`,  color: 'text-amber-600 bg-amber-50',   icon: Clock },
-                { label: 'Vencido',  value: `${stats?.overdueInvoices ?? 0} fat.`,  color: 'text-rose-600 bg-rose-50',     icon: AlertCircle },
+                { label: 'Recebido',  value: `R$ ${(stats?.totalPaid ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,  color: 'text-emerald-500 bg-emerald-500/10', icon: CheckCircle2 },
+                { label: 'Pendente', value: `${stats?.pendingInvoices ?? 0} fat.`,  color: 'text-amber-500 bg-amber-500/10',   icon: Clock },
+                { label: 'Vencido',  value: `${stats?.overdueInvoices ?? 0} fat.`,  color: 'text-rose-500 bg-rose-500/10',     icon: AlertCircle },
               ].map((item, i) => {
                 const Icon = item.icon
                 return (
-                  <div key={i} className="flex flex-col items-center text-center p-3 rounded-xl bg-gray-50 gap-1.5">
+                  <div key={i} className="flex flex-col items-center text-center p-3 rounded-xl bg-accent/20 gap-1.5 border border-border/50">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.color}`}>
                       <Icon size={14} />
                     </div>
-                    <p className="text-xs font-black text-gray-900 leading-tight">{item.value}</p>
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{item.label}</p>
+                    <p className="text-xs font-black text-foreground leading-tight">{item.value}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{item.label}</p>
                   </div>
                 )
               })}
@@ -371,11 +371,11 @@ export default function DashboardPage() {
         {/* Announcements preview */}
         <motion.div
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
-          className="card p-5"
+          className="card p-5 bg-card border-border"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-black text-gray-900 text-sm">Comunicados Recentes</h3>
-            <Link href="/admin/announcements" className="text-[10px] font-black text-lime-600 hover:text-lime-700 flex items-center gap-0.5">
+            <h3 className="font-black text-foreground text-sm">Comunicados Recentes</h3>
+            <Link href="/admin/announcements" className="text-[10px] font-black text-primary hover:text-primary/80 flex items-center gap-0.5">
               Ver tudo <ChevronRight size={12} />
             </Link>
           </div>
@@ -404,7 +404,7 @@ function RecentAnnouncements() {
 
   if (announcements.length === 0) {
     return (
-      <p className="text-xs text-gray-400 font-medium text-center py-4">
+      <p className="text-xs text-muted-foreground font-medium text-center py-4">
         Nenhum comunicado enviado ainda
       </p>
     )
@@ -413,15 +413,15 @@ function RecentAnnouncements() {
   return (
     <div className="space-y-2">
       {announcements.map((ann) => (
-        <div key={ann.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+        <div key={ann.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-accent/50 transition-colors border border-transparent hover:border-border">
           <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-            ann.priority === 'URGENTE' ? 'bg-rose-50 text-rose-600' : 'bg-lime-50 text-lime-700'
+            ann.priority === 'URGENTE' ? 'bg-rose-500/10 text-rose-500' : 'bg-primary/10 text-primary'
           }`}>
             <MessageSquare size={12} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-black text-gray-900 truncate">{ann.title}</p>
-            <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+            <p className="text-xs font-black text-foreground truncate">{ann.title}</p>
+            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
               {new Date(ann.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
             </p>
           </div>

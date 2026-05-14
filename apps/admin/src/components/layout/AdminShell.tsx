@@ -163,7 +163,7 @@ export function AdminSidebar() {
       <motion.aside
         initial={false}
         animate={{ width: collapsed ? 80 : 280 }}
-        className="hidden lg:flex flex-col h-screen sticky top-0 bg-card border-r border-border transition-all duration-300 z-50 overflow-visible"
+        className="hidden lg:flex flex-col h-screen sticky top-0 bg-card border-r border-border transition-all duration-300 z-50 overflow-visible shadow-xl"
       >
         <SidebarContent />
         {/* Collapse Toggle */}
@@ -346,56 +346,56 @@ function NotificationDropdown() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[200]"
+            className="absolute right-0 top-full mt-2 w-80 bg-card rounded-2xl shadow-2xl border border-border overflow-hidden z-[200]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-accent/20">
               <div>
-                <p className="font-black text-gray-900 text-sm">Notificações</p>
+                <p className="font-black text-foreground text-sm">Notificações</p>
                 {unread > 0 && (
-                  <p className="text-[10px] text-gray-400 font-medium mt-0.5">{unread} não lidas</p>
+                  <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{unread} não lidas</p>
                 )}
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="p-1.5 text-gray-300 hover:text-gray-500 rounded-lg transition-colors"
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors"
               >
                 <X size={14} />
               </button>
             </div>
 
             {/* List */}
-            <div className="max-h-[400px] overflow-y-auto divide-y divide-gray-50">
+            <div className="max-h-[400px] overflow-y-auto divide-y divide-border">
               {notifications.length === 0 ? (
                 <div className="py-12 text-center">
-                  <CheckCheck className="h-10 w-10 text-gray-200 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400 font-medium">Tudo em dia!</p>
-                  <p className="text-xs text-gray-300 mt-0.5">Nenhuma notificação no momento</p>
+                  <CheckCheck className="h-10 w-10 text-muted/30 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground font-medium">Tudo em dia!</p>
+                  <p className="text-xs text-muted/50 mt-0.5">Nenhuma notificação no momento</p>
                 </div>
               ) : (
                 notifications.map((n) => {
                   const Icon = NOTIF_ICONS[n.type] ?? Bell
-                  const color = NOTIF_COLORS[n.type] ?? 'text-gray-500 bg-gray-50'
+                  const color = NOTIF_COLORS[n.type] ?? 'text-muted-foreground bg-accent'
                   const isUrgent = n.priority === 'URGENTE'
                   return (
                     <button
                       key={n.id}
                       onClick={() => { setOpen(false); if (n.href) router.push(n.href) }}
-                      className={`w-full flex items-start gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors ${isUrgent ? 'bg-rose-50/40' : ''}`}
+                      className={`w-full flex items-start gap-3 px-5 py-4 text-left hover:bg-accent transition-colors ${isUrgent ? 'bg-rose-500/5' : ''}`}
                     >
                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${color}`}>
                         <Icon size={14} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <p className={`text-xs font-black truncate ${isUrgent ? 'text-rose-700' : 'text-gray-900'}`}>
+                          <p className={`text-xs font-black truncate ${isUrgent ? 'text-rose-500' : 'text-foreground'}`}>
                             {n.title}
                           </p>
-                          <span className="text-[10px] text-gray-300 font-medium shrink-0">
+                          <span className="text-[10px] text-muted-foreground font-medium shrink-0">
                             {timeAgo(n.time)}
                           </span>
                         </div>
-                        <p className="text-[11px] text-gray-500 font-medium mt-0.5 line-clamp-2 leading-relaxed">
+                        <p className="text-[11px] text-muted-foreground font-medium mt-0.5 line-clamp-2 leading-relaxed">
                           {n.body}
                         </p>
                       </div>
@@ -429,7 +429,7 @@ export function AdminHeader() {
   const { setIsOpen } = useContext(SidebarContext)
 
   return (
-    <header className="h-20 bg-card/80 backdrop-blur-md border-b border-border px-4 md:px-8 flex items-center justify-between sticky top-0 z-40">
+    <header className="h-20 bg-card/80 backdrop-blur-md border-b border-border px-4 md:px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
       <div className="flex items-center gap-4 flex-1">
         <button
           onClick={() => setIsOpen(true)}

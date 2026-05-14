@@ -9,7 +9,8 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
   const apiUrl = (process.env.API_URL || 'http://localhost:3333').replace(/\/$/, '')
   
   const url = new URL(req.url)
-  const path = pathOverride || url.pathname.replace(/^\/api/, '')
+  // Mantém o /api pois a API no servidor Express espera este prefixo
+  const path = pathOverride || url.pathname
   const queryString = url.search
 
   const headers: Record<string, string> = {

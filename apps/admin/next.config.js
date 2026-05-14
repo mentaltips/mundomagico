@@ -40,8 +40,12 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/((?!auth).*)',
-        destination: `${process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.mundomagicocajamar.com.br'}/api/:1`,
+        source: '/api/auth/:path*',
+        destination: '/api/auth/:path*', // Mantém local
+      },
+      {
+        source: '/api/:path*',
+        destination: 'https://api.mundomagicocajamar.com.br/api/:path*',
       },
     ]
   },
