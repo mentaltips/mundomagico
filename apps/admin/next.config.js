@@ -36,12 +36,12 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
 
-  // Proxy para a API no VPS
+  // Proxy para a API no VPS (Exceto Auth que roda no Next.js)
   async rewrites() {
     return [
       {
-        source: '/api/:path*',
-        destination: `${process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'}/api/:path*`,
+        source: '/api/((?!auth).*)',
+        destination: `${process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.mundomagicocajamar.com.br'}/api/:1`,
       },
     ]
   },
