@@ -1,261 +1,339 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Users, Plus, MoreVertical, X, Check,
-  Clock, MapPin, ChevronRight,
-  TrendingUp, Loader2
+import { 
+  Plus, Users, Search, MoreVertical, 
+  Trash2, Edit2, UserPlus, Clock, 
+  CheckCircle2, AlertCircle, LayoutGrid,
+  ChevronRight, Calendar, MapPin, Loader2
 } from 'lucide-react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Modal, PageHeader, EmptyState, Badge, LoadingState, StatCard, Avatar } from '@/components/ui'
 import toast from 'react-hot-toast'
 
-interface Group {
-  id: string
-  name: string
-  room?: string
-  capacity?: number
-  shift: string
-  _count: {
-    students: number
-    children: number
-  }
-}
-
 export default function GroupsPage() {
-  const queryClient = useQueryClient()
-  const [showModal, setShowModal] = useState(false)
+  const [groups, setGroups] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ name: '', shift: 'MANHA', capacity: '', room: '' })
+  const [showModal, setShowModal] = useState(false)
+  const [search, setSearch] = useState('')
 
-  const { data: groups, isLoading, error } = useQuery<Group[]>({
-    queryKey: ['groups'],
-    queryFn: () => fetch('/api/groups').then(r => r.json())
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    capacity: 20,
+    startTime: '07:00',
+    endTime: '17:00'
   })
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const fetchGroups = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch('/api/groups')
+      if (res.ok) {
+        const data = await res.json()
+        setGroups(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      toast.error('Erro ao carregar turmas')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchGroups()
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.name.trim()) { toast.error('Informe o nome da turma'); return }
+    if (!formData.name) {
+      toast.error('O nome da turma é obrigatório')
+      return
+    }
+
     setSaving(true)
     try {
       const res = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          shift: form.shift,
-          capacity: form.capacity ? Number(form.capacity) : undefined,
-          room: form.room || undefined,
-        }),
+        body: JSON.stringify(formData)
       })
+
       if (res.ok) {
-        toast.success('Turma criada com sucesso! 🎉')
+        toast.success('Turma criada com sucesso!')
         setShowModal(false)
-        setForm({ name: '', shift: 'MANHA', capacity: '', room: '' })
-        queryClient.invalidateQueries({ queryKey: ['groups'] })
+        setFormData({ name: '', description: '', capacity: 20, startTime: '07:00', endTime: '17:00' })
+        fetchGroups()
       } else {
         toast.error('Erro ao criar turma')
       }
-    } catch { toast.error('Erro ao criar turma') }
-    finally { setSaving(false) }
+    } catch (error) {
+      toast.error('Erro ao criar turma')
+    } finally {
+      setSaving(false)
+    }
   }
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir esta turma?')) return
+    try {
+      const res = await fetch(`/api/groups?id=${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Turma excluída')
+        fetchGroups()
+      } else {
+        toast.error('Erro ao excluir')
+      }
+    } catch {
+      toast.error('Erro ao excluir')
+    }
+  }
+
+  const filteredGroups = groups.filter(g => 
+    g.name.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const totalStudents = groups.reduce((acc, g) => acc + (g._count?.children || 0), 0)
+  const totalCapacity = groups.reduce((acc, g) => acc + (g.capacity || 0), 0)
+  const occupancyRate = totalCapacity > 0 ? Math.round((totalStudents / totalCapacity) * 100) : 0
+
   return (
-    <div className="p-3 sm:p-4 md:p-8 animate-in pb-24 lg:pb-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Gestão de <span className="text-indigo-600">Turmas</span></h1>
-          <p className="text-gray-500 font-medium">Organize salas, horários e capacidade de atendimento.</p>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all w-full md:w-auto"
-        >
-          <Plus size={18} />
-          Nova Turma
-        </button>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
-              <Users size={20} />
-            </div>
-            <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Total de Turmas</span>
-          </div>
-          <div className="text-3xl font-black text-gray-900">{groups?.length || 0}</div>
-        </div>
-        <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
-              <TrendingUp size={20} />
-            </div>
-            <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Ocupação Média</span>
-          </div>
-          <div className="text-3xl font-black text-gray-900">84%</div>
-        </div>
-      </div>
-
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
-          <Loader2 className="text-indigo-600 animate-spin mb-4" size={40} />
-          <p className="text-gray-400 font-black uppercase text-xs tracking-widest">Carregando Turmas...</p>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className="p-12 text-center bg-rose-50 rounded-[2rem] border border-rose-100 text-rose-600">
-          <p className="font-black">Erro ao carregar turmas.</p>
-        </div>
-      )}
-
-      {/* Groups Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {groups?.map((group, i) => (
-          <motion.div 
-            key={group.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all p-8 group relative overflow-hidden"
+    <div className="page animate-in">
+      <PageHeader 
+        title="Gestão de Turmas" 
+        subtitle="Organize as salas, horários e capacidade de atendimento."
+        icon={<LayoutGrid size={24} />}
+        actions={
+          <button 
+            onClick={() => setShowModal(true)}
+            className="btn-primary"
           >
-            {/* Color Accent */}
-            <div className={`absolute top-0 left-0 w-full h-2 ${
-              i % 3 === 0 ? 'bg-rose-400' : i % 3 === 1 ? 'bg-indigo-400' : 'bg-emerald-400'
-            }`} />
+            <Plus size={18} /> Nova Turma
+          </button>
+        }
+      />
 
-            <div className="flex justify-between items-start mb-6">
-              <div className="p-4 bg-gray-50 rounded-2xl text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                <Users size={24} />
-              </div>
-              <button className="text-gray-300 hover:text-gray-600 transition-colors">
-                <MoreVertical size={20} />
-              </button>
-            </div>
-
-            <h3 className="text-2xl font-black text-gray-900 mb-2">{group.name}</h3>
-            <p className="text-gray-400 font-medium text-sm mb-6 flex items-center gap-2">
-              <MapPin size={14} />
-              {group.room || 'Sem sala definida'}
-            </p>
-
-            <div className="space-y-4 mb-8">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500 font-bold">Capacidade</span>
-                <span className="font-black text-gray-900">{group._count.students + group._count.children}/{group.capacity || '∞'}</span>
-              </div>
-              <div className="w-full h-2 bg-gray-50 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full rounded-full ${
-                    i % 3 === 0 ? 'bg-rose-400' : i % 3 === 1 ? 'bg-indigo-400' : 'bg-emerald-400'
-                  }`}
-                  style={{ width: `${Math.min(((group._count.students + group._count.children) / (group.capacity || 1)) * 100, 100)}%` }}
-                />
-              </div>
-              <div className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest">
-                <Clock size={14} />
-                {group.shift}
-              </div>
-            </div>
-
-            <button className="w-full py-4 bg-gray-50 text-gray-600 rounded-2xl font-black text-sm flex items-center justify-center gap-2 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-              Ver Alunos
-              <ChevronRight size={18} />
-            </button>
-          </motion.div>
-        ))}
+      {/* Stats Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard 
+          label="Total de Turmas" 
+          value={groups.length.toString()} 
+          icon={<LayoutGrid size={20} />} 
+          color="text-primary bg-primary/10" 
+        />
+        <StatCard 
+          label="Total de Alunos" 
+          value={totalStudents.toString()} 
+          icon={<Users size={20} />} 
+          color="text-blue-500 bg-blue-500/10" 
+        />
+        <StatCard 
+          label="Ocupação Média" 
+          value={`${occupancyRate}%`} 
+          icon={<TrendingUp size={20} />} 
+          color={occupancyRate > 90 ? 'text-rose-500 bg-rose-500/10' : 'text-emerald-500 bg-emerald-500/10'} 
+          trend={occupancyRate > 90 ? 'Quase lotado' : 'Capacidade estável'}
+          trendUp={occupancyRate > 90}
+        />
       </div>
+
+      {/* Filters */}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+        <input 
+          type="text" 
+          placeholder="Buscar por nome da turma..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="input pl-10"
+        />
+      </div>
+
+      {loading ? (
+        <LoadingState label="Carregando turmas..." />
+      ) : filteredGroups.length === 0 ? (
+        <EmptyState 
+          icon={<LayoutGrid size={32} />}
+          title="Nenhuma turma encontrada"
+          description={search ? "Não encontramos turmas com esse nome." : "Você ainda não cadastrou nenhuma turma."}
+          action={!search && (
+            <button onClick={() => setShowModal(true)} className="btn-primary">
+              Criar Primeira Turma
+            </button>
+          )}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredGroups.map((group, i) => {
+            const count = group._count?.children || 0
+            const cap = group.capacity || 20
+            const percent = Math.min(100, Math.round((count / cap) * 100))
+            
+            return (
+              <motion.div
+                key={group.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="card-hover p-6 flex flex-col group relative"
+              >
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black text-xl">
+                      {group.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-foreground group-hover:text-primary transition-colors">
+                        {group.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Clock size={12} className="text-muted-foreground" />
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                          {group.startTime}h - {group.endTime}h
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl transition-colors">
+                    <MoreVertical size={18} />
+                  </button>
+                </div>
+
+                <div className="space-y-4 mb-8 flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-muted-foreground">Ocupação</span>
+                    <span className={`text-xs font-black ${percent > 90 ? 'text-rose-500' : 'text-foreground'}`}>
+                      {count} / {cap} alunos
+                    </span>
+                  </div>
+                  <div className="h-2 w-full bg-accent rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${percent}%` }}
+                      className={`h-full rounded-full ${percent > 90 ? 'bg-rose-500' : 'bg-primary'}`}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground font-medium line-clamp-2">
+                    {group.description || 'Nenhuma descrição informada para esta turma.'}
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-border flex items-center justify-between">
+                  <div className="flex -space-x-2">
+                    {[1, 2, 3].map(s => (
+                      <div key={s} className="w-7 h-7 rounded-full bg-accent border-2 border-card flex items-center justify-center text-[10px] font-bold">
+                        ?
+                      </div>
+                    ))}
+                    {count > 3 && (
+                      <div className="w-7 h-7 rounded-full bg-primary/10 border-2 border-card flex items-center justify-center text-[9px] font-black text-primary">
+                        +{count - 3}
+                      </div>
+                    )}
+                  </div>
+                  <button className="text-xs font-black text-primary flex items-center gap-1 hover:underline">
+                    Gerenciar Turma <ChevronRight size={14} />
+                  </button>
+                </div>
+              </motion.div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Modal: Nova Turma */}
-      <AnimatePresence>
-        {showModal && (
-          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowModal(false)}
-              className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+      <Modal 
+        open={showModal} 
+        onClose={() => setShowModal(false)}
+        title="Nova Turma"
+        subtitle="Cadastre uma nova sala de aula no sistema."
+      >
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="label">Nome da Turma *</label>
+            <input 
+              type="text" 
+              placeholder="Ex: Maternal II - Manhã"
+              value={formData.name}
+              onChange={e => setFormData({...formData, name: e.target.value})}
+              className="input"
             />
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 40 }}
-              className="bg-white w-full sm:max-w-md rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl relative z-10 p-8 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-6 sm:hidden" />
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-black text-gray-900">Nova Turma</h2>
-                <button onClick={() => setShowModal(false)} className="p-2.5 hover:bg-gray-100 rounded-2xl transition-colors text-gray-400">
-                  <X size={20} />
-                </button>
-              </div>
-
-              <form onSubmit={handleCreate} className="space-y-5">
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Nome da Turma *</label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Jardim I"
-                    value={form.name}
-                    onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Turno</label>
-                  <select
-                    value={form.shift}
-                    onChange={e => setForm(p => ({ ...p, shift: e.target.value }))}
-                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all appearance-none"
-                  >
-                    <option value="MANHA">☀️ Manhã</option>
-                    <option value="TARDE">🌤️ Tarde</option>
-                    <option value="INTEGRAL">📅 Integral</option>
-                    <option value="NOTURNO">🌙 Noturno</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Capacidade</label>
-                    <input
-                      type="number"
-                      placeholder="Ex: 20"
-                      min={1}
-                      value={form.capacity}
-                      onChange={e => setForm(p => ({ ...p, capacity: e.target.value }))}
-                      className="w-full px-4 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Sala</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: Sala 3"
-                      value={form.room}
-                      onChange={e => setForm(p => ({ ...p, room: e.target.value }))}
-                      className="w-full px-4 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-4 rounded-2xl border border-gray-200 font-black text-sm text-gray-500 hover:bg-gray-50 transition-all">
-                    Cancelar
-                  </button>
-                  <button type="submit" disabled={saving} className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white font-black text-sm hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                    {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check size={16} />}
-                    {saving ? 'Salvando...' : 'Criar Turma'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+
+          <div>
+            <label className="label">Descrição</label>
+            <textarea 
+              rows={3}
+              placeholder="Breve descrição da turma..."
+              value={formData.description}
+              onChange={e => setFormData({...formData, description: e.target.value})}
+              className="input"
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="col-span-1">
+              <label className="label">Capacidade</label>
+              <input 
+                type="number" 
+                value={formData.capacity}
+                onChange={e => setFormData({...formData, capacity: parseInt(e.target.value)})}
+                className="input"
+              />
+            </div>
+            <div className="col-span-1">
+              <label className="label">Início</label>
+              <input 
+                type="time" 
+                value={formData.startTime}
+                onChange={e => setFormData({...formData, startTime: e.target.value})}
+                className="input"
+              />
+            </div>
+            <div className="col-span-1">
+              <label className="label">Fim</label>
+              <input 
+                type="time" 
+                value={formData.endTime}
+                onChange={e => setFormData({...formData, endTime: e.target.value})}
+                className="input"
+              />
+            </div>
+          </div>
+
+          <div className="pt-4 flex gap-3 border-t border-border">
+            <button type="button" onClick={() => setShowModal(false)} className="btn-ghost flex-1">Cancelar</button>
+            <button 
+              type="submit"
+              disabled={saving}
+              className="btn-primary flex-1 gap-2"
+            >
+              {saving ? <Loader2 size={18} className="animate-spin" /> : 'Criar Turma'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
+  )
+}
+
+function TrendingUp(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+      <polyline points="17 6 23 6 23 12" />
+    </svg>
   )
 }

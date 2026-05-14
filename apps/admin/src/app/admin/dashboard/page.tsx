@@ -5,7 +5,7 @@ import {
   Users, MessageSquare, CreditCard, TrendingUp,
   Calendar, ArrowUpRight, HeartPulse, Baby,
   ClipboardCheck, Bell, AlertCircle, BarChart2,
-  ChevronRight, Activity, Clock, CheckCircle2,
+  ChevronRight, Activity, Clock, CheckCircle2, LayoutGrid, Megaphone, Plus
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -13,7 +13,7 @@ import {
 } from 'recharts'
 import { useQuery } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
-import { StatCard, LoadingState, EmptyState, Skeleton } from '../../../components/ui'
+import { StatCard, LoadingState, EmptyState, Skeleton, PageHeader, Avatar, Badge } from '@/components/ui'
 import Link from 'next/link'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -48,7 +48,6 @@ interface DashboardStats {
   weeklyAttendance: { day: string; val: number }[]
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { data: session } = useSession()
   const firstName = session?.user?.name?.split(' ')[0] ?? 'Admin'
@@ -69,325 +68,271 @@ export default function DashboardPage() {
   const statCards = [
     {
       label: 'Crianças Ativas',
-      value: isLoading ? '—' : (stats?.activeAlunos ?? 0),
-      icon: <Baby size={18} />,
+      value: isLoading ? '—' : (stats?.activeAlunos ?? 0).toString(),
+      icon: <Baby size={20} />,
       trend: stats?.activeAlunos ? `${stats.activeAlunos} total` : undefined,
-      color: 'text-lime-700 bg-lime-100',
+      color: 'text-primary bg-primary/10',
       href: '/admin/children',
     },
     {
       label: 'Turmas Ativas',
-      value: isLoading ? '—' : (stats?.totalGroups ?? 0),
-      icon: <Users size={18} />,
-      color: 'text-blue-700 bg-blue-100',
+      value: isLoading ? '—' : (stats?.totalGroups ?? 0).toString(),
+      icon: <LayoutGrid size={20} />,
+      color: 'text-blue-500 bg-blue-500/10',
       href: '/admin/groups',
     },
     {
       label: 'Faturas Pendentes',
-      value: isLoading ? '—' : (stats?.pendingInvoices ?? 0),
-      icon: <CreditCard size={18} />,
+      value: isLoading ? '—' : (stats?.pendingInvoices ?? 0).toString(),
+      icon: <CreditCard size={20} />,
       trend: stats?.overdueInvoices ? `${stats.overdueInvoices} vencidas` : undefined,
       trendUp: false,
-      color: 'text-amber-700 bg-amber-100',
+      color: 'text-amber-500 bg-amber-500/10',
       href: '/admin/finance',
     },
     {
       label: 'Frequência Hoje',
       value: isLoading ? '—' : (stats?.attendanceRate ?? '—'),
-      icon: <TrendingUp size={18} />,
+      icon: <TrendingUp size={20} />,
       trend: stats?.attendanceRate,
       trendUp: true,
-      color: 'text-violet-700 bg-violet-100',
+      color: 'text-violet-500 bg-violet-500/10',
       href: '/admin/check-in-out',
     },
   ]
 
   const quickActions = [
-    { icon: ClipboardCheck, label: 'Lançar Rotina', desc: 'Registrar o dia das crianças',  href: '/admin/daily-routine', color: 'bg-lime-500',   shadow: 'shadow-lime-200' },
-    { icon: HeartPulse,     label: 'Saúde',         desc: 'Medicações e alertas',           href: '/admin/health',        color: 'bg-rose-500',   shadow: 'shadow-rose-200' },
-    { icon: MessageSquare,  label: 'Comunicado',    desc: 'Enviar aviso aos pais',          href: '/admin/announcements', color: 'bg-amber-500',  shadow: 'shadow-amber-200' },
-    { icon: Calendar,       label: 'Calendário',    desc: 'Eventos e reuniões',             href: '/admin/calendar',      color: 'bg-blue-500',   shadow: 'shadow-blue-200' },
+    { icon: ClipboardCheck, label: 'Lançar Rotina', desc: 'Registrar o dia',  href: '/admin/daily-routine', color: 'bg-primary',   shadow: 'shadow-primary/20' },
+    { icon: HeartPulse,     label: 'Saúde',         desc: 'Medicações',       href: '/admin/health',        color: 'bg-rose-500',   shadow: 'shadow-rose-500/20' },
+    { icon: Megaphone,      label: 'Comunicado',    desc: 'Aviso aos pais',   href: '/admin/announcements', color: 'bg-amber-500',  shadow: 'shadow-amber-500/20' },
+    { icon: Calendar,       label: 'Calendário',    desc: 'Eventos',          href: '/admin/calendar',      color: 'bg-blue-500',   shadow: 'shadow-blue-500/20' },
   ]
 
   return (
     <div className="page animate-in">
-
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="page-header">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <p className="text-xs font-bold text-muted-foreground capitalize mb-0.5">{today}</p>
-          <h1 className="text-2xl font-black text-foreground">
-            {greeting()}, {firstName} 👋
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">{today}</p>
+          <h1 className="text-3xl font-black text-foreground tracking-tight">
+            {greeting()}, <span className="text-primary">{firstName}</span> 👋
           </h1>
-          <p className="page-subtitle mt-0.5">Aqui está o resumo do seu dia</p>
+          <p className="text-sm text-muted-foreground font-medium mt-1">Aqui está o resumo do que está acontecendo na escola.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/admin/reports" className="btn-secondary text-xs gap-1.5">
-            <BarChart2 size={14} />
-            Relatórios
-          </Link>
-          <Link href="/admin/children/new" className="btn-primary text-xs gap-1.5">
-            <Baby size={14} />
-            Nova criança
+        <div className="flex gap-2 w-full md:w-auto">
+          <Link href="/admin/children/new" className="btn-primary flex-1 md:flex-initial gap-2">
+            <Plus size={18} /> <span className="hidden sm:inline">Nova Criança</span>
           </Link>
         </div>
       </div>
 
-      {/* ── Stat Cards ──────────────────────────────────────────────────── */}
+      {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.07, duration: 0.35 }}
-          >
-            {isLoading ? (
-              <div className="card p-5 space-y-3">
-                <Skeleton className="h-10 w-10" />
-                <Skeleton className="h-7 w-2/3" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
-            ) : (
-              <Link href={card.href} className="block">
-                <StatCard {...card} />
-              </Link>
-            )}
-          </motion.div>
+          <Link key={i} href={card.href} className="block transition-transform active:scale-95">
+            <StatCard {...card} />
+          </Link>
         ))}
       </div>
 
-      {/* ── Main grid ───────────────────────────────────────────────────── */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Chart */}
+        {/* Weekly Chart */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="lg:col-span-2 card p-6"
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          className="lg:col-span-2 card p-6 flex flex-col"
         >
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="font-black text-foreground">Frequência Semanal</h3>
-              <p className="text-xs text-muted-foreground font-medium mt-0.5">Presenças por dia desta semana</p>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Presenças por dia da semana</p>
             </div>
-            <span className="badge badge-lime">Esta semana</span>
+            <Badge label="Esta Semana" variant="primary" size="sm" />
           </div>
-          <div className="h-[220px]">
+          
+          <div className="h-[240px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={stats?.weeklyAttendance ?? weekData}
-                margin={{ top: 0, right: 0, bottom: 0, left: -20 }}
-              >
+              <BarChart data={stats?.weeklyAttendance ?? weekData} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="day"
-                  axisLine={false}
-                  tickLine={false}
+                <XAxis 
+                  dataKey="day" 
+                  axisLine={false} 
+                  tickLine={false} 
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11, fontWeight: 700 }}
                   dy={8}
                 />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, opacity: 0.5 }}
                 />
-                <Tooltip
+                <Tooltip 
                   cursor={{ fill: 'hsl(var(--accent))', radius: 8 }}
-                  contentStyle={{
-                    borderRadius: '16px',
-                    border: 'none',
+                  contentStyle={{ 
+                    borderRadius: '16px', 
+                    border: '1px solid hsl(var(--border))',
                     backgroundColor: 'hsl(var(--card))',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                    fontWeight: 700,
+                    fontWeight: 900,
                     fontSize: 12,
-                    padding: '10px 16px',
+                    padding: '12px',
                   }}
-                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                  itemStyle={{ color: 'hsl(var(--primary))' }}
                   formatter={(v: any) => [`${v} crianças`, 'Presenças']}
                 />
-                <Bar dataKey="val" radius={[8, 8, 0, 0]} barSize={36}>
+                <Bar dataKey="val" radius={[8, 8, 0, 0]} barSize={32}>
                   {(stats?.weeklyAttendance ?? weekData).map((_: any, i: number) => (
-                    <Cell key={i} fill={i === new Date().getDay() - 1 ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.2)'} />
+                    <Cell 
+                      key={i} 
+                      fill={i === (new Date().getDay() - 1) ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.15)'} 
+                    />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
-          {/* Bottom row of mini stats */}
-          {stats && (
-            <div className="grid grid-cols-3 gap-4 mt-6 pt-5 border-t border-border">
-              {[
-                { label: 'Presentes hoje',  value: stats.presentToday ?? '—',   color: 'text-primary' },
-                { label: 'Ausentes',         value: stats.absentToday ?? '—',    color: 'text-destructive' },
-                { label: 'Taxa do mês',      value: stats.attendanceRate ?? '—', color: 'text-sky-600' },
-              ].map((m, i) => (
-                <div key={i} className="text-center">
-                  <p className={`text-xl font-black ${m.color}`}>{m.value}</p>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5">{m.label}</p>
-                </div>
-              ))}
-            </div>
-          )}
+
+          <div className="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-border">
+            {[
+              { label: 'Presentes', value: stats?.presentToday ?? '—', color: 'text-primary' },
+              { label: 'Ausentes',  value: stats?.absentToday ?? '—',  color: 'text-rose-500' },
+              { label: 'Média Mês', value: stats?.attendanceRate ?? '—', color: 'text-blue-500' },
+            ].map((m, i) => (
+              <div key={i} className="text-center">
+                <p className={`text-xl font-black ${m.color}`}>{m.value}</p>
+                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">{m.label}</p>
+              </div>
+            ))}
+          </div>
         </motion.div>
 
-        {/* Notifications feed */}
+        {/* Recent Notifications */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="card p-6 flex flex-col"
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          className="card p-6 flex flex-col bg-card"
         >
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-foreground rounded-xl flex items-center justify-center">
-                <Bell size={14} className="text-background" />
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-foreground rounded-2xl flex items-center justify-center">
+                <Bell size={18} className="text-background" />
               </div>
               <div>
                 <h3 className="font-black text-foreground text-sm">Notificações</h3>
-                {notifications.length > 0 && (
-                  <p className="text-[10px] text-muted-foreground font-medium">{notifications.length} avisos</p>
-                )}
+                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Últimos avisos</p>
               </div>
             </div>
-            {notifications.filter((n) => n.priority === 'URGENTE').length > 0 && (
-              <span className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
-            )}
+            {notifications.length > 0 && <Badge label={notifications.length.toString()} variant="red" size="sm" />}
           </div>
 
-          <div className="flex-1 space-y-3 overflow-y-auto max-h-[280px] pr-1">
+          <div className="flex-1 space-y-3 overflow-y-auto max-h-[350px] pr-1 scrollbar-none">
             {notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <CheckCircle2 className="text-muted/20 mb-2" size={28} />
-                <p className="text-xs text-muted-foreground font-bold">Tudo em dia!</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center opacity-30">
+                <CheckCircle2 size={40} className="mb-4" />
+                <p className="text-xs font-black uppercase tracking-widest">Tudo em dia!</p>
               </div>
             ) : (
-              notifications.slice(0, 6).map((n, i) => {
-                const isUrgent = n.priority === 'URGENTE'
-                return (
-                  <Link
-                    key={n.id}
-                    href={n.href ?? '#'}
-                    className={`flex items-start gap-3 p-3 rounded-xl transition-colors group ${
-                      isUrgent ? 'bg-rose-500/10 hover:bg-rose-500/20' : 'hover:bg-accent/50'
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      isUrgent ? 'bg-rose-500/20 text-rose-500' : 'bg-accent text-muted-foreground'
-                    }`}>
-                      <Activity size={13} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-black truncate ${isUrgent ? 'text-rose-500' : 'text-foreground'}`}>
-                        {n.title}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground font-medium mt-0.5 line-clamp-1">{n.body}</p>
-                    </div>
-                    <ChevronRight size={12} className="text-muted/30 shrink-0 mt-1 group-hover:text-foreground transition-colors" />
-                  </Link>
-                )
-              })
+              notifications.slice(0, 6).map((n, i) => (
+                <Link
+                  key={n.id}
+                  href={n.href ?? '#'}
+                  className={`flex items-start gap-3 p-3 rounded-2xl transition-all border border-transparent hover:border-border hover:bg-accent/20 group`}
+                >
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${n.priority === 'URGENTE' ? 'bg-rose-500/10 text-rose-500' : 'bg-accent text-muted-foreground'}`}>
+                    <Activity size={14} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-black truncate ${n.priority === 'URGENTE' ? 'text-rose-500' : 'text-foreground'}`}>
+                      {n.title}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5 line-clamp-1">{n.body}</p>
+                  </div>
+                  <ChevronRight size={14} className="text-muted-foreground/30 group-hover:text-foreground transition-colors mt-1" />
+                </Link>
+              ))
             )}
           </div>
 
-          <Link
-            href="/admin/announcements"
-            className="mt-4 btn-secondary text-xs w-full justify-center"
-          >
-            Ver todos os comunicados
+          <Link href="/admin/announcements" className="mt-6 btn-ghost py-3 text-[10px] tracking-widest uppercase">
+            Ver Todos
           </Link>
         </motion.div>
       </div>
 
-      {/* ── Quick Actions ────────────────────────────────────────────────── */}
+      {/* Quick Actions */}
       <div>
-        <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4">Acesso Rápido</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] mb-4 ml-1">Ações Rápidas</p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {quickActions.map((action, i) => {
             const Icon = action.icon
             return (
-              <motion.div
+              <Link
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + i * 0.06 }}
+                href={action.href}
+                className="card-hover p-4 flex items-center gap-4 group transition-transform active:scale-95"
               >
-                <Link
-                  href={action.href}
-                  className="card-interactive p-5 flex items-center gap-4 group bg-card border-border"
-                >
-                  <div className={`w-11 h-11 ${action.color} shadow-lg ${action.shadow} rounded-xl flex items-center justify-center shrink-0 text-white group-hover:scale-110 transition-transform`}>
-                    <Icon size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-foreground text-sm truncate">{action.label}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5 truncate">{action.desc}</p>
-                  </div>
-                  <ArrowUpRight size={16} className="text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
-                </Link>
-              </motion.div>
+                <div className={`w-11 h-11 ${action.color} ${action.shadow} rounded-xl flex items-center justify-center shrink-0 text-white group-hover:scale-110 transition-transform`}>
+                  <Icon size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-black text-foreground text-xs uppercase tracking-wider truncate">{action.label}</p>
+                  <p className="text-[10px] text-muted-foreground font-medium mt-0.5 truncate">{action.desc}</p>
+                </div>
+              </Link>
             )
           })}
         </div>
       </div>
 
-      {/* ── Recent activity row ──────────────────────────────────────────── */}
+      {/* Finance & Announcements Preview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Pending invoices summary */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-          className="card p-5 bg-card border-border"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-black text-foreground text-sm">Financeiro</h3>
-            <Link href="/admin/finance" className="text-[10px] font-black text-primary hover:text-primary/80 flex items-center gap-0.5">
-              Ver tudo <ChevronRight size={12} />
-            </Link>
+        {/* Finance Box */}
+        <div className="card p-6 border-border flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center">
+                <Banknote size={18} />
+              </div>
+              <h3 className="font-black text-foreground text-sm uppercase tracking-widest">Resumo Financeiro</h3>
+            </div>
+            <Link href="/admin/finance" className="text-[10px] font-black text-primary hover:underline uppercase">Ver Painel</Link>
           </div>
-          {isLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: 'Recebido',  value: `R$ ${(stats?.totalPaid ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,  color: 'text-emerald-500 bg-emerald-500/10', icon: CheckCircle2 },
-                { label: 'Pendente', value: `${stats?.pendingInvoices ?? 0} fat.`,  color: 'text-amber-500 bg-amber-500/10',   icon: Clock },
-                { label: 'Vencido',  value: `${stats?.overdueInvoices ?? 0} fat.`,  color: 'text-rose-500 bg-rose-500/10',     icon: AlertCircle },
-              ].map((item, i) => {
-                const Icon = item.icon
-                return (
-                  <div key={i} className="flex flex-col items-center text-center p-3 rounded-xl bg-accent/20 gap-1.5 border border-border/50">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.color}`}>
-                      <Icon size={14} />
-                    </div>
-                    <p className="text-xs font-black text-foreground leading-tight">{item.value}</p>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{item.label}</p>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </motion.div>
+          
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'Pago',   value: stats?.totalPaid ?? 0, icon: CheckCircle2, color: 'text-emerald-500 bg-emerald-500/10', prefix: 'R$ ' },
+              { label: 'Aberto', value: stats?.pendingInvoices ?? 0, icon: Clock, color: 'text-amber-500 bg-amber-500/10' },
+              { label: 'Atraso', value: stats?.overdueInvoices ?? 0, icon: AlertCircle, color: 'text-rose-500 bg-rose-500/10' },
+            ].map((item, i) => (
+              <div key={i} className="flex flex-col items-center text-center p-4 rounded-2xl bg-accent/20 border border-border/50 gap-2">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.color}`}>
+                  <item.icon size={14} />
+                </div>
+                <p className="text-xs font-black text-foreground">
+                  {item.prefix || ''}{item.value.toLocaleString('pt-BR')}
+                </p>
+                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">{item.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        {/* Announcements preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
-          className="card p-5 bg-card border-border"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-black text-foreground text-sm">Comunicados Recentes</h3>
-            <Link href="/admin/announcements" className="text-[10px] font-black text-primary hover:text-primary/80 flex items-center gap-0.5">
-              Ver tudo <ChevronRight size={12} />
-            </Link>
+        {/* Recent Announcements Box */}
+        <div className="card p-6 border-border flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center">
+                <Megaphone size={18} />
+              </div>
+              <h3 className="font-black text-foreground text-sm uppercase tracking-widest">Comunicados</h3>
+            </div>
+            <Link href="/admin/announcements" className="text-[10px] font-black text-primary hover:underline uppercase">Central</Link>
           </div>
           <RecentAnnouncements />
-        </motion.div>
+        </div>
       </div>
-
     </div>
   )
 }
 
-// ── Sub-component: Recent Announcements ───────────────────────────────────────
 function RecentAnnouncements() {
   const { data = [], isLoading } = useQuery<any[]>({
     queryKey: ['announcements-preview'],
@@ -395,41 +340,53 @@ function RecentAnnouncements() {
   })
   const announcements = Array.isArray(data) ? data.slice(0, 3) : []
 
-  if (isLoading) return (
-    <div className="space-y-2">
-      <Skeleton className="h-12 w-full" />
-      <Skeleton className="h-12 w-full" />
+  if (isLoading) return <LoadingState size="sm" />
+
+  if (announcements.length === 0) return (
+    <div className="flex-1 flex flex-col items-center justify-center opacity-30">
+      <MessageSquare size={32} className="mb-2" />
+      <p className="text-[10px] font-black uppercase tracking-widest text-center">Nenhum enviado</p>
     </div>
   )
-
-  if (announcements.length === 0) {
-    return (
-      <p className="text-xs text-muted-foreground font-medium text-center py-4">
-        Nenhum comunicado enviado ainda
-      </p>
-    )
-  }
 
   return (
     <div className="space-y-2">
       {announcements.map((ann) => (
-        <div key={ann.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-accent/50 transition-colors border border-transparent hover:border-border">
-          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-            ann.priority === 'URGENTE' ? 'bg-rose-500/10 text-rose-500' : 'bg-primary/10 text-primary'
-          }`}>
-            <MessageSquare size={12} />
+        <div key={ann.id} className="flex items-start gap-3 p-3 rounded-2xl hover:bg-accent/20 transition-all border border-transparent hover:border-border group">
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${ann.priority === 'URGENTE' ? 'bg-rose-500/10 text-rose-500' : 'bg-primary/10 text-primary'}`}>
+            <MessageSquare size={14} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-black text-foreground truncate">{ann.title}</p>
-            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
+            <p className="text-xs font-black text-foreground truncate group-hover:text-primary transition-colors">{ann.title}</p>
+            <p className="text-[10px] text-muted-foreground font-bold mt-0.5">
               {new Date(ann.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
             </p>
           </div>
-          {ann.priority === 'URGENTE' && (
-            <span className="badge badge-red text-[9px] shrink-0">Urgente</span>
-          )}
+          {ann.priority === 'URGENTE' && <Badge label="Urgente" variant="red" size="sm" />}
         </div>
       ))}
     </div>
+  )
+}
+
+function Banknote(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="20" height="12" x="2" y="6" rx="2" />
+      <circle cx="12" cy="12" r="2" />
+      <path d="M6 12h.01" />
+      <path d="M18 12h.01" />
+    </svg>
   )
 }

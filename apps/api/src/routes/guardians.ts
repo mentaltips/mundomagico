@@ -108,4 +108,69 @@ router.delete('/:id', async (req, res) => {
   }
 })
 
+import bcrypt from 'bcryptjs'
+
+// POST /:id/create-user - Generate access for a guardian
+router.post('/:id/create-user', async (req, res) => {
+  try {
+    const schoolId = req.user?.schoolId
+    const guardianId = req.params.id
+
+    const guardian = await prisma.guardian.findUnique({
+      where: { id: guardianId }
+    })
+
+    if (!guardian) {
+      return res.status(404).json({ error: 'Guardian not found' })
+    }
+    if (guardian.userId) {
+      return res.status(400).json({ error: 'Guardian already has a user account' })
+    }
+    if (!guardian.email) {
+      return res.status(400).json({ error: 'Guardian must have an email address to create an account' })
+    }
+
+    // Check if user with email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: guardian.email }
+    })
+    
+    if (existingUser) {
+      return res.status(400).json({ error: 'A user with this email already exists' })
+    }
+
+    // Generate random 6-digit numeric password
+    const tempPassword = Math.floor(100000 + Math.random() * 900000).toString()
+    const hashedPassword = await bcrypt.hash(tempPassword, 10)
+
+    // Create User
+    const user = await prisma.user.create({
+      data: {
+        email: guardian.email,
+        password: hashedPassword,
+        name: guardian.fullName,
+        role: 'GUARDIAN',
+        phone: guardian.phone,
+        schoolId: schoolId,
+      }
+    })
+
+    // Update Guardian with userId
+    await prisma.guardian.update({
+      where: { id: guardian.id },
+      data: { userId: user.id }
+    })
+
+    res.status(201).json({
+      success: true,
+      email: user.email,
+      password: tempPassword,
+      message: 'Access generated successfully'
+    })
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 export default router

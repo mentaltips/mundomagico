@@ -3,6 +3,8 @@ import { ptBR } from 'date-fns/locale'
 import { CheckInOutPanel } from './_components/CheckInOutPanel'
 import { requireAuth } from '@/lib/auth'
 import { apiGet } from '@/lib/server-api'
+import { PageHeader, StatCard, Badge } from '@/components/ui'
+import { ClipboardCheck, CheckCircle2, Clock, Users, ArrowRightLeft } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,50 +38,74 @@ export default async function CheckInOutPage({
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="page-title">Entrada e Saída</h1>
-          <p className="text-sm text-gray-500 capitalize">
-            {format(date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-          </p>
-        </div>
+    <div className="page animate-in">
+      <PageHeader 
+        title="Entrada e Saída" 
+        subtitle={format(date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+        icon={<ArrowRightLeft size={24} />}
+      />
+
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          label="Presentes" 
+          value={stats.present} 
+          icon={<CheckCircle2 size={20} />} 
+          color="text-emerald-500 bg-emerald-500/10" 
+        />
+        <StatCard 
+          label="Ausentes" 
+          value={stats.absent} 
+          icon={<Users size={20} />} 
+          color="text-muted-foreground bg-muted" 
+        />
+        <StatCard 
+          label="Aguardando" 
+          value={stats.waiting} 
+          icon={<Clock size={20} />} 
+          color="text-blue-500 bg-blue-500/10" 
+        />
+        <StatCard 
+          label="Saída Antecipada" 
+          value={stats.left} 
+          icon={<ArrowRightLeft size={20} />} 
+          color="text-amber-500 bg-amber-500/10" 
+        />
       </div>
 
-      {/* Filtro */}
-      <div className="card p-4">
-        <form className="flex flex-wrap gap-3">
-          <input type="date" name="date" defaultValue={today} className="input w-44" />
-          <select name="groupId" defaultValue={searchParams.groupId} className="input w-44">
-            <option value="">Todos os grupos</option>
-            {groups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
-          </select>
-          <button type="submit" className="btn-primary">Buscar</button>
+      {/* Filters */}
+      <div className="card p-5">
+        <form className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <label className="label">Data</label>
+            <input type="date" name="date" defaultValue={today} className="input" />
+          </div>
+          <div className="flex-1">
+            <label className="label">Filtrar por Turma</label>
+            <select name="groupId" defaultValue={searchParams.groupId} className="select">
+              <option value="">Todos os grupos</option>
+              {groups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
+          <div className="flex items-end">
+            <button type="submit" className="btn-primary w-full sm:w-auto h-[46px] px-8">Buscar</button>
+          </div>
         </form>
       </div>
 
-      {/* Cards de status */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card p-4 border-l-4 border-green-500">
-          <p className="text-3xl font-bold text-green-600">{stats.present}</p>
-          <p className="text-sm text-gray-600 mt-1">✅ Presentes</p>
+      {/* Interactive Panel */}
+      <div className="bg-card rounded-[2.5rem] border border-border shadow-sm overflow-hidden p-6 sm:p-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+            <ClipboardCheck size={20} />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-foreground">Lista de Chamada</h3>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Controle individual de presença</p>
+          </div>
         </div>
-        <div className="card p-4 border-l-4 border-gray-400">
-          <p className="text-3xl font-bold text-gray-500">{stats.absent}</p>
-          <p className="text-sm text-gray-600 mt-1">○ Ausentes</p>
-        </div>
-        <div className="card p-4 border-l-4 border-blue-500">
-          <p className="text-3xl font-bold text-blue-600">{stats.waiting}</p>
-          <p className="text-sm text-gray-600 mt-1">⏳ Aguardando retirada</p>
-        </div>
-        <div className="card p-4 border-l-4 border-yellow-500">
-          <p className="text-3xl font-bold text-yellow-600">{stats.left}</p>
-          <p className="text-sm text-gray-600 mt-1">↩ Saiu mais cedo</p>
-        </div>
+        <CheckInOutPanel date={today} children={childrenData} />
       </div>
-
-      {/* Painel interativo */}
-      <CheckInOutPanel date={today} children={childrenData} />
     </div>
   )
 }

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Package, AlertTriangle, Plus, X, Check, Loader2, Minus, RefreshCw } from 'lucide-react'
+import { Package, AlertTriangle, Plus, X, Check, Loader2, Minus, RefreshCw, Box } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ITEM_TYPE_LABELS, ITEM_TYPE_EMOJIS, ITEM_TYPES } from '@mundo-magico/types'
+import { PageHeader, EmptyState, Modal, Alert, LoadingState, Badge } from '@/components/ui'
 import toast from 'react-hot-toast'
 
 type ChildItem = {
@@ -113,251 +114,286 @@ export default function ChildItemsPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Itens das Crianças</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Controle de fraldas, lenços e outros itens enviados pelos responsáveis</p>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl font-black shadow-lg shadow-lime-100 hover:bg-lime-600 transition-all"
-        >
-          <Plus size={18} />
-          Novo Item
-        </button>
-      </div>
+    <div className="page animate-in">
+      <PageHeader 
+        title="Estoque das Crianças" 
+        subtitle="Controle de fraldas, lenços e itens enviados pelos pais."
+        icon={<Box size={24} />}
+        actions={
+          <button onClick={() => setShowModal(true)} className="btn-primary">
+            <Plus size={18} /> Novo Item
+          </button>
+        }
+      />
 
-      {/* Alertas */}
       {lowItems.length > 0 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-3xl p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-5 h-5 text-orange-600" />
-            <p className="font-black text-orange-800">{lowItems.length} item(ns) com estoque baixo!</p>
-          </div>
-          <div className="space-y-2">
-            {lowItems.map((item) => {
-              const remaining = item.quantityReceived - item.quantityUsed
-              return (
-                <div key={item.id} className="flex items-center justify-between bg-white rounded-2xl px-4 py-3 border border-orange-100">
-                  <div>
-                    <p className="font-bold text-gray-900">
-                      {ITEM_TYPE_EMOJIS[item.itemType as keyof typeof ITEM_TYPE_EMOJIS]}{' '}
-                      {item.child.fullName} — {ITEM_TYPE_LABELS[item.itemType as keyof typeof ITEM_TYPE_LABELS]}
-                    </p>
-                    <p className="text-xs text-orange-600 font-medium">
-                      Restam apenas {remaining} unidade{remaining !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => { setRepModal(item); setQty(10) }}
-                    className="text-xs font-black bg-orange-100 text-orange-700 px-3 py-1.5 rounded-xl hover:bg-orange-200 transition-colors"
-                  >
-                    + Repor
-                  </button>
+        <Alert variant="warning">
+          <p className="font-black mb-2 flex items-center gap-2">
+            <AlertTriangle size={16} /> {lowItems.length} item(ns) com estoque baixo!
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+            {lowItems.map((item) => (
+              <div key={item.id} className="bg-background/50 p-3 rounded-xl border border-amber-500/20 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-black truncate">{item.child.fullName}</p>
+                  <p className="text-[10px] opacity-70 font-bold uppercase tracking-widest">
+                    {ITEM_TYPE_EMOJIS[item.itemType as keyof typeof ITEM_TYPE_EMOJIS]} {ITEM_TYPE_LABELS[item.itemType as keyof typeof ITEM_TYPE_LABELS]}
+                  </p>
                 </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Lista */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b bg-gray-50/50 flex items-center justify-between">
-          <p className="font-black text-gray-700">Todos os itens ({items.length})</p>
-        </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="text-primary animate-spin" size={32} />
-          </div>
-        ) : items.length === 0 ? (
-          <div className="p-16 text-center">
-            <Package className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-            <p className="text-gray-500 font-bold">Nenhum item cadastrado</p>
-            <button onClick={() => setShowModal(true)} className="mt-4 text-primary font-black text-sm hover:underline">
-              + Cadastrar primeiro item
-            </button>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-50">
-            {items.map((item) => {
-              const remaining = item.quantityReceived - item.quantityUsed
-              const isLow = remaining <= item.alertThreshold
-              const pct = Math.min((remaining / Math.max(item.quantityReceived, 1)) * 100, 100)
-              return (
-                <div key={item.id} className="p-5 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <span className="text-3xl shrink-0">
-                      {ITEM_TYPE_EMOJIS[item.itemType as keyof typeof ITEM_TYPE_EMOJIS] ?? '📦'}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-black text-gray-900 truncate">{item.child.fullName}</p>
-                      <p className="text-sm font-bold text-gray-500">
-                        {ITEM_TYPE_LABELS[item.itemType as keyof typeof ITEM_TYPE_LABELS] ?? item.itemType}
-                      </p>
-                      <div className="flex items-center gap-3 mt-2">
-                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all ${isLow ? 'bg-orange-400' : 'bg-emerald-400'}`}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                        <span className={`text-xs font-black whitespace-nowrap ${isLow ? 'text-orange-600' : 'text-emerald-600'}`}>
-                          {remaining} restante{remaining !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                      <div className="flex gap-4 mt-1">
-                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Recebido: {item.quantityReceived}</span>
-                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Usado: {item.quantityUsed}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button
-                      onClick={() => { setUseModal(item); setQty(1) }}
-                      className="flex items-center gap-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-black hover:bg-gray-200 transition-colors"
-                    >
-                      <Minus size={14} />
-                      Usar
-                    </button>
-                    <button
-                      onClick={() => { setRepModal(item); setQty(10) }}
-                      className="flex items-center gap-1 px-3 py-2 bg-primary text-white rounded-xl text-xs font-black hover:bg-lime-600 transition-colors"
-                    >
-                      <RefreshCw size={14} />
-                      Repor
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Modal: Novo Item */}
-      {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="bg-white w-full sm:max-w-md rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl relative z-10 p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black text-gray-900">Novo Item</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 text-gray-400 hover:bg-gray-100 rounded-xl"><X size={20} /></button>
-            </div>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Criança *</label>
-                <select
-                  value={form.childId}
-                  onChange={(e) => setForm((p) => ({ ...p, childId: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-lime-200"
+                <button
+                  onClick={() => { setRepModal(item); setQty(10) }}
+                  className="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black uppercase hover:bg-amber-600 transition-colors shrink-0"
                 >
-                  <option value="">Selecione...</option>
-                  {(children as { id: string; fullName: string }[]).map((c) => (
-                    <option key={c.id} value={c.id}>{c.fullName}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Tipo de Item *</label>
-                <select
-                  value={form.itemType}
-                  onChange={(e) => setForm((p) => ({ ...p, itemType: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-lime-200"
-                >
-                  {ITEM_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {ITEM_TYPE_EMOJIS[t]} {ITEM_TYPE_LABELS[t]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Qtd. Recebida</label>
-                  <input
-                    type="number" min={0} value={form.quantityReceived}
-                    onChange={(e) => setForm((p) => ({ ...p, quantityReceived: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-lime-200"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Alerta em</label>
-                  <input
-                    type="number" min={0} value={form.alertThreshold}
-                    onChange={(e) => setForm((p) => ({ ...p, alertThreshold: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-lime-200"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl border border-gray-200 font-black text-sm text-gray-500">Cancelar</button>
-                <button type="submit" disabled={saving} className="flex-1 py-3 rounded-2xl bg-primary text-white font-black text-sm hover:bg-lime-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                  {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                  Cadastrar
+                  Repor
                 </button>
               </div>
-            </form>
+            ))}
           </div>
+        </Alert>
+      )}
+
+      {isLoading ? (
+        <LoadingState />
+      ) : items.length === 0 ? (
+        <EmptyState 
+          icon={<Package size={32} />}
+          title="Nenhum item cadastrado"
+          description="Os pais ainda não enviaram itens ou você ainda não os registrou."
+          action={
+            <button onClick={() => setShowModal(true)} className="btn-primary">
+              Registrar Primeiro Item
+            </button>
+          }
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {items.map((item) => {
+            const remaining = item.quantityReceived - item.quantityUsed
+            const isLow = remaining <= item.alertThreshold
+            const pct = Math.min((remaining / Math.max(item.quantityReceived, 1)) * 100, 100)
+            
+            return (
+              <div key={item.id} className="card-hover p-6 flex flex-col group">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-sm border border-border/50">
+                      {ITEM_TYPE_EMOJIS[item.itemType as keyof typeof ITEM_TYPE_EMOJIS] ?? '📦'}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-black text-foreground leading-tight truncate">{item.child.fullName}</h3>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">
+                        {ITEM_TYPE_LABELS[item.itemType as keyof typeof ITEM_TYPE_LABELS] ?? item.itemType}
+                      </p>
+                    </div>
+                  </div>
+                  {isLow && <Badge label="Baixo" variant="red" dot size="sm" />}
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Estoque Atual</span>
+                      <span className={`text-sm font-black ${isLow ? 'text-rose-500' : 'text-emerald-500'}`}>
+                        {remaining} unidades
+                      </span>
+                    </div>
+                    <div className="h-2 bg-accent rounded-full overflow-hidden shadow-inner">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${isLow ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+                    <span>Recebido: {item.quantityReceived}</span>
+                    <span>Usado: {item.quantityUsed}</span>
+                  </div>
+                </div>
+
+                <div className="mt-auto pt-6 border-t border-border/50 grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => { setUseModal(item); setQty(1) }}
+                    className="btn-ghost py-2.5 text-xs font-black gap-2"
+                  >
+                    <Minus size={14} /> Usar
+                  </button>
+                  <button
+                    onClick={() => { setRepModal(item); setQty(10) }}
+                    className="btn-primary py-2.5 text-xs font-black gap-2"
+                  >
+                    <RefreshCw size={14} /> Repor
+                  </button>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
+
+      {/* Modal: Novo Item */}
+      <Modal 
+        open={showModal} 
+        onClose={() => setShowModal(false)}
+        title="Novo Item em Estoque"
+        subtitle="Registre o recebimento de itens enviados pelos pais."
+      >
+        <form onSubmit={handleCreate} className="space-y-5">
+          <div>
+            <label className="label">Criança *</label>
+            <select
+              required
+              value={form.childId}
+              onChange={(e) => setForm((p) => ({ ...p, childId: e.target.value }))}
+              className="select"
+            >
+              <option value="">Selecione uma criança...</option>
+              {children.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.fullName}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Tipo de Item *</label>
+            <select
+              value={form.itemType}
+              onChange={(e) => setForm((p) => ({ ...p, itemType: e.target.value }))}
+              className="select"
+            >
+              {ITEM_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {ITEM_TYPE_EMOJIS[t]} {ITEM_TYPE_LABELS[t]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Qtd. Recebida</label>
+              <input
+                type="number" min={1} required value={form.quantityReceived}
+                onChange={(e) => setForm((p) => ({ ...p, quantityReceived: e.target.value }))}
+                className="input"
+              />
+            </div>
+            <div>
+              <label className="label">Alerta (Qtd. Baixa)</label>
+              <input
+                type="number" min={0} required value={form.alertThreshold}
+                onChange={(e) => setForm((p) => ({ ...p, alertThreshold: e.target.value }))}
+                className="input"
+              />
+            </div>
+          </div>
+          <div className="pt-4 flex gap-3 border-t border-border/50">
+            <button type="button" onClick={() => setShowModal(false)} className="btn-ghost flex-1">Cancelar</button>
+            <button type="submit" disabled={saving} className="btn-primary flex-1 gap-2">
+              {saving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
+              Cadastrar Item
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Modal: Usar Item */}
-      {useModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setUseModal(null)} />
-          <div className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 p-8">
-            <h2 className="text-xl font-black text-gray-900 mb-1">Registrar Uso</h2>
-            <p className="text-sm text-gray-500 mb-6">
-              {ITEM_TYPE_EMOJIS[useModal.itemType as keyof typeof ITEM_TYPE_EMOJIS]}{' '}
-              {ITEM_TYPE_LABELS[useModal.itemType as keyof typeof ITEM_TYPE_LABELS]} — {useModal.child.fullName}
-            </p>
-            <div className="flex items-center justify-center gap-6 mb-8">
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-700 font-black text-xl hover:bg-gray-200 flex items-center justify-center">−</button>
-              <span className="text-4xl font-black text-gray-900 w-12 text-center">{qty}</span>
-              <button onClick={() => setQty((q) => q + 1)} className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-700 font-black text-xl hover:bg-gray-200 flex items-center justify-center">+</button>
+      <Modal
+        open={!!useModal}
+        onClose={() => setUseModal(null)}
+        title="Registrar Uso"
+      >
+        {useModal && (
+          <div className="space-y-8">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-accent rounded-[2rem] flex items-center justify-center text-4xl mx-auto mb-4 border border-border/50 shadow-sm">
+                {ITEM_TYPE_EMOJIS[useModal.itemType as keyof typeof ITEM_TYPE_EMOJIS]}
+              </div>
+              <h3 className="text-lg font-black text-foreground">{useModal.child.fullName}</h3>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">
+                {ITEM_TYPE_LABELS[useModal.itemType as keyof typeof ITEM_TYPE_LABELS]}
+              </p>
             </div>
-            <p className="text-center text-xs text-gray-400 mb-6">
-              Restam {useModal.quantityReceived - useModal.quantityUsed} unidades
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setUseModal(null)} className="flex-1 py-3 rounded-2xl border border-gray-200 font-black text-sm text-gray-500">Cancelar</button>
-              <button onClick={handleUse} disabled={saving} className="flex-1 py-3 rounded-2xl bg-gray-900 text-white font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2">
-                {saving ? <Loader2 size={16} className="animate-spin" /> : <Minus size={16} />}
-                Registrar uso
+
+            <div className="flex items-center justify-center gap-8">
+              <button 
+                onClick={() => setQty((q) => Math.max(1, q - 1))} 
+                className="w-14 h-14 rounded-2xl bg-accent hover:bg-accent/80 text-foreground font-black text-2xl transition-all shadow-sm"
+              >
+                −
+              </button>
+              <div className="flex flex-col items-center">
+                <span className="text-5xl font-black text-foreground tabular-nums">{qty}</span>
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-2">Unidade(s)</span>
+              </div>
+              <button 
+                onClick={() => setQty((q) => q + 1)} 
+                className="w-14 h-14 rounded-2xl bg-accent hover:bg-accent/80 text-foreground font-black text-2xl transition-all shadow-sm"
+              >
+                +
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button onClick={handleUse} disabled={saving} className="w-full btn-primary py-4 gap-3 text-sm">
+                {saving ? <Loader2 size={18} className="animate-spin" /> : <Minus size={18} />}
+                Confirmar Uso
+              </button>
+              <button onClick={() => setUseModal(null)} className="w-full btn-ghost py-3">
+                Cancelar
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
 
       {/* Modal: Repor Estoque */}
-      {repModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setRepModal(null)} />
-          <div className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 p-8">
-            <h2 className="text-xl font-black text-gray-900 mb-1">Repor Estoque</h2>
-            <p className="text-sm text-gray-500 mb-6">
-              {ITEM_TYPE_EMOJIS[repModal.itemType as keyof typeof ITEM_TYPE_EMOJIS]}{' '}
-              {ITEM_TYPE_LABELS[repModal.itemType as keyof typeof ITEM_TYPE_LABELS]} — {repModal.child.fullName}
-            </p>
-            <div className="flex items-center justify-center gap-6 mb-8">
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-700 font-black text-xl hover:bg-gray-200 flex items-center justify-center">−</button>
-              <span className="text-4xl font-black text-gray-900 w-12 text-center">{qty}</span>
-              <button onClick={() => setQty((q) => q + 1)} className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-700 font-black text-xl hover:bg-gray-200 flex items-center justify-center">+</button>
+      <Modal
+        open={!!repModal}
+        onClose={() => setRepModal(null)}
+        title="Repor Estoque"
+      >
+        {repModal && (
+          <div className="space-y-8">
+             <div className="text-center">
+              <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center text-4xl mx-auto mb-4 border border-primary/20 shadow-sm">
+                <RefreshCw size={32} className="text-primary" />
+              </div>
+              <h3 className="text-lg font-black text-foreground">{repModal.child.fullName}</h3>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">
+                {ITEM_TYPE_EMOJIS[repModal.itemType as keyof typeof ITEM_TYPE_EMOJIS]} {ITEM_TYPE_LABELS[repModal.itemType as keyof typeof ITEM_TYPE_LABELS]}
+              </p>
             </div>
-            <div className="flex gap-3">
-              <button onClick={() => setRepModal(null)} className="flex-1 py-3 rounded-2xl border border-gray-200 font-black text-sm text-gray-500">Cancelar</button>
-              <button onClick={handleReplenish} disabled={saving} className="flex-1 py-3 rounded-2xl bg-primary text-white font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2">
-                {saving ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
-                Repor
+
+            <div className="flex items-center justify-center gap-8">
+              <button 
+                onClick={() => setQty((q) => Math.max(1, q - 1))} 
+                className="w-14 h-14 rounded-2xl bg-accent hover:bg-accent/80 text-foreground font-black text-2xl transition-all shadow-sm"
+              >
+                −
+              </button>
+              <div className="flex flex-col items-center">
+                <span className="text-5xl font-black text-foreground tabular-nums">{qty}</span>
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-2">Unidade(s)</span>
+              </div>
+              <button 
+                onClick={() => setQty((q) => q + 1)} 
+                className="w-14 h-14 rounded-2xl bg-accent hover:bg-accent/80 text-foreground font-black text-2xl transition-all shadow-sm"
+              >
+                +
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button onClick={handleReplenish} disabled={saving} className="w-full btn-primary py-4 gap-3 text-sm">
+                {saving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
+                Registrar Reposição
+              </button>
+              <button onClick={() => setRepModal(null)} className="w-full btn-ghost py-3">
+                Cancelar
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   )
 }

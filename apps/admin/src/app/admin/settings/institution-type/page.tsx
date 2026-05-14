@@ -7,7 +7,9 @@ import {
   INSTITUTION_TYPES, INSTITUTION_TYPE_LABELS, DEFAULT_MODULES,
   type InstitutionType, type ModuleKey
 } from '@mundo-magico/types'
-import { Settings, CheckCircle, Save, AlertCircle } from 'lucide-react'
+import { Settings, CheckCircle, Save, AlertCircle, ChevronRight } from 'lucide-react'
+import { PageHeader } from '@/components/ui'
+import { motion } from 'framer-motion'
 
 const MODULE_LABELS: Record<ModuleKey, string> = {
   children:            '👶 Crianças',
@@ -60,7 +62,7 @@ export default function InstitutionTypeSettingsPage() {
 
   const handleTypeChange = (type: InstitutionType) => {
     setSelectedType(type)
-    setCustomModules(null) // reset customização
+    setCustomModules(null)
   }
 
   const handleSave = async () => {
@@ -71,11 +73,11 @@ export default function InstitutionTypeSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           institutionType: selectedType,
-          activeModules: customModules, // null = usar padrão do tipo
+          activeModules: customModules,
         }),
       })
       if (!res.ok) throw new Error()
-      toast.success('Configurações salvas! O sistema foi adaptado.')
+      toast.success('Sistema adaptado com sucesso!')
       router.refresh()
     } catch {
       toast.error('Erro ao salvar configurações.')
@@ -85,136 +87,154 @@ export default function InstitutionTypeSettingsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl">
-      <div>
-        <h1 className="page-title flex items-center gap-2">
-          <Settings className="w-6 h-6" />
-          Tipo de Instituição
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Esta configuração adapta toda a linguagem, menus e módulos do sistema.
-        </p>
-      </div>
+    <div className="page animate-in">
+      <PageHeader 
+        title="Tipo de Instituição" 
+        subtitle="Adapte a linguagem e os módulos do sistema para sua realidade."
+        icon={<Settings size={24} />}
+        actions={
+          <button onClick={handleSave} disabled={saving} className="btn-primary">
+            {saving ? 'Salvando...' : 'Salvar Alterações'}
+          </button>
+        }
+      />
 
-      {/* Aviso */}
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
-        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-amber-800">
-          Ao mudar o tipo de instituição, o sistema irá adaptar automaticamente os termos usados
-          (ex: "Aluno" → "Criança", "Turma" → "Grupo") e ativar/ocultar módulos correspondentes.
-          Os dados existentes não serão afetados.
-        </p>
-      </div>
-
-      {/* Seleção do tipo */}
-      <div className="card p-5">
-        <h2 className="section-title mb-4">Selecione o tipo de operação</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {INSTITUTION_TYPES.map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => handleTypeChange(type)}
-              className={`p-4 rounded-xl border-2 text-left transition-all ${
-                selectedType === type
-                  ? 'border-violet-500 bg-violet-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <p className={`font-semibold ${selectedType === type ? 'text-violet-700' : 'text-gray-900'}`}>
-                  {INSTITUTION_TYPE_LABELS[type]}
-                </p>
-                {selectedType === type && (
-                  <CheckCircle className="w-5 h-5 text-violet-500 flex-shrink-0" />
-                )}
-              </div>
-              <p className="text-xs text-gray-500 mt-1">{TYPE_DESCRIPTIONS[type]}</p>
-            </button>
-          ))}
+      {/* Info Alert */}
+      <div className="bg-primary/5 border border-primary/20 rounded-[2.5rem] p-6 flex gap-4">
+        <div className="w-10 h-10 bg-primary/10 text-primary rounded-2xl flex items-center justify-center shrink-0">
+          <AlertCircle size={20} />
+        </div>
+        <div className="space-y-1">
+          <p className="font-black text-primary text-sm uppercase tracking-widest">Informação Importante</p>
+          <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+            Ao mudar o tipo, o sistema irá adaptar automaticamente os termos usados (ex: "Aluno" → "Criança") 
+            e ativar módulos correspondentes. Seus dados existentes não serão afetados.
+          </p>
         </div>
       </div>
 
-      {/* Módulos */}
-      <div className="card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="section-title">Módulos ativos</h2>
-          {!isHybrid && (
-            <button
-              type="button"
-              onClick={() => setCustomModules(null)}
-              className="text-xs text-violet-600 hover:text-violet-800"
-            >
-              Restaurar padrão
-            </button>
-          )}
-        </div>
-        <p className="text-xs text-gray-500 mb-4">
-          {isHybrid
-            ? 'No modo Híbrido, você escolhe exatamente quais módulos ativar.'
-            : 'Os módulos abaixo são os padrões para o tipo selecionado. Você pode personalizar clicando em cada um.'
-          }
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {(Object.keys(MODULE_LABELS) as ModuleKey[]).map((mod) => {
-            const isActive = activeModules.includes(mod)
-            return (
-              <label
-                key={mod}
-                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                  isActive ? 'bg-violet-50 border-violet-200' : 'bg-gray-50 border-gray-200 opacity-60'
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Type Selection */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-9 h-9 bg-accent text-foreground rounded-xl flex items-center justify-center">
+              <CheckCircle size={18} />
+            </div>
+            <h3 className="font-black text-foreground text-sm uppercase tracking-widest">Modelo de Operação</h3>
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            {INSTITUTION_TYPES.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => handleTypeChange(type)}
+                className={`p-5 rounded-[2rem] border-2 text-left transition-all ${
+                  selectedType === type
+                    ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10'
+                    : 'border-border bg-card hover:border-primary/30'
                 }`}
               >
-                <input
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={() => toggleModule(mod)}
-                  className="rounded text-violet-600 focus:ring-violet-500"
-                />
-                <span className={`text-sm ${isActive ? 'text-violet-900 font-medium' : 'text-gray-500'}`}>
-                  {MODULE_LABELS[mod]}
-                </span>
-              </label>
-            )
-          })}
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className={`font-black uppercase tracking-widest text-xs ${selectedType === type ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {INSTITUTION_TYPE_LABELS[type]}
+                    </p>
+                    <p className="text-sm font-bold text-foreground mt-1">{TYPE_DESCRIPTIONS[type]}</p>
+                  </div>
+                  {selectedType === type && (
+                    <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
+                      <CheckCircle size={14} />
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Preview de terminologia */}
-      <div className="card p-5">
-        <h2 className="section-title mb-4">Preview da terminologia</h2>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          {selectedType === 'ESCOLA' ? (
-            <>
-              <TermRow before="Aluno" />
-              <TermRow before="Professor" />
-              <TermRow before="Turma" />
-              <TermRow before="Disciplina" />
-              <TermRow before="Nota" />
-              <TermRow before="Boletim" />
-              <TermRow before="Frequência" />
-              <TermRow before="Ocorrência pedagógica" />
-            </>
-          ) : (
-            <>
-              <TermRow before="Criança" />
-              {selectedType === 'BERCARIO' ? <TermRow before="Cuidador" /> : <TermRow before="Educador" />}
-              {selectedType === 'BERCARIO' ? <TermRow before="Sala" /> : <TermRow before="Grupo" />}
-              <TermRow before="Rotina diária" />
-              <TermRow before="Presença diária" />
-              <TermRow before="Relatório de desenvolvimento" />
-              <TermRow before="Registro diário" />
-            </>
-          )}
+        {/* Modules Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-accent text-foreground rounded-xl flex items-center justify-center">
+                <Settings size={18} />
+              </div>
+              <h3 className="font-black text-foreground text-sm uppercase tracking-widest">Módulos Ativos</h3>
+            </div>
+            {!isHybrid && (
+              <button
+                type="button"
+                onClick={() => setCustomModules(null)}
+                className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest"
+              >
+                Restaurar Padrão
+              </button>
+            )}
+          </div>
+          
+          <div className="bg-card rounded-[2.5rem] border border-border p-6 sm:p-8 space-y-4 shadow-sm">
+            <p className="text-xs text-muted-foreground font-medium mb-4">
+              {isHybrid
+                ? 'Modo Personalizado: escolha exatamente quais módulos deseja utilizar.'
+                : 'Estes são os módulos recomendados para seu tipo de instituição.'
+              }
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-2 scrollbar-none">
+              {(Object.keys(MODULE_LABELS) as ModuleKey[]).map((mod) => {
+                const isActive = activeModules.includes(mod)
+                return (
+                  <label
+                    key={mod}
+                    className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${
+                      isActive 
+                        ? 'bg-primary/10 border-primary text-primary font-black' 
+                        : 'bg-accent/20 border-border text-muted-foreground opacity-60 grayscale'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      onChange={() => toggleModule(mod)}
+                      className="w-5 h-5 accent-primary rounded-lg"
+                    />
+                    <span className="text-xs uppercase tracking-widest leading-none">
+                      {MODULE_LABELS[mod]}
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div className="bg-card rounded-[2.5rem] border border-border p-8 shadow-sm">
+            <h3 className="font-black text-foreground text-sm uppercase tracking-widest mb-6">Preview da Terminologia</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {selectedType === 'ESCOLA' ? (
+                <>
+                  <TermRow before="Aluno" />
+                  <TermRow before="Professor" />
+                  <TermRow before="Turma" />
+                  <TermRow before="Disciplina" />
+                  <TermRow before="Nota" />
+                  <TermRow before="Boletim" />
+                  <TermRow before="Frequência" />
+                  <TermRow before="Ocorrência pedagógica" />
+                </>
+              ) : (
+                <>
+                  <TermRow before="Criança" />
+                  {selectedType === 'BERCARIO' ? <TermRow before="Cuidador" /> : <TermRow before="Educador" />}
+                  {selectedType === 'BERCARIO' ? <TermRow before="Sala" /> : <TermRow before="Grupo" />}
+                  <TermRow before="Rotina diária" />
+                  <TermRow before="Presença diária" />
+                  <TermRow before="Relatório de desenvolvimento" />
+                  <TermRow before="Registro diário" />
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Botão salvar */}
-      <div className="flex justify-end">
-        <button onClick={handleSave} disabled={saving} className="btn-primary">
-          <Save className="w-4 h-4" />
-          {saving ? 'Salvando...' : 'Salvar configurações'}
-        </button>
       </div>
     </div>
   )
@@ -222,9 +242,9 @@ export default function InstitutionTypeSettingsPage() {
 
 function TermRow({ before }: { before: string }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50">
-      <CheckCircle className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
-      <span className="text-gray-700">{before}</span>
+    <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-accent/20 border border-border">
+      <div className="w-2 h-2 bg-primary rounded-full" />
+      <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">{before}</span>
     </div>
   )
 }

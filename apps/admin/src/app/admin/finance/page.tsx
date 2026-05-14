@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   CreditCard, TrendingUp, DollarSign, Plus, X, Check, Loader2,
   Clock, CheckCircle2, AlertCircle, Barcode, QrCode,
-  RefreshCw, Users, Banknote, Trash2
+  RefreshCw, Users, Banknote, Trash2, Search, Filter, ChevronRight
 } from 'lucide-react'
 import { format, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
-import { Modal, EmptyState, Badge, Skeleton, Avatar } from '@/components/ui/index'
+import { Modal, EmptyState, Badge, Skeleton, Avatar, PageHeader, StatCard, Alert } from '@/components/ui'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Invoice = {
@@ -28,11 +28,11 @@ type Invoice = {
   student?: { id: string; fullName: string; photoUrl?: string }
 }
 
-const STATUS: Record<string, { label: string; badge: string; icon: any }> = {
-  PENDENTE:  { label: 'Pendente',  badge: 'badge-amber',  icon: Clock },
-  PAGO:      { label: 'Pago',      badge: 'badge-green',  icon: CheckCircle2 },
-  VENCIDO:   { label: 'Vencido',   badge: 'badge-red',    icon: AlertCircle },
-  CANCELADO: { label: 'Cancelado', badge: 'badge-gray',   icon: X },
+const STATUS_CONFIG: Record<string, { label: string; variant: any; icon: any }> = {
+  PENDENTE:  { label: 'Pendente',  variant: 'amber', icon: Clock },
+  PAGO:      { label: 'Pago',      variant: 'green', icon: CheckCircle2 },
+  VENCIDO:   { label: 'Vencido',   variant: 'red',   icon: AlertCircle },
+  CANCELADO: { label: 'Cancelado', variant: 'gray',  icon: X },
 }
 
 const FILTERS = [
@@ -173,70 +173,55 @@ export default function FinancePage() {
 
   return (
     <div className="page animate-in">
+      <PageHeader 
+        title="Financeiro" 
+        subtitle="Gerencie faturas, mensalidades e pagamentos da escola."
+        icon={<Banknote size={24} />}
+        actions={
+          <div className="flex gap-2">
+            <button onClick={() => setShowBatchModal(true)} className="btn-secondary hidden sm:flex">
+              <Users size={18} /> Lote
+            </button>
+            <button onClick={() => setShowModal(true)} className="btn-primary">
+              <Plus size={18} /> <span className="hidden sm:inline">Nova Fatura</span>
+            </button>
+          </div>
+        }
+      />
 
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Financeiro</h1>
-          <p className="page-subtitle">Faturas, mensalidades e pagamentos via Mercado Pago</p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => setShowBatchModal(true)} className="btn-secondary gap-1.5 text-xs">
-            <Users size={14} /> Gerar em Lote
-          </button>
-          <button onClick={() => setShowModal(true)} className="btn-primary gap-1.5 text-xs">
-            <Plus size={14} /> Nova Fatura
-          </button>
-        </div>
-      </div>
-
-      {/* ── Summary cards ───────────────────────────────────────────────── */}
+      {/* Summary Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="card p-5 flex items-center gap-4 bg-card border-border">
-          <div className="w-11 h-11 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center shrink-0">
-            <CheckCircle2 size={20} />
-          </div>
-          <div>
-            <p className="text-xl font-black text-foreground">{fmtBRL(totalPaid)}</p>
-            <p className="label mt-0.5">Recebido</p>
-            <p className="text-[10px] text-emerald-500 font-bold mt-0.5">
-              {invoices.filter(i => i.status === 'PAGO').length} fatura(s) paga(s)
-            </p>
-          </div>
-        </div>
-        <div className="card p-5 flex items-center gap-4 bg-card border-border">
-          <div className="w-11 h-11 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center shrink-0">
-            <Clock size={20} />
-          </div>
-          <div>
-            <p className="text-xl font-black text-foreground">{fmtBRL(totalPending)}</p>
-            <p className="label mt-0.5">A Receber</p>
-            <p className="text-[10px] text-amber-500 font-bold mt-0.5">
-              {invoices.filter(i => i.status === 'PENDENTE').length} pendente(s)
-            </p>
-          </div>
-        </div>
-        <div className="bg-rose-600 rounded-2xl p-5 flex items-center gap-4 shadow-lg shadow-rose-600/20">
-          <div className="w-11 h-11 bg-white/20 text-white rounded-xl flex items-center justify-center shrink-0">
-            <AlertCircle size={20} />
-          </div>
-          <div>
-            <p className="text-xl font-black text-white">{fmtBRL(totalOverdue)}</p>
-            <p className="text-[11px] font-bold text-rose-100 uppercase tracking-widest mt-0.5">Vencido</p>
-            <p className="text-[10px] text-rose-200 font-bold mt-0.5">
-              {invoices.filter(i => i.status === 'VENCIDO').length} vencida(s)
-            </p>
-          </div>
-        </div>
+        <StatCard 
+          label="Recebido" 
+          value={fmtBRL(totalPaid)} 
+          icon={<CheckCircle2 size={20} />} 
+          color="text-emerald-500 bg-emerald-500/10" 
+          trend={`${invoices.filter(i => i.status === 'PAGO').length} pagas`}
+        />
+        <StatCard 
+          label="A Receber" 
+          value={fmtBRL(totalPending)} 
+          icon={<Clock size={20} />} 
+          color="text-amber-500 bg-amber-500/10" 
+          trend={`${invoices.filter(i => i.status === 'PENDENTE').length} abertas`}
+        />
+        <StatCard 
+          label="Vencido" 
+          value={fmtBRL(totalOverdue)} 
+          icon={<AlertCircle size={20} />} 
+          color="text-rose-500 bg-rose-500/10" 
+          trend={`${invoices.filter(i => i.status === 'VENCIDO').length} vencidas`}
+          trendUp={false}
+        />
       </div>
 
-      {/* ── Filters ─────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 flex-wrap">
+      {/* Filters */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
         {FILTERS.map(f => (
           <button
             key={f.value}
             onClick={() => setFilterStatus(f.value)}
-            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wide transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${
               filterStatus === f.value
                 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
                 : 'bg-card text-muted-foreground border border-border hover:border-primary/50'
@@ -247,121 +232,118 @@ export default function FinancePage() {
         ))}
         <button
           onClick={fetchInvoices}
-          className="ml-auto w-9 h-9 btn-ghost rounded-xl flex items-center justify-center p-0 border border-border bg-card"
+          className="ml-auto w-10 h-10 btn-ghost rounded-xl flex items-center justify-center p-0 border border-border bg-card shrink-0"
           title="Atualizar"
         >
-          <RefreshCw size={15} />
+          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
 
-      {/* ── Table ───────────────────────────────────────────────────────── */}
-      <div className="table-container bg-card border-border">
-        {loading ? (
-          <div className="p-6 space-y-3">
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14 w-full" />)}
-          </div>
-        ) : invoices.length === 0 ? (
-          <EmptyState
-            icon={<Banknote size={28} />}
-            title="Nenhuma fatura encontrada"
-            description="Gere mensalidades em lote ou crie uma fatura individual."
-            action={
-              <button onClick={() => setShowBatchModal(true)} className="btn-primary gap-2">
-                <Users size={14} /> Gerar mensalidades
-              </button>
-            }
-          />
-        ) : (
-          <>
-            {/* Desktop header */}
-            <div className="hidden md:grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-5 py-3 bg-accent/20 border-b border-border">
-              <span className="table-header text-left">Aluno</span>
-              <span className="table-header">Descrição</span>
-              <span className="table-header">Valor</span>
-              <span className="table-header">Vencimento</span>
-              <span className="table-header">Status</span>
-            </div>
-            <div className="divide-y divide-border">
-              {invoices.map((inv, i) => {
-                const s = STATUS[inv.status] ?? STATUS.PENDENTE
-                const Icon = s.icon
+      {loading ? (
+        <div className="space-y-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+        </div>
+      ) : invoices.length === 0 ? (
+        <EmptyState 
+          icon={<Banknote size={32} />}
+          title="Nenhuma fatura encontrada"
+          description="Você ainda não gerou nenhuma cobrança para o filtro selecionado."
+          action={
+            <button onClick={() => setShowModal(true)} className="btn-primary">
+              Criar Primeira Fatura
+            </button>
+          }
+        />
+      ) : (
+        <div className="table-container">
+          <table className="w-full text-left">
+            <thead>
+              <tr>
+                <th className="table-header">Aluno</th>
+                <th className="table-header hidden md:table-cell">Descrição</th>
+                <th className="table-header">Valor</th>
+                <th className="table-header hidden sm:table-cell">Vencimento</th>
+                <th className="table-header">Status</th>
+                <th className="table-header text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((inv) => {
+                const config = STATUS_CONFIG[inv.status] || STATUS_CONFIG.PENDENTE
                 const name = studentName(inv)
                 return (
-                  <motion.div
-                    key={inv.id}
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.02 }}
-                    className="flex items-center gap-3 md:gap-4 px-5 py-3.5 hover:bg-accent/10 transition-colors group"
-                  >
-                    <Avatar name={name} photoUrl={inv.child?.photoUrl} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-black text-foreground text-sm truncate">{name}</p>
-                      <p className="text-[11px] text-muted-foreground font-medium truncate">{inv.description}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-black text-foreground text-sm">{fmtBRL(inv.amount)}</p>
-                      <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
-                        {format(new Date(inv.dueDate), 'dd/MM/yy')}
+                  <tr key={inv.id} className="table-row group">
+                    <td className="table-cell">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={name} photoUrl={inv.child?.photoUrl} size="sm" />
+                        <div className="min-w-0">
+                          <p className="font-black text-foreground truncate">{name}</p>
+                          <p className="text-[10px] text-muted-foreground font-medium md:hidden truncate">{inv.description}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="table-cell hidden md:table-cell">
+                      <p className="text-sm text-muted-foreground font-medium truncate max-w-xs">{inv.description}</p>
+                    </td>
+                    <td className="table-cell">
+                      <p className="font-black text-foreground">{fmtBRL(inv.amount)}</p>
+                    </td>
+                    <td className="table-cell hidden sm:table-cell">
+                      <p className="text-xs font-bold text-muted-foreground">
+                        {format(new Date(inv.dueDate), 'dd/MM/yyyy')}
                       </p>
-                    </div>
-                    <span className={`badge ${s.badge} shrink-0 hidden sm:inline-flex`}>
-                      <Icon size={10} /> {s.label}
-                    </span>
-                    <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {inv.status === 'PENDENTE' && (
-                        <button onClick={() => handleCancel(inv.id)}
-                          className="w-8 h-8 bg-amber-500/10 text-amber-500 rounded-lg flex items-center justify-center hover:bg-amber-500/20 transition-colors" title="Cancelar">
-                          <X size={14} />
-                        </button>
-                      )}
-                      {inv.status !== 'PAGO' && (
-                        <button onClick={() => handleDelete(inv.id)}
-                          className="w-8 h-8 bg-red-500/10 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-500/20 transition-colors" title="Excluir">
-                          <Trash2 size={14} />
-                        </button>
-                      )}
-                      {inv.boletoUrl && (
-                        <a href={inv.boletoUrl} target="_blank" rel="noreferrer"
-                          className="w-8 h-8 bg-blue-500/10 text-blue-500 rounded-lg flex items-center justify-center hover:bg-blue-500/20 transition-colors" title="Boleto">
-                          <Barcode size={14} />
-                        </a>
-                      )}
-                      {inv.pixCopyPaste && (
-                        <button onClick={() => { navigator.clipboard.writeText(inv.pixCopyPaste!); toast.success('PIX copiado!') }}
-                          className="w-8 h-8 bg-emerald-500/10 text-emerald-500 rounded-lg flex items-center justify-center hover:bg-emerald-500/20 transition-colors" title="Copiar PIX">
-                          <QrCode size={14} />
-                        </button>
-                      )}
-                    </div>
-                  </motion.div>
+                    </td>
+                    <td className="table-cell">
+                      <Badge 
+                        label={config.label} 
+                        variant={config.variant} 
+                        dot={inv.status === 'PENDENTE'}
+                      />
+                    </td>
+                    <td className="table-cell text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {inv.status === 'PENDENTE' && (
+                          <button onClick={() => handleCancel(inv.id)} className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-xl transition-colors" title="Cancelar">
+                            <X size={16} />
+                          </button>
+                        )}
+                        {inv.status !== 'PAGO' && (
+                          <button onClick={() => handleDelete(inv.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors" title="Excluir">
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                        {inv.boletoUrl && (
+                          <a href={inv.boletoUrl} target="_blank" rel="noreferrer" className="p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors" title="Boleto">
+                            <Barcode size={16} />
+                          </a>
+                        )}
+                        {inv.pixCopyPaste && (
+                          <button onClick={() => { navigator.clipboard.writeText(inv.pixCopyPaste!); toast.success('PIX copiado!') }} className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-xl transition-colors" title="Copiar PIX">
+                            <QrCode size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
                 )
               })}
-            </div>
-          </>
-        )}
-      </div>
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* ── Modal: Nova Fatura ───────────────────────────────────────────── */}
+      {/* Modal: Nova Fatura */}
       <Modal
         open={showModal}
         onClose={() => setShowModal(false)}
         title="Nova Fatura"
-        subtitle="Criar cobrança individual para um aluno"
-        footer={
-          <>
-            <button onClick={() => setShowModal(false)} className="btn-secondary">Cancelar</button>
-            <button form="create-invoice" type="submit" disabled={saving} className="btn-primary gap-2">
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-              {saving ? 'Salvando…' : 'Criar Fatura'}
-            </button>
-          </>
-        }
+        subtitle="Crie uma cobrança individual para um aluno."
       >
-        <form id="create-invoice" onSubmit={handleCreate} className="space-y-4">
+        <form onSubmit={handleCreate} className="space-y-4">
           <div>
-            <label className="label">Aluno / Criança *</label>
+            <label className="label">Aluno *</label>
             <select value={form.childId} onChange={e => setForm(p => ({ ...p, childId: e.target.value }))} className="select">
-              <option value="">Selecione...</option>
+              <option value="">Selecione o aluno...</option>
               {children.map(c => <option key={c.id} value={c.id}>{c.fullName}</option>)}
             </select>
           </div>
@@ -371,7 +353,7 @@ export default function FinancePage() {
               value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
               className="input" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Valor (R$) *</label>
               <input type="number" min="0.01" step="0.01" placeholder="0,00"
@@ -389,33 +371,30 @@ export default function FinancePage() {
             <input type="month" value={form.referenceMonth}
               onChange={e => setForm(p => ({ ...p, referenceMonth: e.target.value }))} className="input" />
           </div>
+          <div className="pt-4 flex justify-end gap-3 border-t">
+            <button type="button" onClick={() => setShowModal(false)} className="btn-ghost" disabled={saving}>Cancelar</button>
+            <button type="submit" disabled={saving} className="btn-primary">
+              {saving ? <Loader2 size={16} className="animate-spin" /> : 'Criar Fatura'}
+            </button>
+          </div>
         </form>
       </Modal>
 
-      {/* ── Modal: Gerar em Lote ─────────────────────────────────────────── */}
+      {/* Modal: Gerar em Lote */}
       <Modal
         open={showBatchModal}
         onClose={() => setShowBatchModal(false)}
         title="Gerar em Lote"
-        subtitle="Crie mensalidades para múltiplos alunos de uma vez"
+        subtitle="Crie mensalidades para múltiplos alunos de uma vez."
         size="lg"
-        footer={
-          <>
-            <button onClick={() => setShowBatchModal(false)} className="btn-secondary">Cancelar</button>
-            <button form="batch-invoice" type="submit" disabled={saving || batch.selectedIds.length === 0} className="btn-primary gap-2">
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <Users size={14} />}
-              {saving ? 'Gerando…' : `Gerar ${batch.selectedIds.length} Fatura(s)`}
-            </button>
-          </>
-        }
       >
-        <form id="batch-invoice" onSubmit={handleBatch} className="space-y-4">
-          <div>
-            <label className="label">Descrição</label>
-            <input type="text" value={batch.description}
-              onChange={e => setBatch(p => ({ ...p, description: e.target.value }))} className="input" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleBatch} className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="label">Descrição Padrão</label>
+              <input type="text" value={batch.description}
+                onChange={e => setBatch(p => ({ ...p, description: e.target.value }))} className="input" />
+            </div>
             <div>
               <label className="label">Valor (R$) *</label>
               <input type="number" min="0.01" step="0.01" placeholder="0,00"
@@ -428,35 +407,40 @@ export default function FinancePage() {
                 onChange={e => setBatch(p => ({ ...p, dueDate: e.target.value }))} className="input" />
             </div>
           </div>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="label mb-0">Selecionar Alunos *</label>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="label mb-0">Selecionar Alunos ({batch.selectedIds.length})</label>
               <button type="button" onClick={() =>
                 setBatch(p => ({ ...p, selectedIds: p.selectedIds.length === children.length ? [] : children.map(c => c.id) }))
-              } className="text-[10px] font-black text-lime-600 hover:text-lime-700">
+              } className="text-xs font-black text-primary hover:underline">
                 {batch.selectedIds.length === children.length ? 'Desmarcar todos' : 'Selecionar todos'}
               </button>
             </div>
-            <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-xl divide-y divide-gray-50">
+            <div className="max-h-60 overflow-y-auto border border-border rounded-2xl divide-y divide-border bg-accent/20">
               {children.length === 0 ? (
-                <p className="text-center text-gray-300 text-xs py-6">Nenhum aluno encontrado</p>
+                <div className="p-8 text-center text-muted-foreground italic text-sm">Nenhum aluno encontrado</div>
               ) : children.map(c => (
-                <label key={c.id} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-lime-50/50 transition-colors">
+                <label key={c.id} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent/50 transition-colors">
                   <input type="checkbox" checked={batch.selectedIds.includes(c.id)}
                     onChange={e => setBatch(p => ({
                       ...p, selectedIds: e.target.checked
                         ? [...p.selectedIds, c.id]
                         : p.selectedIds.filter(id => id !== c.id)
                     }))}
-                    className="w-4 h-4 accent-lime-600 rounded" />
+                    className="w-5 h-5 accent-primary rounded-lg" />
                   <Avatar name={c.fullName} photoUrl={c.photoUrl} size="sm" />
-                  <span className="text-sm font-bold text-gray-900">{c.fullName}</span>
+                  <span className="text-sm font-black text-foreground">{c.fullName}</span>
                 </label>
               ))}
             </div>
-            <p className="text-[10px] font-bold text-gray-400 mt-1.5">
-              {batch.selectedIds.length} de {children.length} selecionado(s)
-            </p>
+          </div>
+
+          <div className="pt-4 flex justify-end gap-3 border-t">
+            <button type="button" onClick={() => setShowBatchModal(false)} className="btn-ghost" disabled={saving}>Cancelar</button>
+            <button type="submit" disabled={saving || batch.selectedIds.length === 0} className="btn-primary">
+              {saving ? <Loader2 size={16} className="animate-spin" /> : `Gerar ${batch.selectedIds.length} Cobranças`}
+            </button>
           </div>
         </form>
       </Modal>

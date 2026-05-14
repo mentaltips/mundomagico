@@ -30,11 +30,39 @@ router.get('/invoices', async (req, res) => {
   }
 })
 
-// POST /invoices - Create invoice
+// POST /invoices - Create invoice(s)
 router.post('/invoices', async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
-    const { dueDate, boletoExpiry, pixExpiry, paidAt, ...rest } = req.body
+    const data = req.body
+
+    if (Array.isArray(data)) {
+      // Batch creation
+      const results = await Promise.all(
+        data.map(async (item) => {
+          const { dueDate, boletoExpiry, pixExpiry, paidAt, ...rest } = item
+          try {
+            // Check for duplicate referenceMonth if needed, but let's keep it simple
+            const invoice = await prisma.invoice.create({
+              data: {
+                ...rest,
+                schoolId,
+                dueDate: new Date(dueDate),
+                ...(boletoExpiry && { boletoExpiry: new Date(boletoExpiry) }),
+                ...(pixExpiry && { pixExpiry: new Date(pixExpiry) }),
+                ...(paidAt && { paidAt: new Date(paidAt) }),
+              }
+            })
+            return invoice
+          } catch (err) {
+            return { error: 'Failed to create', childId: rest.childId, skipped: true }
+          }
+        })
+      )
+      return res.status(201).json(results)
+    }
+
+    const { dueDate, boletoExpiry, pixExpiry, paidAt, ...rest } = data
     const invoice = await prisma.invoice.create({
       data: {
         ...rest,
@@ -46,6 +74,25 @@ router.post('/invoices', async (req, res) => {
       }
     })
     res.status(201).json(invoice)
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// DELETE /invoices/:id - Delete invoice
+router.delete('/invoices/:id', async (req, res) => {
+  try {
+    const schoolId = req.user?.schoolId
+    const invoice = await prisma.invoice.findFirst({ where: { id: req.params.id, schoolId } })
+    if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
+
+    if (invoice.status === 'PAGO') {
+      return res.status(400).json({ error: 'Cannot delete a paid invoice' })
+    }
+
+    await prisma.invoice.delete({ where: { id: req.params.id } })
+    res.status(204).send()
   } catch (error) {
     req.log.error(error)
     res.status(500).json({ error: 'Internal server error' })

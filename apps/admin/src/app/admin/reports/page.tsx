@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import {
   FileText, Download, Loader2, Users, CreditCard,
-  ClipboardCheck, TrendingUp, Calendar, BarChart2
+  ClipboardCheck, TrendingUp, Calendar, BarChart2,
+  PieChart as PieChartIcon
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -11,6 +12,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts'
 import toast from 'react-hot-toast'
+import { PageHeader, StatCard } from '@/components/ui'
 
 const COLORS = ['#84cc16', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
 
@@ -96,43 +98,12 @@ export default function ReportsPage() {
     .filter((i) => i.status === 'PENDENTE')
     .reduce((sum, i) => sum + i.amount, 0)
 
-  const summaryCards = [
-    {
-      label: 'Total de Crianças',
-      value: children.length,
-      sub: `${statusData.find((s) => s.name === 'Ativo')?.value ?? 0} ativas`,
-      icon: <Users size={20} />,
-      color: 'text-primary bg-lime-50',
-    },
-    {
-      label: 'Receita Recebida',
-      value: `R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      sub: `${invoiceStatusData.find((s) => s.name === 'Pago')?.value ?? 0} faturas pagas`,
-      icon: <CreditCard size={20} />,
-      color: 'text-emerald-600 bg-emerald-50',
-    },
-    {
-      label: 'A Receber',
-      value: `R$ ${pendingRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      sub: `${invoiceStatusData.find((s) => s.name === 'Pendente')?.value ?? 0} faturas pendentes`,
-      icon: <TrendingUp size={20} />,
-      color: 'text-amber-600 bg-amber-50',
-    },
-    {
-      label: 'Relatórios Dev.',
-      value: devReports.length,
-      sub: `${devReports.filter((r) => !r.isDraft).length} publicados`,
-      icon: <ClipboardCheck size={20} />,
-      color: 'text-blue-600 bg-blue-50',
-    },
-  ]
-
   const exportSections = [
     {
       type: 'children',
       label: 'Crianças',
       icon: <Users size={20} />,
-      desc: 'Nome, turma, turno, responsáveis e informações de saúde',
+      desc: 'Nome, turma, turno, responsáveis e saúde',
     },
     {
       type: 'finance',
@@ -144,147 +115,192 @@ export default function ReportsPage() {
       type: 'attendance',
       label: 'Frequência',
       icon: <Calendar size={20} />,
-      desc: 'Registros de entrada e saída do mês atual',
+      desc: 'Registros de entrada e saída do mês',
     },
   ]
 
   return (
-    <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-          <BarChart2 className="text-primary" size={28} />
-          Relatórios
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">Visão geral da escola e exportações de dados</p>
-      </div>
+    <div className="page animate-in">
+      <PageHeader 
+        title="Relatórios & BI" 
+        subtitle="Análise completa da escola e exportação de dados estratégicos."
+        icon={<BarChart2 size={24} />}
+      />
 
-      {/* Cards de resumo */}
+      {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {summaryCards.map((card, i) => (
-          <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-4 ${card.color}`}>
-              {card.icon}
-            </div>
-            <p className="text-2xl font-black text-gray-900 leading-none">{card.value}</p>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{card.label}</p>
-            <p className="text-xs text-gray-400 font-medium mt-1">{card.sub}</p>
-          </div>
-        ))}
+        <StatCard 
+          label="Total Alunos" 
+          value={children.length} 
+          icon={<Users size={20} />} 
+          color="text-primary bg-primary/10" 
+          trend={`${statusData.find(s => s.name === 'Ativo')?.value ?? 0} ativos`}
+        />
+        <StatCard 
+          label="Recebido" 
+          value={`R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} 
+          icon={<CreditCard size={20} />} 
+          color="text-emerald-500 bg-emerald-500/10" 
+          trend={`${invoiceStatusData.find(s => s.name === 'Pago')?.value ?? 0} pagas`}
+        />
+        <StatCard 
+          label="A Receber" 
+          value={`R$ ${pendingRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} 
+          icon={<TrendingUp size={20} />} 
+          color="text-amber-500 bg-amber-500/10" 
+          trend={`${invoiceStatusData.find(s => s.name === 'Pendente')?.value ?? 0} pendentes`}
+        />
+        <StatCard 
+          label="Relatórios Dev." 
+          value={devReports.length} 
+          icon={<ClipboardCheck size={20} />} 
+          color="text-blue-500 bg-blue-500/10" 
+          trend={`${devReports.filter(r => !r.isDraft).length} publicados`}
+        />
       </div>
 
-      {/* Gráficos */}
+      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Status das crianças */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-black text-gray-900 mb-4">Status das Crianças</h2>
-          {statusData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  cx="50%" cy="50%"
-                  innerRadius={50} outerRadius={80}
-                  paddingAngle={3}
-                  dataKey="value"
-                >
-                  {statusData.map((_, idx) => (
-                    <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v) => [`${v} crianças`]} />
-                <Legend iconType="circle" iconSize={8} />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-48 flex items-center justify-center text-gray-300 text-sm">Sem dados</div>
-          )}
+        {/* Status */}
+        <div className="bg-card rounded-[2.5rem] border border-border p-6 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-9 h-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+              <PieChartIcon size={18} />
+            </div>
+            <h3 className="font-black text-foreground text-sm uppercase tracking-widest">Status das Crianças</h3>
+          </div>
+          <div className="h-[240px]">
+            {statusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%" cy="50%"
+                    innerRadius={60} outerRadius={90}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {statusData.map((_, idx) => (
+                      <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                    itemStyle={{ fontWeight: 800, fontSize: '12px' }}
+                  />
+                  <Legend iconType="circle" iconSize={8} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground italic text-sm">Sem dados</div>
+            )}
+          </div>
         </div>
 
-        {/* Turno */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-black text-gray-900 mb-4">Distribuição por Turno</h2>
-          {shiftData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={shiftData} barSize={40}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fontWeight: 700 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => [`${v} crianças`]} />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                  {shiftData.map((_, idx) => (
-                    <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-48 flex items-center justify-center text-gray-300 text-sm">Sem dados</div>
-          )}
+        {/* Distribution */}
+        <div className="bg-card rounded-[2.5rem] border border-border p-6 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-9 h-9 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center">
+              <BarChart2 size={18} />
+            </div>
+            <h3 className="font-black text-foreground text-sm uppercase tracking-widest">Turnos</h3>
+          </div>
+          <div className="h-[240px]">
+            {shiftData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={shiftData} barSize={40}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                  <Tooltip 
+                    cursor={{ fill: 'hsl(var(--accent))' }}
+                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                    {shiftData.map((_, idx) => (
+                      <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground italic text-sm">Sem dados</div>
+            )}
+          </div>
         </div>
 
-        {/* Financeiro */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-black text-gray-900 mb-4">Status das Faturas</h2>
-          {invoiceStatusData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={invoiceStatusData}
-                  cx="50%" cy="50%"
-                  outerRadius={80}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {invoiceStatusData.map((entry, idx) => (
-                    <Cell key={idx} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v) => [`${v} faturas`]} />
-                <Legend iconType="circle" iconSize={8} />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-48 flex items-center justify-center text-gray-300 text-sm">Sem faturas</div>
-          )}
+        {/* Finance */}
+        <div className="bg-card rounded-[2.5rem] border border-border p-6 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-9 h-9 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center">
+              <CreditCard size={18} />
+            </div>
+            <h3 className="font-black text-foreground text-sm uppercase tracking-widest">Faturas</h3>
+          </div>
+          <div className="h-[240px]">
+            {invoiceStatusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={invoiceStatusData}
+                    cx="50%" cy="50%"
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {invoiceStatusData.map((entry, idx) => (
+                      <Cell key={idx} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend iconType="circle" iconSize={8} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground italic text-sm">Sem faturas</div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Exportações */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-        <h2 className="font-black text-gray-900 mb-1 flex items-center gap-2">
-          <FileText size={20} className="text-primary" />
-          Exportar Dados
-        </h2>
-        <p className="text-sm text-gray-500 mb-6">Baixe os dados em CSV para planilhas ou JSON para integração</p>
+      {/* Export Section */}
+      <div className="bg-card rounded-[2.5rem] border border-border p-8 shadow-sm">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+            <Download size={20} />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-foreground">Exportar Dados</h3>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Relatórios para planilhas e auditoria</p>
+          </div>
+        </div>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {exportSections.map(({ type, label, icon, desc }) => (
-            <div key={type} className="flex items-center justify-between bg-gray-50 rounded-2xl p-5">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-white rounded-xl border border-gray-100 flex items-center justify-center text-gray-500 shadow-sm">
-                  {icon}
-                </div>
-                <div>
-                  <p className="font-black text-gray-900">{label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
-                </div>
+            <div key={type} className="p-6 rounded-3xl border border-border bg-accent/20 hover:bg-accent/40 transition-colors flex flex-col group">
+              <div className="w-10 h-10 bg-card rounded-2xl border border-border flex items-center justify-center text-muted-foreground shadow-sm group-hover:text-primary transition-colors mb-4">
+                {icon}
               </div>
-              <div className="flex gap-2 shrink-0">
+              <h4 className="font-black text-foreground mb-1">{label}</h4>
+              <p className="text-xs text-muted-foreground font-medium mb-6 flex-1">{desc}</p>
+              
+              <div className="flex gap-2">
                 <button
                   onClick={() => handleExport(type, 'csv')}
                   disabled={!!exporting}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-black text-xs hover:bg-gray-50 transition-all disabled:opacity-50"
+                  className="flex-1 btn-ghost py-2 rounded-xl text-[10px] gap-1.5"
                 >
-                  {exporting === `${type}-csv` ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                  {exporting === `${type}-csv` ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
                   CSV
                 </button>
                 <button
                   onClick={() => handleExport(type, 'json')}
                   disabled={!!exporting}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl font-black text-xs hover:bg-lime-600 transition-all disabled:opacity-50"
+                  className="flex-1 btn-primary py-2 rounded-xl text-[10px] gap-1.5"
                 >
-                  {exporting === `${type}-json` ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                  {exporting === `${type}-json` ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
                   JSON
                 </button>
               </div>
