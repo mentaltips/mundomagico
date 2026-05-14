@@ -26,16 +26,18 @@ const weekData = [
   { day: 'Sex', val: 0 },
 ]
 
-function greeting() {
+function getGreeting() {
   const h = new Date().getHours()
   if (h < 12) return 'Bom dia'
   if (h < 18) return 'Boa tarde'
   return 'Boa noite'
 }
 
-const today = new Date().toLocaleDateString('pt-BR', {
-  weekday: 'long', day: '2-digit', month: 'long',
-})
+function getTodayString() {
+  return new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long', day: '2-digit', month: 'long',
+  })
+}
 
 interface DashboardStats {
   activeAlunos: number
@@ -120,9 +122,11 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">{today}</p>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">
+            {mounted ? getTodayString() : '—'}
+          </p>
           <h1 className="text-3xl font-black text-foreground tracking-tight">
-            {greeting()}, <span className="text-primary">{firstName}</span> 👋
+            {mounted ? getGreeting() : 'Olá'}, <span className="text-primary">{firstName}</span> 👋
           </h1>
           <p className="text-sm text-muted-foreground font-medium mt-1">Aqui está o resumo do que está acontecendo na escola.</p>
         </div>

@@ -68,9 +68,14 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function AdminSidebar() {
+  const [mounted, setMounted] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const { isOpen, setIsOpen } = useContext(SidebarContext)
   const pathname = usePathname()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const SidebarContent = () => (
     <>
@@ -133,6 +138,12 @@ export function AdminSidebar() {
     </>
   )
 
+  if (!mounted) {
+    return (
+      <aside className="hidden lg:flex flex-col h-screen sticky top-0 bg-card border-r border-border w-[280px] shrink-0" />
+    )
+  }
+
   return (
     <>
       <AnimatePresence>
@@ -164,7 +175,7 @@ export function AdminSidebar() {
       <motion.aside
         initial={false}
         animate={{ width: collapsed ? 84 : 280 }}
-        className="hidden lg:flex flex-col h-screen sticky top-0 bg-card border-r border-border transition-all duration-300 z-50 overflow-visible shadow-sm"
+        className="hidden lg:flex flex-col h-screen sticky top-0 bg-card border-r border-border transition-all duration-300 z-50 overflow-visible shadow-sm shrink-0"
       >
         <SidebarContent />
         <button

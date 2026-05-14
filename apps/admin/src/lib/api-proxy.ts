@@ -2,7 +2,7 @@ import { getApiAuth } from './auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function proxyRequest(req: NextRequest, pathOverride?: string) {
-  const apiAuth = await getApiAuth()
+  const apiAuth = await getApiAuth(req)
   const accessToken = apiAuth?.token
 
   if (process.env.NODE_ENV !== 'production') {

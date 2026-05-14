@@ -7,7 +7,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from './auth'
 
 function getApiUrl() {
-  return (process.env.API_URL || 'http://localhost:3333').replace(/\/$/, '')
+  return (process.env.API_URL || 'http://localhost:3002').replace(/\/$/, '')
 }
 
 async function getToken(): Promise<string | null> {

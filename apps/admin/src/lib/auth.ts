@@ -1,4 +1,5 @@
 import { getServerSession, NextAuthOptions } from 'next-auth'
+import { getToken } from 'next-auth/jwt'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { redirect } from 'next/navigation'
 
@@ -78,7 +79,30 @@ export async function requireAuth() {
   return session.user
 }
 
-export async function getApiAuth() {
+export async function getApiAuth(req?: any) {
+  // Se tivermos o request, usamos getToken que é mais robusto em rotas de API
+  if (req) {
+    const token = await getToken({ 
+      req, 
+      secret: process.env.NEXTAUTH_SECRET,
+      // Se estiver usando HTTPS em produção, NextAuth muda o nome do cookie
+      secureCookie: process.env.NODE_ENV === 'production'
+    })
+    
+    if (token) {
+      return {
+        user: {
+          id: token.sub as string,
+          role: token.role as string,
+          schoolId: token.schoolId as string,
+          email: token.email as string,
+        },
+        token: token.accessToken as string | undefined,
+      }
+    }
+  }
+
+  // Fallback para getServerSession (funciona bem em Server Components)
   const session = await getServerSession(authOptions)
 
   if (!session?.user) {

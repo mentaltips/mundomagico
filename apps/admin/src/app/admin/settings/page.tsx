@@ -396,7 +396,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                {pendingData && pendingData.pending.length > 0 && (
+                {pendingData?.pending && pendingData.pending.length > 0 && (
                   <div className="pt-8 border-t border-border animate-in slide-in-from-bottom-4 duration-500">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-10 h-10 bg-rose-500/10 text-rose-600 rounded-xl flex items-center justify-center">

@@ -8,9 +8,10 @@ import { z } from 'zod'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import {
-  User, Heart, Baby, Shield, Plus, Trash2, AlertTriangle
+  User, Heart, Baby, Shield, Plus, Trash2, AlertTriangle, Loader2
 } from 'lucide-react'
 import { ImageUpload } from '@/components/ui/ImageUpload'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 const schema = z.object({
   // Dados pessoais
@@ -533,29 +534,22 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
 }
 
 function GuardianLinker({ childId }: { childId: string }) {
-  const [links, setLinks] = useState<any[]>([])
-  const [guardians, setGuardians] = useState<any[]>([])
   const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  const fetchData = async () => {
-    try {
-      const [lRes, gRes] = await Promise.all([
-        fetch(`/api/children/${childId}/guardians`),
-        fetch('/api/guardians')
-      ])
-      if (lRes.ok) setLinks(await lRes.json())
-      if (gRes.ok) setGuardians(await gRes.json())
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data: links = [], isLoading: loadingLinks, error: errorLinks } = useQuery<any[]>({
+    queryKey: ['child-guardians', childId],
+    queryFn: () => fetch(`/api/children/${childId}/guardians`).then(r => {
+      if (!r.ok) throw new Error('Falha ao buscar vínculos')
+      return r.json()
+    }),
+    enabled: !!childId
+  })
 
-  useEffect(() => { 
-    fetchData() 
-  }, [childId])
+  const { data: guardians = [], isLoading: loadingGuardians } = useQuery<any[]>({
+    queryKey: ['all-guardians'],
+    queryFn: () => fetch('/api/guardians').then(r => r.json()),
+  })
 
   const handleLink = async (guardianId: string) => {
     try {
@@ -568,7 +562,7 @@ function GuardianLinker({ childId }: { childId: string }) {
       if (res.ok) {
         toast.success('Responsável vinculado!')
         setSearch('')
-        fetchData()
+        queryClient.invalidateQueries({ queryKey: ['child-guardians', childId] })
       } else {
         const data = await res.json()
         toast.error(data.error || 'Erro ao vincular')
@@ -590,7 +584,7 @@ function GuardianLinker({ childId }: { childId: string }) {
 
       if (res.ok) {
         toast.success('Vínculo removido')
-        fetchData()
+        queryClient.invalidateQueries({ queryKey: ['child-guardians', childId] })
       } else {
         toast.error('Erro ao desvincular')
       }
@@ -608,7 +602,16 @@ function GuardianLinker({ childId }: { childId: string }) {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-black text-foreground tracking-tight mb-4">Responsáveis Vinculados</h3>
-        {links.length === 0 ? (
+        {loadingLinks ? (
+          <div className="py-12 flex flex-col items-center justify-center opacity-40 animate-pulse">
+            <Loader2 className="w-8 h-8 animate-spin mb-2" />
+            <p className="text-[10px] font-black uppercase tracking-widest">Buscando responsáveis...</p>
+          </div>
+        ) : errorLinks ? (
+          <div className="p-6 bg-rose-500/5 border border-rose-500/10 rounded-[2rem] text-center">
+            <p className="text-xs text-rose-500 font-bold">Erro ao carregar responsáveis. Verifique sua conexão.</p>
+          </div>
+        ) : links.length === 0 ? (
           <p className="text-sm text-muted-foreground font-bold italic bg-accent/20 p-6 rounded-[2rem] text-center border border-border/50">Nenhum responsável vinculado ainda.</p>
         ) : (
           <div className="grid gap-3">
@@ -616,10 +619,10 @@ function GuardianLinker({ childId }: { childId: string }) {
               <div key={link.id} className="flex items-center justify-between p-4 bg-primary/5 rounded-[2rem] border border-primary/10">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center text-primary font-black shadow-sm border border-border">
-                    {link.guardian.fullName.charAt(0)}
+                    {link.guardian?.fullName?.charAt(0) || '?'}
                   </div>
                   <div>
-                    <p className="font-black text-foreground tracking-tight">{link.guardian.fullName}</p>
+                    <p className="font-black text-foreground tracking-tight">{link.guardian?.fullName || 'Sem nome'}</p>
                     <p className="text-[10px] text-primary font-black uppercase tracking-widest">{link.isPrimary ? 'Responsável Principal' : 'Responsável Secundário'}</p>
                   </div>
                 </div>

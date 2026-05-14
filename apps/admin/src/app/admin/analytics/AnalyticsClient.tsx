@@ -30,8 +30,8 @@ export default function AnalyticsClient() {
 
   const stats = [
     { label: 'Total de Acessos', value: data?.totalVisits || 0, icon: <MousePointer2 />, color: 'text-blue-500 bg-blue-500/10' },
-    { label: 'Visitas Recentes', value: data?.recentVisits.length || 0, icon: <Clock />, color: 'text-emerald-500 bg-emerald-500/10' },
-    { label: 'Páginas Ativas', value: data?.topPaths.length || 0, icon: <Globe />, color: 'text-purple-500 bg-purple-500/10' },
+    { label: 'Visitas Recentes', value: data?.recentVisits?.length || 0, icon: <Clock />, color: 'text-emerald-500 bg-emerald-500/10' },
+    { label: 'Páginas Ativas', value: data?.topPaths?.length || 0, icon: <Globe />, color: 'text-purple-500 bg-purple-500/10' },
   ]
 
   return (
