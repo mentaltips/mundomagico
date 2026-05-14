@@ -6,48 +6,67 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 262.1 83.3% 57.8%;
-    --secondary-foreground: 210 40% 98%;
-
+    --primary: 115 50% 45%;
+    --primary-deep: 115 50% 32%;    /* pressed/shadow — #2d6228 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 350 89% 60%;
+    --secondary-foreground: 0 0% 100%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
     --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 84% 4.9%;
-
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
+    --border-deep: 214.3 31.8% 82%;  /* bottom-shadow border — slightly darker */
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --ring: 115 60% 50%;
+    --radius: 1.25rem;
+  }
 
-    --radius: 1rem;
+  .dark {
+    --background: 222.2 47.4% 3.5%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 47.4% 5.5%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 47.4% 3.5%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 115 60% 50%;
+    --primary-deep: 115 60% 36%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+    --secondary: 350 89% 65%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 12%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 12%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 12%;
+    --border-deep: 217.2 32.6% 8%;
+    --input: 217.2 32.6% 12%;
+    --ring: 115 60% 50%;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  h1, h2, h3, h4 { @apply tracking-tight font-black text-foreground; }
 }
 
 .glass {
-  @apply bg-white/70 backdrop-blur-lg border border-white/20;
+  @apply bg-white/70 backdrop-blur-lg border border-white/20 dark:bg-black/70;
 }
 
 .animate-in {

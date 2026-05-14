@@ -37,7 +37,7 @@ const nextConfig = {
   },
 
   // Proxy para a API no VPS (Exceto Auth que roda no Next.js)
-  async rewrites() {
+  /* async rewrites() {
     return [
       {
         source: '/api/auth/:path*',
@@ -48,7 +48,7 @@ const nextConfig = {
         destination: 'https://api.mundomagicocajamar.com.br/api/:path*',
       },
     ]
-  },
+  }, */
 }
 
 module.exports = nextConfig

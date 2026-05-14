@@ -11,6 +11,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 115 50% 45%;
+    --primary-deep: 115 50% 32%;    /* pressed/shadow — #2d6228 */
     --primary-foreground: 0 0% 100%;
     --secondary: 350 89% 60%;
     --secondary-foreground: 0 0% 100%;
@@ -21,6 +22,7 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
+    --border-deep: 214.3 31.8% 82%;  /* bottom-shadow border — slightly darker */
     --input: 214.3 31.8% 91.4%;
     --ring: 115 60% 50%;
     --radius: 1.25rem;
@@ -34,6 +36,7 @@
     --popover: 222.2 47.4% 3.5%;
     --popover-foreground: 210 40% 98%;
     --primary: 115 60% 50%;
+    --primary-deep: 115 60% 36%;    /* pressed — darker green in dark mode */
     --primary-foreground: 222.2 47.4% 1.2%;
     --secondary: 350 89% 65%;
     --secondary-foreground: 210 40% 98%;
@@ -44,6 +47,7 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 12%;
+    --border-deep: 217.2 32.6% 8%;  /* bottom-shadow in dark mode */
     --input: 217.2 32.6% 12%;
     --ring: 115 60% 50%;
   }
@@ -85,9 +89,22 @@
            disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-primary text-primary-foreground shadow-lg shadow-primary/20
-           hover:brightness-110 active:scale-[0.98]
+    @apply btn bg-primary text-primary-foreground font-black
            focus-visible:ring-primary;
+    box-shadow: none;
+    border-bottom: 4px solid hsl(var(--primary-deep));
+    transition: filter 150ms ease, transform 80ms ease, border-bottom-width 80ms ease;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.08);
+  }
+  .btn-primary:active {
+    transform: translateY(4px);
+    border-bottom-width: 0px;
+  }
+  .btn-primary:disabled {
+    border-bottom-color: transparent;
+    transform: none;
   }
   .btn-secondary {
     @apply btn bg-card text-foreground border border-border shadow-sm
@@ -103,13 +120,25 @@
 
   /* ── Cards ───────────────────────────────────────────────────────────── */
   .card {
-    @apply bg-card text-card-foreground rounded-[--radius] border border-border shadow-sm overflow-hidden;
+    @apply bg-card text-card-foreground rounded-[--radius] overflow-hidden;
+    border: 2px solid hsl(var(--border));
+    border-bottom: 4px solid hsl(var(--border-deep, var(--border)));
+    box-shadow: none;
   }
   .card-hover {
-    @apply card hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300;
+    @apply card transition-all duration-200;
+  }
+  .card-hover:hover {
+    border-color: hsl(var(--primary) / 0.25);
+    border-bottom-color: hsl(var(--primary) / 0.35);
+    transform: translateY(-2px);
   }
   .card-interactive {
-    @apply card-hover cursor-pointer active:scale-[0.99] active:brightness-95;
+    @apply card-hover cursor-pointer;
+  }
+  .card-interactive:active {
+    transform: translateY(2px);
+    border-bottom-width: 2px;
   }
 
   /* ── Inputs ──────────────────────────────────────────────────────────── */
@@ -188,12 +217,34 @@
     @apply px-7 py-5 border-t border-border flex items-center justify-end gap-3;
   }
 
+  /* ── Progress Bar ────────────────────────────────────────────────────── */
+  .progress-track {
+    @apply w-full overflow-hidden rounded-full;
+    height: 16px;
+    background: hsl(var(--border));
+    border: 2px solid hsl(var(--border-deep, var(--border)));
+  }
+  .progress-fill {
+    @apply rounded-full h-full;
+    background: hsl(var(--primary));
+    transition: width 320ms ease-out;
+    min-width: 8px;
+  }
+  .progress-fill-amber {
+    @apply progress-fill;
+    background: #f59e0b;
+  }
+  .progress-fill-red {
+    @apply progress-fill;
+    background: #ef4444;
+  }
+
   /* ── Misc ────────────────────────────────────────────────────────────── */
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
   .glass {
-    @apply bg-background/60 backdrop-blur-xl border border-border;
+    @apply bg-background/60 backdrop-blur-xl border-2 border-border;
   }
   .gradient-primary {
     background: linear-gradient(135deg, hsl(var(--primary)) 0%, #65a30d 100%);

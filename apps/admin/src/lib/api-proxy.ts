@@ -1,10 +1,25 @@
-import { getServerSession } from 'next-auth'
+import { getToken } from 'next-auth/jwt'
 import { authOptions } from './auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function proxyRequest(req: NextRequest, pathOverride?: string) {
-  const session = await getServerSession(authOptions)
-  const token = (session as any)?.accessToken
+  // Tenta pegar o token do cookie da requisição
+  const token = await getToken({ 
+    req: req as any, 
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: process.env.NODE_ENV === 'production'
+  })
+  
+  const accessToken = (token as any)?.accessToken
+  
+  console.log(`[Proxy] Request: ${req.method} ${req.url}`)
+  console.log(`[Proxy] Token object exists: ${!!token}`)
+  console.log(`[Proxy] AccessToken: ${!!accessToken}`)
+  
+  const headersObj: any = {}
+  req.headers.forEach((v, k) => { headersObj[k] = k.includes('cookie') ? '[HIDDEN]' : v })
+  console.log(`[Proxy] Headers:`, JSON.stringify(headersObj, null, 2))
+  console.log(`[Proxy] Cookies list:`, req.cookies.getAll().map(c => c.name).join(', '))
 
   const apiUrl = (process.env.API_URL || 'http://localhost:3333').replace(/\/$/, '')
   
@@ -16,7 +31,7 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   }
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`
 
   let body: string | undefined
   if (req.method !== 'GET' && req.method !== 'HEAD') {

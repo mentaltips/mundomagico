@@ -6,7 +6,24 @@ import { useTheme } from 'next-themes'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export function ThemeToggle() {
-  const { setTheme, theme, resolvedTheme } = useTheme()
+  const { setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => { setMounted(true) }, [])
+
+  // Render a neutral placeholder on server & before hydration
+  // — same DOM shape (button > div > svg) so no mismatch occurs
+  if (!mounted) {
+    return (
+      <button
+        className="p-2 text-muted-foreground rounded-xl hover:bg-accent relative overflow-hidden"
+        aria-label="Alternar tema"
+        suppressHydrationWarning
+      >
+        <div style={{ width: 20, height: 20 }} />
+      </button>
+    )
+  }
 
   return (
     <button

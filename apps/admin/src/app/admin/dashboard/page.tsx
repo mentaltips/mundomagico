@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { motion } from 'framer-motion'
 import {
@@ -50,6 +51,12 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { data: session } = useSession()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const firstName = session?.user?.name?.split(' ')[0] ?? 'Admin'
 
   const { data: stats, isLoading } = useQuery<DashboardStats>({
@@ -129,9 +136,9 @@ export default function DashboardPage() {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card, i) => (
-          <Link key={i} href={card.href} className="block transition-transform active:scale-95">
+          <div key={i} className="block transition-transform active:scale-95">
             <StatCard {...card} />
-          </Link>
+          </div>
         ))}
       </div>
 
@@ -151,44 +158,48 @@ export default function DashboardPage() {
           </div>
           
           <div className="h-[240px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats?.weeklyAttendance ?? weekData} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="day" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11, fontWeight: 700 }}
-                  dy={8}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, opacity: 0.5 }}
-                />
-                <Tooltip 
-                  cursor={{ fill: 'hsl(var(--accent))', radius: 8 }}
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: '1px solid hsl(var(--border))',
-                    backgroundColor: 'hsl(var(--card))',
-                    fontWeight: 900,
-                    fontSize: 12,
-                    padding: '12px',
-                  }}
-                  itemStyle={{ color: 'hsl(var(--primary))' }}
-                  formatter={(v: any) => [`${v} crianças`, 'Presenças']}
-                />
-                <Bar dataKey="val" radius={[8, 8, 0, 0]} barSize={32}>
-                  {(stats?.weeklyAttendance ?? weekData).map((_: any, i: number) => (
-                    <Cell 
-                      key={i} 
-                      fill={i === (new Date().getDay() - 1) ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.15)'} 
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {mounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats?.weeklyAttendance ?? weekData} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="day" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11, fontWeight: 700 }}
+                    dy={8}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, opacity: 0.5 }}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: 'hsl(var(--accent))', radius: 8 }}
+                    contentStyle={{ 
+                      borderRadius: '16px', 
+                      border: '1px solid hsl(var(--border))',
+                      backgroundColor: 'hsl(var(--card))',
+                      fontWeight: 900,
+                      fontSize: 12,
+                      padding: '12px',
+                    }}
+                    itemStyle={{ color: 'hsl(var(--primary))' }}
+                    formatter={(v: any) => [`${v} crianças`, 'Presenças']}
+                  />
+                  <Bar dataKey="val" radius={[8, 8, 0, 0]} barSize={32}>
+                    {(stats?.weeklyAttendance ?? weekData).map((_: any, i: number) => (
+                      <Cell 
+                        key={i} 
+                        fill={i === (new Date().getDay() - 1) ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.15)'} 
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full bg-accent/10 rounded-2xl animate-pulse" />
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-border">

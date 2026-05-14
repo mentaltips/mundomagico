@@ -199,10 +199,10 @@ export default function ChildItemsPage() {
                         {remaining} unidades
                       </span>
                     </div>
-                    <div className="h-2 bg-accent rounded-full overflow-hidden shadow-inner">
+                    <div className="progress-track">
                       <div
-                        className={`h-full rounded-full transition-all duration-700 ${isLow ? 'bg-rose-500' : 'bg-emerald-500'}`}
-                        style={{ width: `${pct}%` }}
+                        className={isLow ? 'progress-fill-red' : 'progress-fill'}
+                        style={{ width: `${pct}%`, background: isLow ? undefined : '#10b981' }}
                       />
                     </div>
                   </div>

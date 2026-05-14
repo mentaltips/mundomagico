@@ -35,7 +35,8 @@ export function requireApiAuth(req: Request, res: Response, next: NextFunction) 
     const payload = jwt.verify(token, secret) as JwtPayload
     req.user = payload
     next()
-  } catch (err) {
-    return res.status(401).json({ error: 'Token inválido ou expirado' })
+  } catch (err: any) {
+    console.error('[Auth] Erro na verificação do token:', err.message)
+    return res.status(401).json({ error: 'Token inválido ou expirado', detail: err.message })
   }
 }

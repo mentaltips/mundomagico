@@ -10,7 +10,8 @@ import {
   Search, ChevronLeft, ChevronRight, GraduationCap,
   HeartPulse, Calendar, FileText, ShieldAlert,
   SearchIcon, Command, Camera, ClipboardList, Package, ShieldCheck,
-  AlertCircle, Megaphone, BarChart2, CheckCheck, Sparkles, Heart
+  AlertCircle, Megaphone, BarChart2, CheckCheck, Sparkles, Heart,
+  LayoutGrid, LogIn, Image, BarChart
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -18,16 +19,22 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import { OfflineIndicator } from '@/components/OfflineIndicator'
 
 const menuItems = [
-  { icon: <LayoutDashboard size={20} />, label: 'Dashboard',        href: '/admin/dashboard',            group: 'principal' },
-  { icon: <GraduationCap size={20} />,  label: 'Crianças',          href: '/admin/children',             group: 'principal' },
-  { icon: <Users size={20} />,          label: 'Responsáveis',      href: '/admin/guardians',            group: 'principal' },
-  { icon: <Users size={20} />,          label: 'Turmas',            href: '/admin/groups',               group: 'principal' },
-  { icon: <Megaphone size={20} />,      label: 'Comunicados',       href: '/admin/announcements',        group: 'operacional' },
-  { icon: <ClipboardCheck size={20} />, label: 'Diário de Rotina',  href: '/admin/daily-routine',        group: 'operacional' },
-  { icon: <HeartPulse size={20} />,     label: 'Saúde',             href: '/admin/health',               group: 'operacional' },
-  { icon: <CreditCard size={20} />,     label: 'Financeiro',        href: '/admin/finance',              group: 'operacional' },
-  { icon: <Calendar size={20} />,       label: 'Calendário',        href: '/admin/calendar',             group: 'operacional' },
-  { icon: <Settings size={20} />,       label: 'Configurações',     href: '/admin/settings',             group: 'operacional' },
+  // ── Principal ──────────────────────────────────────────────
+  { icon: <LayoutDashboard size={20} />, label: 'Dashboard',        href: '/admin/dashboard',     group: 'principal' },
+  { icon: <GraduationCap size={20} />,  label: 'Crianças',          href: '/admin/children',      group: 'principal' },
+  { icon: <Users size={20} />,          label: 'Responsáveis',      href: '/admin/guardians',     group: 'principal' },
+  { icon: <LayoutGrid size={20} />,     label: 'Turmas',            href: '/admin/groups',        group: 'principal' },
+  // ── Operacional ────────────────────────────────────────────
+  { icon: <Megaphone size={20} />,      label: 'Comunicados',       href: '/admin/announcements', group: 'operacional' },
+  { icon: <ClipboardCheck size={20} />, label: 'Diário de Rotina',  href: '/admin/daily-routine', group: 'operacional' },
+  { icon: <LogIn size={20} />,          label: 'Entrada / Saída',   href: '/admin/check-in-out',  group: 'operacional' },
+  { icon: <HeartPulse size={20} />,     label: 'Saúde',             href: '/admin/health',        group: 'operacional' },
+  { icon: <Package size={20} />,        label: 'Itens das Crianças',href: '/admin/child-items',   group: 'operacional' },
+  { icon: <Image size={20} />,          label: 'Fotos do Dia',      href: '/admin/photos',        group: 'operacional' },
+  { icon: <CreditCard size={20} />,     label: 'Financeiro',        href: '/admin/finance',       group: 'operacional' },
+  { icon: <Calendar size={20} />,       label: 'Calendário',        href: '/admin/calendar',      group: 'operacional' },
+  { icon: <BarChart size={20} />,       label: 'Relatórios',        href: '/admin/reports',       group: 'operacional' },
+  { icon: <Settings size={20} />,       label: 'Configurações',     href: '/admin/settings',      group: 'operacional' },
 ]
 
 const NOTIF_ICONS: Record<string, any> = {
