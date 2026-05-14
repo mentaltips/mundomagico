@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const database_1 = require("@mundo-magico/database");
+const validate_1 = require("../middleware/validate");
+const schemas_1 = require("../schemas");
 const router = (0, express_1.Router)();
 // GET / - List all children
 router.get('/', async (req, res) => {
@@ -23,7 +25,7 @@ router.get('/', async (req, res) => {
     }
 });
 // POST / - Create child
-router.post('/', async (req, res) => {
+router.post('/', (0, validate_1.validate)(schemas_1.createChildSchema), async (req, res) => {
     try {
         const schoolId = req.user?.schoolId;
         const { birthDate, entryDate, exitDate, imageAuthDate, ...rest } = req.body;
@@ -68,7 +70,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 // PATCH /:id - Update child
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', (0, validate_1.validate)(schemas_1.updateChildSchema), async (req, res) => {
     try {
         const schoolId = req.user?.schoolId;
         const { birthDate, entryDate, exitDate, imageAuthDate, ...rest } = req.body;
@@ -140,7 +142,7 @@ router.get('/:id/authorized-pickups', async (req, res) => {
     }
 });
 // POST /:id/authorized-pickups
-router.post('/:id/authorized-pickups', async (req, res) => {
+router.post('/:id/authorized-pickups', (0, validate_1.validate)(schemas_1.createAuthorizedPickupSchema), async (req, res) => {
     try {
         const schoolId = req.user?.schoolId;
         const child = await database_1.prisma.child.findFirst({ where: { id: req.params.id, schoolId } });

@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const database_1 = require("@mundo-magico/database");
+const validate_1 = require("../middleware/validate");
+const schemas_1 = require("../schemas");
 const router = (0, express_1.Router)();
 // GET / - List check-in/out records
 router.get('/', async (req, res) => {
@@ -33,7 +35,7 @@ router.get('/', async (req, res) => {
     }
 });
 // POST / - Register check-in or check-out
-router.post('/', async (req, res) => {
+router.post('/', (0, validate_1.validate)(schemas_1.checkInOutSchema), async (req, res) => {
     try {
         const schoolId = req.user?.schoolId;
         const checkedById = req.user?.sub;

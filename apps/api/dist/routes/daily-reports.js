@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
                 where: { schoolId, groupId: groupId },
                 select: { id: true }
             });
-            childIds = children.map(c => c.id);
+            childIds = children.map((c) => c.id);
         }
         const reports = await database_1.prisma.childDailyReport.findMany({
             where: {

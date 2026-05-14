@@ -6,7 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const database_1 = require("@mundo-magico/database");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const requireRole_1 = require("../middleware/requireRole");
 const router = (0, express_1.Router)();
+// Roles que podem gerenciar usuários
+const MANAGERS = ['ADMIN', 'DIRECTOR'];
 // GET / - List users of school
 router.get('/', async (req, res) => {
     try {
@@ -33,8 +36,8 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-// POST / - Create user
-router.post('/', async (req, res) => {
+// POST / - Create user (apenas ADMIN e DIRECTOR)
+router.post('/', (0, requireRole_1.requireRole)(...MANAGERS), async (req, res) => {
     try {
         const schoolId = req.user?.schoolId;
         const { password, ...rest } = req.body;
@@ -86,8 +89,8 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-// PATCH /:id - Update user
-router.patch('/:id', async (req, res) => {
+// PATCH /:id - Update user (apenas ADMIN e DIRECTOR)
+router.patch('/:id', (0, requireRole_1.requireRole)(...MANAGERS), async (req, res) => {
     try {
         const schoolId = req.user?.schoolId;
         const { password, ...rest } = req.body;
@@ -112,8 +115,8 @@ router.patch('/:id', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-// DELETE /:id - Delete user (soft delete by deactivating)
-router.delete('/:id', async (req, res) => {
+// DELETE /:id - Desativa usuário (apenas ADMIN e DIRECTOR)
+router.delete('/:id', (0, requireRole_1.requireRole)(...MANAGERS), async (req, res) => {
     try {
         const schoolId = req.user?.schoolId;
         const result = await database_1.prisma.user.updateMany({

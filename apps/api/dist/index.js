@@ -16,6 +16,7 @@ const students_1 = __importDefault(require("./routes/students"));
 const groups_1 = __importDefault(require("./routes/groups"));
 const stats_1 = __importDefault(require("./routes/stats"));
 const auth_2 = __importDefault(require("./routes/auth"));
+const webhooks_1 = __importDefault(require("./routes/webhooks"));
 // New routes
 const children_1 = __importDefault(require("./routes/children"));
 const announcements_1 = __importDefault(require("./routes/announcements"));
@@ -32,7 +33,6 @@ const settings_1 = __importDefault(require("./routes/settings"));
 const users_1 = __importDefault(require("./routes/users"));
 const notifications_1 = __importDefault(require("./routes/notifications"));
 const parent_1 = __importDefault(require("./routes/parent"));
-const guardian_feed_1 = __importDefault(require("./routes/guardian-feed"));
 const teacher_1 = __importDefault(require("./routes/teacher"));
 const daily_reports_1 = __importDefault(require("./routes/daily-reports"));
 const documents_1 = __importDefault(require("./routes/documents"));
@@ -61,8 +61,18 @@ app.use((0, cors_1.default)({
 app.use(express_1.default.json());
 app.use((0, pino_http_1.default)());
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    const redis = (0, queue_1.isRedisHealthy)();
+    res.status(redis ? 200 : 207).json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        services: {
+            api: 'ok',
+            redis: redis ? 'ok' : 'unavailable — notificações WhatsApp pausadas',
+        },
+    });
 });
+// Webhooks públicos (sem auth — verificação própria por assinatura)
+app.use('/api/webhooks', webhooks_1.default);
 // Existing routes
 app.use('/api/students', auth_1.requireApiAuth, students_1.default);
 app.use('/api/groups', auth_1.requireApiAuth, groups_1.default);
@@ -84,7 +94,6 @@ app.use('/api/settings', auth_1.requireApiAuth, settings_1.default);
 app.use('/api/users', auth_1.requireApiAuth, users_1.default);
 app.use('/api/notifications', auth_1.requireApiAuth, notifications_1.default);
 app.use('/api/parent', auth_1.requireApiAuth, parent_1.default);
-app.use('/api/guardian-feed', auth_1.requireApiAuth, guardian_feed_1.default);
 app.use('/api/teacher', auth_1.requireApiAuth, teacher_1.default);
 app.use('/api/daily-reports', auth_1.requireApiAuth, daily_reports_1.default);
 app.use('/api/documents', auth_1.requireApiAuth, documents_1.default);
