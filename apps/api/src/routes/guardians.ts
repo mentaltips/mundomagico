@@ -110,6 +110,9 @@ import bcrypt from 'bcryptjs'
 router.post('/:id/create-user', async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
+    if (!schoolId) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
     const guardianId = req.params.id
 
     const guardian = await prisma.guardian.findUnique({
@@ -146,7 +149,7 @@ router.post('/:id/create-user', async (req, res) => {
         password: hashedPassword,
         name: guardian.fullName,
         role: 'GUARDIAN',
-        phone: guardian.phone,
+        phone: guardian.phone || undefined,
         schoolId: schoolId,
       }
     })
