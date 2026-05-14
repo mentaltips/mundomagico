@@ -1,6 +1,8 @@
 'use client'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -48,7 +50,16 @@ const fmtBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
 // ── Component ─────────────────────────────────────────────────────────────────
+// ── Main Page Wrapper ─────────────────────────────────────────────────────────
 export default function FinancePage() {
+  return (
+    <Suspense fallback={<div className="p-10 animate-pulse text-center">Carregando módulo financeiro...</div>}>
+      <FinancePageContent />
+    </Suspense>
+  )
+}
+
+function FinancePageContent() {
   const searchParams = useSearchParams()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [children, setChildren] = useState<any[]>([])
