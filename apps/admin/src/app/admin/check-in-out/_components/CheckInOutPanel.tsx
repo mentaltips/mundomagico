@@ -90,10 +90,18 @@ export function CheckInOutPanel({ date, children }: Props) {
         body: JSON.stringify({
           childId: modal.child.id,
           date,
-          type: modal.type,
-          personName: form.personName,
-          personDoc: form.personDoc,
-          note: form.note,
+          status: modal.type === 'in' ? 'PRESENTE' : 'AGUARDANDO_RETIRADA',
+          ...(modal.type === 'in' ? {
+            checkInTime: new Date().toISOString(),
+            broughtBy: form.personName,
+            broughtByDoc: form.personDoc,
+            checkInNote: form.note,
+          } : {
+            checkOutTime: new Date().toISOString(),
+            pickedUpBy: form.personName,
+            pickedUpByDoc: form.personDoc,
+            checkOutNote: form.note,
+          })
         }),
       })
       if (!res.ok) throw new Error()
