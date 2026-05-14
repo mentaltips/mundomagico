@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
-import { LogIn, LogOut, Shield, AlertTriangle, Search, Clock } from 'lucide-react'
+import { LogIn, LogOut, Shield, AlertTriangle, Search, Clock, Users, X, CheckCircle2 } from 'lucide-react'
+import { Modal, Avatar, Badge, BadgeVariant } from '@/components/ui'
 
 interface AuthorizedPerson {
   name: string
@@ -47,7 +48,7 @@ export function CheckInOutPanel({ date, children }: Props) {
   const [loading, setLoading] = useState(false)
 
   const filtered = children.filter((c) =>
-    c.fullName.toLowerCase().includes(search.toLowerCase())
+    (c.fullName || '').toLowerCase().includes(search.toLowerCase())
   )
 
   const getStatus = (child: ChildData) => {
@@ -70,7 +71,7 @@ export function CheckInOutPanel({ date, children }: Props) {
     // Verificar se a pessoa está autorizada para busca
     if (modal.type === 'out') {
       const isAuthorized = modal.child.authorizedPersons.some(
-        (p) => p.name.toLowerCase().includes(form.personName.toLowerCase()) ||
+        (p) => (p.name || '').toLowerCase().includes(form.personName.toLowerCase()) ||
                (form.personDoc && p.cpf === form.personDoc)
       )
       if (!isAuthorized) {
@@ -110,82 +111,91 @@ export function CheckInOutPanel({ date, children }: Props) {
     }
   }
 
-  const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-    PRESENTE:           { label: 'Presente',          color: 'text-green-700',  bg: 'bg-green-50 border-green-200' },
-    AUSENTE:            { label: 'Ausente',            color: 'text-gray-500',   bg: 'bg-gray-50 border-gray-200' },
-    SAIU_MAIS_CEDO:     { label: 'Saiu mais cedo',     color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-200' },
-    AGUARDANDO_RETIRADA:{ label: 'Aguardando retirada',color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200' },
+  const statusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
+    PRESENTE:           { label: 'Presente',          variant: 'green' },
+    AUSENTE:            { label: 'Ausente',            variant: 'amber' }, // Use amber for missing
+    SAIU_MAIS_CEDO:     { label: 'Saiu mais cedo',     variant: 'sky' },
+    AGUARDANDO_RETIRADA:{ label: 'Aguardando retirada',variant: 'blue' },
   }
 
   return (
     <>
       {/* Busca */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <div className="relative group mb-2">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
         <input
-          className="input pl-9 w-full"
-          placeholder="Buscar criança..."
+          className="input pl-12 w-full bg-accent/30 border-transparent focus:bg-accent/50 focus:border-primary/30 h-14 text-sm font-bold"
+          placeholder="Buscar criança pelo nome..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
       {/* Lista */}
-      <div className="space-y-2">
+      <div className="space-y-4">
         {filtered.map((child) => {
           const status = getStatus(child)
           const cfg = statusConfig[status] ?? statusConfig.AUSENTE
           const isPresent = status === 'PRESENTE' || status === 'AGUARDANDO_RETIRADA'
 
           return (
-            <div key={child.id} className={`card p-4 border ${cfg.bg}`}>
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-3">
-                  {child.photoUrl ? (
-                    <img src={child.photoUrl} className="w-11 h-11 rounded-full object-cover" alt={child.fullName} />
-                  ) : (
-                    <div className="w-11 h-11 rounded-full bg-lime-100 flex items-center justify-center text-primary font-bold">
-                      {child.fullName.charAt(0)}
+            <div key={child.id} className="card p-6 border border-border/50 hover:border-primary/20 transition-all group/card">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-start gap-5 flex-1 min-w-0">
+                  <Avatar 
+                    photoUrl={child.photoUrl} 
+                    name={child.fullName}
+                    size="lg"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                      <p className="font-black text-foreground text-lg sm:text-xl tracking-tight leading-tight line-clamp-2 sm:line-clamp-none">
+                        {child.fullName}
+                      </p>
+                      <div className="shrink-0">
+                        <Badge label={cfg.label} variant={cfg.variant} dot={status === 'AUSENTE'} />
+                      </div>
                     </div>
-                  )}
-                  <div>
-                    <p className="font-semibold text-gray-900">{child.fullName}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`text-xs font-medium ${cfg.color}`}>{cfg.label}</span>
+                    
+                    <div className="flex flex-wrap items-center gap-y-2 gap-x-4">
+                      {child.groupName && (
+                        <span className="px-2 py-1 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest rounded-lg border border-primary/10">
+                          {child.groupName}
+                        </span>
+                      )}
                       {child.checkInOut?.checkInTime && (
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          Entrada: {new Date(child.checkInOut.checkInTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                          {child.checkInOut.broughtBy && ` por ${child.checkInOut.broughtBy}`}
+                        <span className="text-xs text-muted-foreground/70 flex items-center gap-1.5 font-bold">
+                          <Clock className="w-3.5 h-3.5" />
+                          Entrada: <span className="text-foreground">{new Date(child.checkInOut.checkInTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                          {child.checkInOut.broughtBy && <span className="opacity-60 text-[10px]">({child.checkInOut.broughtBy})</span>}
                         </span>
                       )}
                       {child.checkInOut?.checkOutTime && (
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          Saída: {new Date(child.checkInOut.checkOutTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                          {child.checkInOut.pickedUpBy && ` com ${child.checkInOut.pickedUpBy}`}
+                        <span className="text-xs text-muted-foreground/70 flex items-center gap-1.5 font-bold">
+                          <Clock className="w-3.5 h-3.5" />
+                          Saída: <span className="text-foreground">{new Date(child.checkInOut.checkOutTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                          {child.checkInOut.pickedUpBy && <span className="opacity-60 text-[10px]">({child.checkInOut.pickedUpBy})</span>}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  {!isPresent && (
+                <div className="flex shrink-0">
+                  {!isPresent ? (
                     <button
                       onClick={() => openModal('in', child)}
-                      className="btn-primary text-xs px-3 py-1.5"
+                      className="btn-primary w-full md:w-auto py-3.5 px-8 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-lg shadow-primary/20"
                     >
-                      <LogIn className="w-3.5 h-3.5" />
+                      <LogIn className="w-4 h-4" />
                       Check-in
                     </button>
-                  )}
-                  {isPresent && (
+                  ) : (
                     <button
                       onClick={() => openModal('out', child)}
-                      className="btn-secondary text-xs px-3 py-1.5"
+                      className="btn-secondary w-full md:w-auto py-3.5 px-8 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5"
                     >
-                      <LogOut className="w-3.5 h-3.5" />
+                      <LogOut className="w-4 h-4" />
                       Check-out
                     </button>
                   )}
@@ -197,50 +207,37 @@ export function CheckInOutPanel({ date, children }: Props) {
       </div>
 
       {/* Modal de Check-in/out */}
-      {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-5">
-            <div className="flex items-center gap-3">
-              {modal.type === 'in' ? (
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <LogIn className="w-5 h-5 text-green-600" />
-                </div>
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <LogOut className="w-5 h-5 text-blue-600" />
-                </div>
-              )}
-              <div>
-                <h2 className="font-bold text-gray-900">
-                  {modal.type === 'in' ? 'Registrar entrada' : 'Registrar saída'}
-                </h2>
-                <p className="text-sm text-gray-500">{modal.child.fullName}</p>
-              </div>
-            </div>
-
+      <Modal
+        open={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.type === 'in' ? 'Registrar entrada' : 'Registrar saída'}
+        subtitle={modal?.child.fullName}
+      >
+        {modal && (
+          <div className="space-y-6">
             {/* Pessoas autorizadas */}
             {modal.type === 'out' && modal.child.authorizedPersons.length > 0 && (
-              <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Shield className="w-4 h-4 text-green-600" />
-                  <p className="text-sm font-medium text-green-800">Pessoas autorizadas</p>
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Shield className="w-4 h-4 text-emerald-500" />
+                  <p className="text-xs font-black text-emerald-500 uppercase tracking-widest">Pessoas autorizadas</p>
                 </div>
-                <div className="space-y-1">
+                <div className="grid grid-cols-1 gap-2">
                   {modal.child.authorizedPersons.map((p, i) => (
                     <button
                       key={i}
                       type="button"
                       onClick={() => setForm((prev) => ({ ...prev, personName: p.name }))}
-                      className="w-full text-left text-xs text-green-700 hover:text-green-900 py-1 px-2 rounded hover:bg-green-100"
+                      className="w-full text-left text-xs text-emerald-600/80 hover:text-emerald-500 py-2 px-3 rounded-xl hover:bg-emerald-500/10 transition-all border border-transparent hover:border-emerald-500/20"
                     >
-                      {p.name} — {p.relationship} ({p.phone})
+                      <span className="font-bold">{p.name}</span> — {p.relationship}
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
                 <label className="label">
                   {modal.type === 'in' ? 'Quem está trazendo *' : 'Quem está buscando *'}
@@ -252,37 +249,44 @@ export function CheckInOutPanel({ date, children }: Props) {
                   onChange={(e) => setForm((p) => ({ ...p, personName: e.target.value }))}
                 />
               </div>
-              <div>
-                <label className="label">CPF / RG (opcional)</label>
-                <input
-                  className="input"
-                  placeholder="Documento para conferência"
-                  value={form.personDoc}
-                  onChange={(e) => setForm((p) => ({ ...p, personDoc: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="label">Observação</label>
-                <input
-                  className="input"
-                  placeholder="Alguma observação..."
-                  value={form.note}
-                  onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">CPF / RG (opcional)</label>
+                  <input
+                    className="input"
+                    placeholder="Documento"
+                    value={form.personDoc}
+                    onChange={(e) => setForm((p) => ({ ...p, personDoc: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="label">Observação</label>
+                  <input
+                    className="input"
+                    placeholder="Ex: Veio de Uber"
+                    value={form.note}
+                    onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <button type="button" onClick={() => setModal(null)} className="btn-secondary flex-1">
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={() => setModal(null)} className="btn-secondary flex-1 py-3.5">
                 Cancelar
               </button>
-              <button type="button" onClick={handleSubmit} disabled={loading} className="btn-primary flex-1">
-                {loading ? 'Registrando...' : modal.type === 'in' ? '✅ Confirmar entrada' : '👋 Confirmar saída'}
+              <button 
+                type="button" 
+                onClick={handleSubmit} 
+                disabled={loading} 
+                className="btn-primary flex-1 py-3.5 font-black uppercase tracking-widest text-xs"
+              >
+                {loading ? 'Processando...' : modal.type === 'in' ? 'Confirmar entrada' : 'Confirmar saída'}
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </>
   )
 }

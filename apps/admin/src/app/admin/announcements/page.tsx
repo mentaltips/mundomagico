@@ -52,7 +52,7 @@ export default function AnnouncementsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja excluir este comunicado?')) return
     try {
-      const res = await fetch(`/api/announcements?id=${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/announcements/${id}`, { method: 'DELETE' })
       if (res.ok) {
         toast.success('Comunicado excluído')
         fetchAnnouncements()
@@ -93,7 +93,7 @@ export default function AnnouncementsPage() {
     } catch (error) {
       toast.error('Erro ao enviar comunicado')
     } finally {
-      setSaving(true)
+      setSaving(false)
     }
   }
 
@@ -171,7 +171,9 @@ export default function AnnouncementsPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">
-                        {ann.type === 'GERAL' ? 'Público Geral' : `Turma: ${ann.group?.name}`}
+                        {ann.type === 'GERAL'
+                          ? 'Público Geral'
+                          : `Turma: ${groups.find(g => g.id === ann.groupId)?.name ?? ann.groupId ?? '—'}`}
                       </p>
                       {ann.priority === 'URGENTE' && (
                         <Badge label="Urgente" variant="red" size="sm" />
@@ -227,12 +229,12 @@ export default function AnnouncementsPage() {
 
           <div>
             <label className="label">Mensagem *</label>
-            <textarea 
-              rows={4}
+            <textarea
+              rows={3}
               placeholder="Descreva aqui o aviso completo..."
               value={formData.content}
               onChange={e => setFormData({...formData, content: e.target.value})}
-              className="input min-h-[120px]"
+              className="input min-h-[90px]"
             />
           </div>
 

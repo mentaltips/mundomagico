@@ -2,7 +2,8 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, AlertCircle, CheckCircle2, Info, TrendingUp, TrendingDown, ChevronRight } from 'lucide-react'
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
@@ -163,7 +164,10 @@ interface ModalProps {
 const MODAL_SIZES = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' }
 
 export function Modal({ open, onClose, title, subtitle, children, footer, size = 'md' }: ModalProps) {
+  const [mounted, setMounted] = useState(false)
+
   useEffect(() => {
+    setMounted(true)
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     if (open) {
       document.addEventListener('keydown', handler)
@@ -175,48 +179,68 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
     }
   }, [open, onClose])
 
-  return (
+  if (!mounted) return null
+
+  const modalContent = (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[9999] isolate">
+          {/* Backdrop — agora cobre tudo via Portal */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
-            className="modal-backdrop bg-background/40 backdrop-blur-md"
+            className="fixed inset-0 bg-background/60 backdrop-blur-md"
           />
-          <motion.div
-            initial={{ opacity: 0, y: 100, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.98 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-            className={`modal-content w-full ${MODAL_SIZES[size]} relative z-10 flex flex-col bg-card overflow-hidden shadow-2xl rounded-t-[2.5rem] sm:rounded-[2.5rem] border border-border/50`}
+
+          {/* Wrapper do conteúdo — centralizado em todos os dispositivos */}
+          <div
+            className="fixed inset-0 flex items-center justify-center pointer-events-none p-4 sm:p-8"
           >
-            {/* Handle bar on mobile */}
-            <div className="w-12 h-1.5 bg-accent rounded-full mx-auto mt-4 sm:hidden shrink-0" />
-            
-            {/* Header */}
-            <div className="px-8 py-6 border-b border-border/50 flex items-center justify-between shrink-0">
-              <div>
-                <h2 className="text-xl font-black text-foreground tracking-tight">{title}</h2>
-                {subtitle && <p className="text-xs text-muted-foreground font-bold mt-1 opacity-70 tracking-wide">{subtitle}</p>}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className={`pointer-events-auto w-full ${MODAL_SIZES[size]} flex flex-col bg-card shadow-2xl border border-border/50
+                rounded-[2rem]
+                max-h-full sm:max-h-[90vh]`}
+            >
+              {/* Header */}
+              <div className="px-6 sm:px-8 py-4 sm:py-6 border-b border-border/50 flex items-center justify-between shrink-0">
+                <div className="min-w-0 flex-1 pr-4">
+                  <h2 className="text-lg sm:text-xl font-black text-foreground tracking-tight">{title}</h2>
+                  {subtitle && <p className="text-xs text-muted-foreground font-bold mt-0.5 opacity-70">{subtitle}</p>}
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-2.5 bg-accent hover:bg-accent/80 text-muted-foreground hover:text-foreground rounded-2xl transition-all shrink-0"
+                >
+                  <X size={20} />
+                </button>
               </div>
-              <button onClick={onClose} className="p-2.5 bg-accent hover:bg-accent/80 text-muted-foreground hover:text-foreground rounded-2xl transition-all">
-                <X size={20} />
-              </button>
-            </div>
 
-            {/* Body */}
-            <div className="px-8 py-8 overflow-y-auto custom-scrollbar flex-1 min-h-0">
-              {children}
-            </div>
+              {/* Body scrollável */}
+              <div
+                className="px-6 sm:px-8 py-6 overflow-y-auto flex-1 min-h-0"
+                style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}
+              >
+                {children}
+              </div>
 
-            {/* Footer */}
-            {footer && <div className="px-8 py-6 border-t border-border/50 bg-accent/10 flex items-center justify-end gap-3 shrink-0">{footer}</div>}
-          </motion.div>
+              {/* Footer opcional */}
+              {footer && (
+                <div className="px-6 sm:px-8 py-4 sm:py-6 border-t border-border/50 bg-accent/10 flex items-center justify-end gap-3 shrink-0">
+                  {footer}
+                </div>
+              )}
+            </motion.div>
+          </div>
         </div>
       )}
     </AnimatePresence>
   )
+
+  return createPortal(modalContent, document.body)
 }
 
 // ── Alert Banner ──────────────────────────────────────────────────────────────

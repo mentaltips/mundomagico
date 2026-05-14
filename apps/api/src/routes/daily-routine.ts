@@ -7,32 +7,42 @@ const router = Router()
 router.get('/', async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
-    const { childId, date, isDraft } = req.query
-    const reports = await prisma.childDailyReport.findMany({
-      where: {
-        schoolId,
-        ...(childId && { childId: childId as string }),
-        ...(date && {
-          date: {
-            gte: new Date(new Date(date as string).setHours(0, 0, 0, 0)),
-            lte: new Date(new Date(date as string).setHours(23, 59, 59, 999)),
-          }
-        }),
-        ...(isDraft !== undefined && { isDraft: isDraft === 'true' }),
-      },
+    const { date } = req.query
+
+    // Define the date range for the specified date (or today)
+    const targetDate = date ? new Date(date as string) : new Date()
+    const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0))
+    const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999))
+
+    // Fetch all children and include their daily reports for the target date
+    const children = await prisma.child.findMany({
+      where: { schoolId },
       include: {
-        child: { select: { id: true, fullName: true, photoUrl: true } },
-        meals: true,
-        sleep: true,
-        hygiene: true,
-        health: true,
-        moods: true,
-        activities: true,
-        author: { select: { id: true, name: true } }
+        group: true,
+        guardians: {
+          include: { guardian: true }
+        },
+        dailyReports: {
+          where: {
+            date: {
+              gte: startOfDay,
+              lte: endOfDay,
+            }
+          },
+          include: {
+            meals: true,
+            sleep: true,
+            hygiene: true,
+            health: true,
+            moods: true,
+            activities: true,
+          }
+        }
       },
-      orderBy: { date: 'desc' }
+      orderBy: { fullName: 'asc' }
     })
-    res.json(reports)
+
+    res.json(children)
   } catch (error) {
     req.log.error(error)
     res.status(500).json({ error: 'Internal server error' })
@@ -202,6 +212,30 @@ router.get('/child/:childId', async (req, res) => {
     if (!child) return res.status(404).json({ error: 'Child not found' })
 
     res.json(child)
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// DELETE /:id - Delete a report
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const schoolId = req.user?.schoolId
+
+    // Ensure the report belongs to the school
+    const report = await prisma.childDailyReport.findFirst({
+      where: { id, schoolId }
+    })
+
+    if (!report) return res.status(404).json({ error: 'Report not found' })
+
+    await prisma.childDailyReport.delete({
+      where: { id }
+    })
+
+    res.json({ success: true })
   } catch (error) {
     req.log.error(error)
     res.status(500).json({ error: 'Internal server error' })

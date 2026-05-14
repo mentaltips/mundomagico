@@ -249,7 +249,7 @@ export function AdminBottomNav() {
   const { setIsOpen } = useContext(SidebarContext)
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex lg:hidden h-20 items-center justify-around bg-card/90 backdrop-blur-md border-t border-border shadow-[0_-4px_24px_rgba(0,0,0,0.06)] pb-4">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 flex lg:hidden h-20 items-center justify-around bg-card/90 backdrop-blur-md border-t border-border shadow-[0_-4px_24px_rgba(0,0,0,0.06)] pb-4">
       {bottomNavItems.map((item) => {
         const Icon = item.icon
         const isActive = pathname.startsWith(item.href) && item.href !== '#menu'

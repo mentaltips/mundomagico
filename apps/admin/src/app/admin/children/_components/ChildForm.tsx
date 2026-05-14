@@ -8,7 +8,7 @@ import { z } from 'zod'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import {
-  User, Heart, Baby, Shield, Plus, Trash2, Camera, AlertTriangle
+  User, Heart, Baby, Shield, Plus, Trash2, AlertTriangle
 } from 'lucide-react'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 
@@ -74,10 +74,47 @@ function normalizeGender(g: any): string {
   return map[g] ?? g
 }
 
+// Converte ISO datetime → yyyy-MM-dd para <input type="date">
+function toDateInput(val: any): string {
+  if (!val) return ''
+  const s = String(val)
+  // Já está no formato correto
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  // ISO com hora: pega só a parte da data
+  return s.slice(0, 10)
+}
+
+// Switch acessível reutilizável
+function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+        checked ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'
+      }`}
+    >
+      <span
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ${
+          checked ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
+      <span className="sr-only">{label}</span>
+    </button>
+  )
+}
+
 export function ChildForm({ groups, defaultValues, childId }: Props) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('personal')
   const [loading, setLoading] = useState(false)
+
+  // Switches da aba Saúde
+  const [hasAllergies, setHasAllergies] = useState(false)
+  const [hasMeds, setHasMeds] = useState(false)
+  const [hasDiet, setHasDiet] = useState(false)
 
   const {
     register,
@@ -102,6 +139,17 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
   // garantindo que a normalização dos valores do banco seja aplicada.
   useEffect(() => {
     if (!defaultValues) return
+    const dv = defaultValues as any
+
+    const allergiesText = jsonArrayToText(dv?.allergies)
+    const medsText = jsonArrayToText(dv?.continuousMeds)
+    const dietText = jsonArrayToText(dv?.dietaryRestrictions)
+
+    // Inicializa os switches com base em dados existentes
+    if (allergiesText) setHasAllergies(true)
+    if (medsText) setHasMeds(true)
+    if (dietText) setHasDiet(true)
+
     reset({
       status: 'ATIVO',
       shift: 'MANHA',
@@ -109,12 +157,16 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
       usesBottle: false,
       usesNipple: false,
       imageAuthorized: false,
-      ...(defaultValues as any),
+      ...dv,
       // Normaliza campos que o banco pode armazenar em formatos legados
-      gender: normalizeGender((defaultValues as any)?.gender),
-      allergies: jsonArrayToText((defaultValues as any)?.allergies),
-      continuousMeds: jsonArrayToText((defaultValues as any)?.continuousMeds),
-      dietaryRestrictions: jsonArrayToText((defaultValues as any)?.dietaryRestrictions),
+      gender: normalizeGender(dv?.gender),
+      // Datas: converte ISO → yyyy-MM-dd para <input type="date">
+      birthDate: toDateInput(dv?.birthDate),
+      entryDate: toDateInput(dv?.entryDate),
+      exitDate: toDateInput(dv?.exitDate),
+      allergies: allergiesText,
+      continuousMeds: medsText,
+      dietaryRestrictions: dietText,
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -164,7 +216,7 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-border overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         {TABS.map((tab) => {
           const Icon = tab.icon
           return (
@@ -172,13 +224,13 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-black uppercase tracking-widest border-b-2 transition-all whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
+                  ? 'border-primary text-primary bg-primary/5'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className={activeTab === tab.id ? 'text-primary' : 'text-muted-foreground'} size={16} />
               {tab.label}
             </button>
           )
@@ -288,57 +340,108 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
       {/* ─── Saúde ─── */}
       {activeTab === 'health' && (
         <div className="card p-6 space-y-5">
-          <div className="flex items-center gap-2 text-amber-600 bg-amber-50 rounded-lg px-4 py-3">
+          <div className="flex items-center gap-2 text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 rounded-lg px-4 py-3">
             <AlertTriangle className="w-4 h-4 flex-shrink-0" />
             <p className="text-sm">Informações de saúde são sigilosas e de uso exclusivo da equipe.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="label">Tipo sanguíneo</label>
-              <select {...register('bloodType')} className="input">
-                <option value="">Não informado</option>
-                {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
+          {/* Tipo sanguíneo */}
+          <div>
+            <label className="label">Tipo sanguíneo</label>
+            <select {...register('bloodType')} className="input">
+              <option value="">Não informado</option>
+              {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
 
-            <div className="md:col-span-2">
-              <label className="label">Alergias (uma por linha)</label>
+          {/* Alergias */}
+          <div className="rounded-2xl border border-border bg-accent/20 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-sm text-foreground">Possui alergias?</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Alimentos, medicamentos, ambiente…</p>
+              </div>
+              <Switch
+                checked={hasAllergies}
+                onChange={(v) => {
+                  setHasAllergies(v)
+                  if (!v) setValue('allergies', '')
+                }}
+                label="Possui alergias"
+              />
+            </div>
+            {hasAllergies && (
               <textarea
                 {...register('allergies')}
                 className="input min-h-20"
-                placeholder="Amendoim&#10;Lactose&#10;Glúten"
+                placeholder={"Amendoim\nLactose\nGlúten"}
+                autoFocus
+              />
+            )}
+          </div>
+
+          {/* Medicamentos contínuos */}
+          <div className="rounded-2xl border border-border bg-accent/20 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-sm text-foreground">Usa medicamentos contínuos?</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Remédios de uso diário ou regular.</p>
+              </div>
+              <Switch
+                checked={hasMeds}
+                onChange={(v) => {
+                  setHasMeds(v)
+                  if (!v) setValue('continuousMeds', '')
+                }}
+                label="Usa medicamentos contínuos"
               />
             </div>
-
-            <div className="md:col-span-2">
-              <label className="label">Medicamentos em uso contínuo (um por linha)</label>
+            {hasMeds && (
               <textarea
                 {...register('continuousMeds')}
                 className="input min-h-20"
-                placeholder="Ritalina 10mg — às 8h&#10;Ômega 3"
+                placeholder={"Ritalina 10mg — às 8h\nÔmega 3"}
+                autoFocus
+              />
+            )}
+          </div>
+
+          {/* Restrições alimentares */}
+          <div className="rounded-2xl border border-border bg-accent/20 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-sm text-foreground">Tem restrições alimentares?</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Dieta especial, intolerâncias, preferências.</p>
+              </div>
+              <Switch
+                checked={hasDiet}
+                onChange={(v) => {
+                  setHasDiet(v)
+                  if (!v) setValue('dietaryRestrictions', '')
+                }}
+                label="Tem restrições alimentares"
               />
             </div>
-
-            <div className="md:col-span-2">
-              <label className="label">Restrições alimentares (uma por linha)</label>
+            {hasDiet && (
               <textarea
                 {...register('dietaryRestrictions')}
                 className="input min-h-20"
-                placeholder="Sem açúcar&#10;Vegetariano"
+                placeholder={"Sem açúcar\nVegetariano"}
+                autoFocus
               />
-            </div>
+            )}
+          </div>
 
-            <div className="md:col-span-2">
-              <label className="label">Observações de saúde</label>
-              <textarea
-                {...register('healthObservations')}
-                className="input min-h-24"
-                placeholder="Informações relevantes sobre a saúde da criança..."
-              />
-            </div>
+          {/* Observações gerais de saúde */}
+          <div>
+            <label className="label">Observações de saúde</label>
+            <textarea
+              {...register('healthObservations')}
+              className="input min-h-24"
+              placeholder="Informações relevantes sobre a saúde da criança..."
+            />
           </div>
         </div>
       )}
@@ -497,7 +600,7 @@ function GuardianLinker({ childId }: { childId: string }) {
   }
 
   const filteredGuardians = guardians.filter(g => 
-    g.fullName.toLowerCase().includes(search.toLowerCase()) &&
+    (g.fullName || '').toLowerCase().includes(search.toLowerCase()) &&
     !links.some(l => l.guardianId === g.id)
   )
 

@@ -91,7 +91,7 @@ export default function TeacherDashboard() {
             <Link href="/teacher/classes" className="text-sm font-bold text-indigo-600">Ver todos</Link>
           </div>
 
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+          <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
             {['LS', 'AO', 'PS', 'MC', 'JV', 'AF'].map((init, i) => (
               <div key={i} className="flex flex-col items-center gap-2 shrink-0">
                 <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 font-black text-sm border-2 border-transparent hover:border-indigo-600 transition-all cursor-pointer">

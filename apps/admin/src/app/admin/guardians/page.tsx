@@ -154,9 +154,9 @@ export default function GuardiansPage() {
   }
 
   const filteredGuardians = guardians.filter(g => 
-    g.fullName.toLowerCase().includes(search.toLowerCase()) ||
-    g.email?.toLowerCase().includes(search.toLowerCase()) ||
-    g.phone?.includes(search)
+    (g.fullName || '').toLowerCase().includes(search.toLowerCase()) ||
+    (g.email || '').toLowerCase().includes(search.toLowerCase()) ||
+    (g.phone || '').includes(search)
   )
 
   return (

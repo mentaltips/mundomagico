@@ -186,7 +186,7 @@ export default async function ChildrenPage({
                         {child.guardians && child.guardians.length > 0 ? (
                           <div>
                             <p className="text-sm font-bold text-foreground">
-                              {child.guardians.slice(0, 2).map((g: any) => g.guardian.fullName.split(' ')[0]).join(', ')}
+                              {child.guardians.slice(0, 2).map((g: any) => (g.guardian?.fullName || '').split(' ')[0]).join(', ')}
                               {child.guardians.length > 2 && ` +${child.guardians.length - 2}`}
                             </p>
                             {child.guardians[0].guardian.phone && (
@@ -243,7 +243,7 @@ export default async function ChildrenPage({
                     <p className="text-xs text-muted-foreground font-medium mt-2">
                       {formatAge(child.birthDate)}
                       {child.guardians && child.guardians.length > 0 && (
-                        <> · {child.guardians.slice(0, 2).map((g: any) => g.guardian.fullName.split(' ')[0]).join(', ')}</>
+                        <> · {child.guardians.slice(0, 2).map((g: any) => (g.guardian?.fullName || '').split(' ')[0]).join(', ')}</>
                       )}
                     </p>
                   </div>

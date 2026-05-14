@@ -220,7 +220,7 @@ export default function FinancePage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
         {FILTERS.map(f => (
           <button
             key={f.value}

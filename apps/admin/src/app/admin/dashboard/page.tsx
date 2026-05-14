@@ -234,7 +234,7 @@ export default function DashboardPage() {
             {notifications.length > 0 && <Badge label={notifications.length.toString()} variant="red" size="sm" />}
           </div>
 
-          <div className="flex-1 space-y-3 overflow-y-auto max-h-[350px] pr-1 scrollbar-none">
+          <div className="flex-1 space-y-3 overflow-y-auto max-h-[350px] pr-1 no-scrollbar">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center opacity-30">
                 <CheckCircle2 size={40} className="mb-4" />

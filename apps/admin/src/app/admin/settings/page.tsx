@@ -156,7 +156,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
         {TABS.map((tab) => (
           <button
             key={tab.key}

@@ -160,21 +160,21 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col">
       {/* Abas - Horizontal Scrollable on mobile */}
-      <div className="flex overflow-x-auto border-b border-gray-100 bg-gray-50/50 scrollbar-hide sticky top-0 z-10 px-4">
+      <div className="flex overflow-x-auto border-b border-border bg-card/80 backdrop-blur-xl no-scrollbar sticky top-[-24px] z-20 -mx-6 sm:-mx-8 -mt-6 px-4">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-6 py-4 text-sm font-black whitespace-nowrap border-b-4 transition-all ${
+            className={`flex items-center gap-2 px-6 py-4 text-[11px] sm:text-xs font-black whitespace-nowrap border-b-4 uppercase tracking-widest transition-all ${
               activeTab === tab.id
-                ? 'border-primary text-primary bg-white'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
+                ? 'border-primary text-primary bg-background'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50'
             }`}
           >
-            <span className="text-xl">{tab.emoji}</span>
+            <span className="text-xl filter grayscale group-hover:grayscale-0">{tab.emoji}</span>
             {tab.label}
           </button>
         ))}
@@ -185,10 +185,10 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
         {activeTab === 'meals' && (
           <div className="space-y-6">
             {MEAL_TYPES.filter((m) => m.key !== 'bottle' || usesBottle).map((mealType) => (
-              <div key={mealType.key} className="rounded-[2rem] border border-gray-100 p-6 bg-white shadow-sm hover:shadow-md transition-all">
+              <div key={mealType.key} className="rounded-[2rem] border border-border p-6 bg-card shadow-sm hover:shadow-md transition-all">
                 <div className="flex items-center gap-3 mb-6">
                   <span className="text-2xl">{mealType.emoji}</span>
-                  <h3 className="font-black text-gray-900 text-lg uppercase tracking-tight">{mealType.label}</h3>
+                  <h3 className="font-black text-foreground text-lg uppercase tracking-tight">{mealType.label}</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                   {Object.entries(MEAL_RESULT_LABELS).map(([key, label]) => (
@@ -198,8 +198,8 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
                       onClick={() => setMeals((prev) => ({ ...prev, [mealType.key]: { ...prev[mealType.key], result: key as MealResult } }))}
                       className={`py-4 px-2 rounded-2xl text-xs font-black uppercase tracking-widest border-2 transition-all ${
                         meals[mealType.key]?.result === key
-                          ? 'border-primary bg-lime-50 text-primary scale-[1.02]'
-                          : 'border-gray-100 text-gray-400 hover:border-gray-200'
+                          ? 'border-primary bg-primary/10 text-primary scale-[1.02]'
+                          : 'border-border text-muted-foreground hover:border-accent-foreground'
                       }`}
                     >
                       {label}
@@ -208,18 +208,18 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Quantidade</label>
+                    <label className="text-[10px] font-black text-muted-foreground uppercase ml-2">Quantidade</label>
                     <input
-                      className="w-full px-4 py-3 bg-gray-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-primary focus:ring-0 text-sm font-bold transition-all outline-none"
+                      className="input"
                       placeholder="Ex: 200ml, 1 prato..."
                       value={meals[mealType.key]?.amount}
                       onChange={(e) => setMeals((prev) => ({ ...prev, [mealType.key]: { ...prev[mealType.key], amount: e.target.value } }))}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Observação</label>
+                    <label className="text-[10px] font-black text-muted-foreground uppercase ml-2">Observação</label>
                     <input
-                      className="w-full px-4 py-3 bg-gray-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-primary focus:ring-0 text-sm font-bold transition-all outline-none"
+                      className="input"
                       placeholder="Algum detalhe extra?"
                       value={meals[mealType.key]?.observation}
                       onChange={(e) => setMeals((prev) => ({ ...prev, [mealType.key]: { ...prev[mealType.key], observation: e.target.value } }))}
@@ -234,16 +234,16 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
         {/* ─── Sono ─── */}
         {activeTab === 'sleep' && (
           <div className="space-y-6">
-            <label className="flex items-center gap-4 p-6 rounded-[2rem] border-2 border-gray-100 cursor-pointer bg-white hover:bg-gray-50 transition-all group">
+            <label className="flex items-center gap-4 p-6 rounded-[2rem] border-2 border-border cursor-pointer bg-card hover:bg-accent/20 transition-all group">
               <input
                 type="checkbox"
                 checked={sleep.slept}
                 onChange={(e) => setSleep((p) => ({ ...p, slept: e.target.checked }))}
-                className="w-8 h-8 rounded-xl border-2 border-gray-200 text-primary focus:ring-primary transition-all"
+                className="w-8 h-8 rounded-xl border-2 border-border text-primary focus:ring-primary transition-all bg-background"
               />
               <div>
-                <span className="font-black text-gray-900 text-lg uppercase tracking-tight block">Dormiu hoje?</span>
-                <span className="text-xs font-medium text-gray-400">Marque se a criança tirou uma soneca</span>
+                <span className="font-black text-foreground text-lg uppercase tracking-tight block">Dormiu hoje?</span>
+                <span className="text-xs font-medium text-muted-foreground">Marque se a criança tirou uma soneca</span>
               </div>
             </label>
 
@@ -251,19 +251,19 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Hora que dormiu</label>
+                    <label className="text-[10px] font-black text-muted-foreground uppercase ml-2">Hora que dormiu</label>
                     <input
                       type="time"
-                      className="w-full px-4 py-3 bg-gray-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-primary focus:ring-0 text-sm font-bold transition-all outline-none"
+                      className="input"
                       value={sleep.sleepTime}
                       onChange={(e) => setSleep((p) => ({ ...p, sleepTime: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Hora que acordou</label>
+                    <label className="text-[10px] font-black text-muted-foreground uppercase ml-2">Hora que acordou</label>
                     <input
                       type="time"
-                      className="w-full px-4 py-3 bg-gray-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-primary focus:ring-0 text-sm font-bold transition-all outline-none"
+                      className="input"
                       value={sleep.wakeTime}
                       onChange={(e) => setSleep((p) => ({ ...p, wakeTime: e.target.value }))}
                     />
@@ -271,7 +271,7 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase ml-2 mb-2 block">Qualidade do sono</label>
+                  <label className="text-[10px] font-black text-muted-foreground uppercase ml-2 mb-2 block">Qualidade do sono</label>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { key: 'TRANQUILO', label: 'Tranquilo', emoji: '😴' },
@@ -285,8 +285,8 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
                         onClick={() => setSleep((p) => ({ ...p, quality: q.key as SleepQuality }))}
                         className={`p-5 rounded-[2rem] border-2 text-xs font-black uppercase tracking-widest transition-all ${
                           sleep.quality === q.key
-                            ? 'border-primary bg-lime-50 text-primary'
-                            : 'border-gray-100 text-gray-400 hover:border-gray-200'
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border text-muted-foreground hover:border-accent-foreground'
                         }`}
                       >
                         <span className="text-3xl block mb-2">{q.emoji}</span>
@@ -299,9 +299,9 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
             )}
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Observações do sono</label>
+              <label className="text-[10px] font-black text-muted-foreground uppercase ml-2">Observações do sono</label>
               <textarea
-                className="w-full px-4 py-3 bg-gray-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-primary focus:ring-0 text-sm font-bold transition-all outline-none min-h-[100px]"
+                className="input min-h-[100px]"
                 value={sleep.observation}
                 onChange={(e) => setSleep((p) => ({ ...p, observation: e.target.value }))}
                 placeholder="Ex: Demorou para dormir, acordou com choro..."
@@ -314,14 +314,14 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
         {activeTab === 'hygiene' && (
           <div className="space-y-6">
             {usesDiapers && (
-              <div className="p-8 bg-blue-50 rounded-[2.5rem] border border-blue-100 flex flex-col items-center justify-center text-center">
-                <label className="text-xs font-black text-blue-600 uppercase tracking-widest mb-4">Trocas de fralda</label>
+              <div className="p-8 bg-blue-500/10 rounded-[2.5rem] border border-blue-500/20 flex flex-col items-center justify-center text-center">
+                <label className="text-xs font-black text-blue-500 uppercase tracking-widest mb-4">Trocas de fralda</label>
                 <div className="flex items-center gap-6">
                   <button type="button" onClick={() => setHygiene((p) => ({ ...p, diaperChanges: Math.max(0, p.diaperChanges - 1) }))}
-                    className="w-14 h-14 rounded-2xl bg-white text-blue-600 text-3xl font-black shadow-sm active:scale-90 transition-transform">-</button>
-                  <span className="text-5xl font-black text-blue-900 w-16">{hygiene.diaperChanges}</span>
+                    className="w-14 h-14 rounded-2xl bg-card text-blue-500 text-3xl font-black shadow-sm active:scale-90 transition-transform">-</button>
+                  <span className="text-5xl font-black text-foreground w-16">{hygiene.diaperChanges}</span>
                   <button type="button" onClick={() => setHygiene((p) => ({ ...p, diaperChanges: p.diaperChanges + 1 }))}
-                    className="w-14 h-14 rounded-2xl bg-white text-blue-600 text-3xl font-black shadow-sm active:scale-90 transition-transform">+</button>
+                    className="w-14 h-14 rounded-2xl bg-card text-blue-500 text-3xl font-black shadow-sm active:scale-90 transition-transform">+</button>
                 </div>
               </div>
             )}
@@ -335,24 +335,24 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
               ].map((item) => (
                 <label key={item.key} className={`flex flex-col items-center gap-4 p-6 rounded-[2rem] border-2 cursor-pointer transition-all ${
                   hygiene[item.key as keyof typeof hygiene]
-                    ? 'border-primary bg-lime-50'
-                    : 'border-gray-100 bg-white hover:border-gray-200'
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border bg-card hover:border-accent-foreground'
                 }`}>
                   <input
                     type="checkbox"
                     checked={!!hygiene[item.key as keyof typeof hygiene]}
                     onChange={(e) => setHygiene((p) => ({ ...p, [item.key]: e.target.checked }))}
-                    className="w-6 h-6 rounded-lg border-2 border-gray-200 text-primary focus:ring-primary"
+                    className="w-6 h-6 rounded-lg border-2 border-border text-primary focus:ring-primary bg-background"
                   />
                   <span className="text-4xl">{item.emoji}</span>
-                  <span className="font-black text-[10px] text-gray-900 uppercase tracking-widest">{item.label}</span>
+                  <span className="font-black text-[10px] text-foreground uppercase tracking-widest">{item.label}</span>
                 </label>
               ))}
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Observações de higiene</label>
-              <textarea className="w-full px-4 py-3 bg-gray-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-primary focus:ring-0 text-sm font-bold transition-all outline-none min-h-[100px]"
+              <label className="text-[10px] font-black text-muted-foreground uppercase ml-2">Observações de higiene</label>
+              <textarea className="input min-h-[100px]"
                 value={hygiene.observation}
                 onChange={(e) => setHygiene((p) => ({ ...p, observation: e.target.value }))}
                 placeholder="Ex: Fezes líquidas, irritação na pele..." />
@@ -374,17 +374,17 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
               ].map((item) => (
                 <label key={item.key} className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
                   health[item.key as keyof typeof health]
-                    ? 'border-rose-400 bg-rose-50'
-                    : 'border-gray-100 bg-white hover:border-gray-200'
+                    ? 'border-rose-500 bg-rose-500/10'
+                    : 'border-border bg-card hover:border-accent-foreground'
                 }`}>
                   <input
                     type="checkbox"
                     checked={!!health[item.key as keyof typeof health]}
                     onChange={(e) => setHealth((p) => ({ ...p, [item.key]: e.target.checked }))}
-                    className="w-5 h-5 rounded-lg border-2 border-gray-200 text-rose-500 focus:ring-rose-500"
+                    className="w-5 h-5 rounded-lg border-2 border-border text-rose-500 focus:ring-rose-500 bg-background"
                   />
                   <div className="flex flex-col">
-                    <span className="text-sm font-black text-gray-900 uppercase tracking-tighter leading-none mb-1">{item.label}</span>
+                    <span className="text-sm font-black text-foreground uppercase tracking-tighter leading-none mb-1">{item.label}</span>
                     <span className="text-xl">{item.emoji}</span>
                   </div>
                 </label>
@@ -392,18 +392,18 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
             </div>
 
             {health.medicationGiven && (
-              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-[2rem] border border-orange-200 bg-orange-50 p-6 space-y-4">
-                <p className="font-black text-orange-800 uppercase tracking-widest text-xs">Administração de Medicamento</p>
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-[2rem] border border-orange-500/20 bg-orange-500/10 p-6 space-y-4 text-foreground">
+                <p className="font-black text-orange-500 uppercase tracking-widest text-xs">Administração de Medicamento</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input className="w-full px-4 py-3 bg-white border-transparent border-2 rounded-xl focus:border-orange-400 outline-none text-sm font-bold" 
+                  <input className="input" 
                     placeholder="Nome do medicamento"
                     value={health.medicationName}
                     onChange={(e) => setHealth((p) => ({ ...p, medicationName: e.target.value }))} />
-                  <input className="w-full px-4 py-3 bg-white border-transparent border-2 rounded-xl focus:border-orange-400 outline-none text-sm font-bold" 
+                  <input className="input" 
                     placeholder="Horário"
                     type="time" value={health.medicationTime}
                     onChange={(e) => setHealth((p) => ({ ...p, medicationTime: e.target.value }))} />
-                  <input className="w-full px-4 py-3 bg-white border-transparent border-2 rounded-xl focus:border-orange-400 outline-none text-sm font-bold col-span-1 md:col-span-2" 
+                  <input className="input col-span-1 md:col-span-2" 
                     placeholder="Autorizado por (nome do responsável)"
                     value={health.authorizedBy}
                     onChange={(e) => setHealth((p) => ({ ...p, authorizedBy: e.target.value }))} />
@@ -412,8 +412,8 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
             )}
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Observações de saúde</label>
-              <textarea className="w-full px-4 py-3 bg-gray-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-primary focus:ring-0 text-sm font-bold transition-all outline-none min-h-[100px]" 
+              <label className="text-[10px] font-black text-muted-foreground uppercase ml-2">Observações de saúde</label>
+              <textarea className="input min-h-[100px]" 
                 value={health.observation}
                 onChange={(e) => setHealth((p) => ({ ...p, observation: e.target.value }))}
                 placeholder="Descreva qualquer ocorrência de saúde..." />
@@ -433,12 +433,12 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
                   onClick={() => toggleMood(mood)}
                   className={`p-6 rounded-[2.5rem] border-2 text-center transition-all ${
                     selectedMoods.includes(mood)
-                      ? 'border-primary bg-lime-50 scale-105'
-                      : 'border-gray-100 bg-white hover:border-gray-200'
+                      ? 'border-primary bg-primary/10 scale-105'
+                      : 'border-border bg-card hover:border-accent-foreground'
                   }`}
                 >
                   <span className="text-5xl block mb-2">{emoji}</span>
-                  <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{MOOD_LABELS[mood]}</span>
+                  <span className="text-[10px] font-black text-foreground uppercase tracking-widest">{MOOD_LABELS[mood]}</span>
                 </button>
               ))}
             </div>
@@ -457,11 +457,11 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
                     type="button"
                     onClick={() => toggleActivity(act.key)}
                     className={`p-4 rounded-2xl border-2 text-center transition-all ${
-                      isSelected ? 'border-primary bg-lime-50' : 'border-gray-100 bg-white hover:border-gray-200'
+                      isSelected ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-accent-foreground'
                     }`}
                   >
                     <span className="text-3xl block mb-2">{act.emoji}</span>
-                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{act.label}</span>
+                    <span className="text-[10px] font-black text-foreground uppercase tracking-widest">{act.label}</span>
                   </button>
                 )
               })}
@@ -473,7 +473,7 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
                   Detalhes: {ACTIVITY_TYPES.find((a) => a.key === act.activityType)?.label}
                 </label>
                 <input
-                  className="w-full px-4 py-3 bg-gray-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-primary focus:ring-0 text-sm font-bold transition-all outline-none"
+                  className="input"
                   placeholder="O que a criança fez nessa atividade?"
                   value={act.description}
                   onChange={(e) => setActivities((prev) => {
@@ -491,8 +491,8 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
         {activeTab === 'message' && (
           <div className="space-y-6">
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Recado para os pais</label>
-              <textarea className="w-full px-4 py-3 bg-gray-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-primary focus:ring-0 text-sm font-bold transition-all outline-none min-h-[120px]"
+              <label className="text-[10px] font-black text-muted-foreground uppercase ml-2">Recado para os pais</label>
+              <textarea className="input min-h-[120px]"
                 value={message.messageToParents}
                 onChange={(e) => setMessage((p) => ({ ...p, messageToParents: e.target.value }))}
                 placeholder="Ex: A criança ficou mais quieta hoje. Amanhã teremos festa junina!" />
@@ -500,14 +500,14 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
 
             <div className="space-y-1">
               <label className="text-[10px] font-black text-rose-500 uppercase ml-2">Aviso importante</label>
-              <textarea className="w-full px-4 py-3 bg-rose-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-rose-500 focus:ring-0 text-sm font-bold transition-all outline-none min-h-[80px]"
+              <textarea className="w-full px-4 py-3 bg-rose-500/10 border-transparent border-2 rounded-xl focus:bg-background focus:border-rose-500 focus:ring-0 text-sm font-bold transition-all outline-none min-h-[80px] text-foreground"
                 value={message.importantAlert}
                 onChange={(e) => setMessage((p) => ({ ...p, importantAlert: e.target.value }))}
                 placeholder="Algo urgente que os responsáveis precisam saber..." />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Solicitar itens</label>
+              <label className="text-[10px] font-black text-muted-foreground uppercase ml-2">Solicitar itens</label>
               <div className="flex flex-wrap gap-2">
                 {(Object.entries(ITEM_TYPE_LABELS) as [string, string][]).map(([key, label]) => (
                   <button
@@ -521,8 +521,8 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
                     }))}
                     className={`px-4 py-2 rounded-full border-2 text-[10px] font-black uppercase tracking-widest transition-all ${
                       message.itemRequests.includes(key)
-                        ? 'bg-primary text-white border-primary shadow-lg shadow-lime-100'
-                        : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200'
+                        ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                        : 'bg-card text-muted-foreground border-border hover:border-accent-foreground'
                     }`}
                   >
                     {label}
@@ -531,9 +531,9 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
               </div>
             </div>
 
-            <div className="space-y-1 pt-4 border-t border-gray-50">
-              <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Anotação interna (Equipe)</label>
-              <textarea className="w-full px-4 py-3 bg-gray-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-gray-400 focus:ring-0 text-sm font-bold transition-all outline-none min-h-[80px]"
+            <div className="space-y-1 pt-4 border-t border-border">
+              <label className="text-[10px] font-black text-muted-foreground uppercase ml-2">Anotação interna (Equipe)</label>
+              <textarea className="w-full px-4 py-3 bg-accent/20 border-transparent border-2 rounded-xl focus:bg-background focus:border-accent-foreground focus:ring-0 text-sm font-bold transition-all outline-none min-h-[80px] text-foreground"
                 value={message.teamNote}
                 onChange={(e) => setMessage((p) => ({ ...p, teamNote: e.target.value }))}
                 placeholder="Nota interna (não enviada aos pais)..." />
@@ -543,19 +543,19 @@ export function DailyRoutineForm({ childId, date, usesDiapers, usesBottle, exist
       </div>
 
       {/* Ações Fixas no Rodapé do Modal */}
-      <div className="sticky bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100 p-6 flex flex-wrap gap-3 justify-between items-center z-30">
-        <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+      <div className="sticky bottom-[-24px] left-0 right-0 bg-card/90 backdrop-blur-xl border-t border-border p-4 sm:p-6 flex flex-wrap gap-3 justify-between items-center z-30 -mx-6 sm:-mx-8 -mb-6">
+        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
           {existingReport?.updatedAt && `Sincronizado às ${new Date(existingReport.updatedAt).toLocaleTimeString('pt-BR')}`}
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button type="button" onClick={() => handleSave(true)} disabled={saving}
-            className="flex items-center gap-2 px-6 py-4 bg-gray-50 text-gray-700 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-all active:scale-95 disabled:opacity-50">
-            <Save size={18} />
+            className="flex items-center gap-2 px-4 py-3 bg-accent/30 text-foreground rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-accent transition-all active:scale-95 disabled:opacity-50">
+            <Save size={16} />
             {saving ? '...' : 'Salvar'}
           </button>
           <button type="button" onClick={() => handleSave(false)} disabled={saving}
-            className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-lime-200 hover:bg-lime-600 transition-all active:scale-95 disabled:opacity-50">
-            <Check size={18} />
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary/80 transition-all active:scale-95 disabled:opacity-50">
+            <Check size={16} />
             {saving ? '...' : 'Finalizar'}
           </button>
         </div>
