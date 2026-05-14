@@ -8,9 +8,21 @@ importers:
 
   .:
     devDependencies:
+      autoprefixer:
+        specifier: ^10.4.19
+        version: 10.5.0(postcss@8.5.14)
+      postcss:
+        specifier: ^8.4.39
+        version: 8.5.14
       prettier:
         specifier: ^3.3.3
         version: 3.8.3
+      tailwindcss:
+        specifier: ^3.4.6
+        version: 3.4.19(tsx@4.21.0)
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@3.4.19(tsx@4.21.0))
       turbo:
         specifier: ^2.0.12
         version: 2.9.10
@@ -23,21 +35,12 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.75.0(react@18.3.1))
-      '@mundo-magico/database':
-        specifier: workspace:*
-        version: link:../../packages/database
       '@mundo-magico/types':
         specifier: workspace:*
         version: link:../../packages/types
-      '@prisma/client':
-        specifier: ^5.16.1
-        version: 5.22.0(prisma@5.22.0)
       '@tanstack/react-query':
         specifier: ^5.100.9
         version: 5.100.9(react@18.3.1)
-      bcryptjs:
-        specifier: ^2.4.3
-        version: 2.4.3
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -90,9 +93,6 @@ importers:
         specifier: ^5.0.13
         version: 5.0.13(@types/react@18.3.28)(immer@11.1.8)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
     devDependencies:
-      '@types/bcryptjs':
-        specifier: ^2.4.6
-        version: 2.4.6
       '@types/node':
         specifier: ^20.14.11
         version: 20.19.40
@@ -117,9 +117,6 @@ importers:
       postcss:
         specifier: ^8.4.39
         version: 8.5.14
-      prisma:
-        specifier: ^5.16.1
-        version: 5.22.0
       tailwindcss:
         specifier: ^3.4.6
         version: 3.4.19(tsx@4.21.0)
