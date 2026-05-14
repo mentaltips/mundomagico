@@ -51,6 +51,6 @@ export const config = {
      * - /_next/* (arquivos estáticos do Next.js)
      * - /favicon, imagens, etc.
      */
-    '/((?!login|api/auth|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg).*)',
+    '/((?!login|privacy-policy|api/auth|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg).*)',
   ],
 }

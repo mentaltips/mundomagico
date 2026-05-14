@@ -36,7 +36,7 @@ export function CookieBanner() {
           </p>
           <div className="mt-3 flex flex-wrap justify-center md:justify-start gap-4">
             <Link 
-              href="/privacy" 
+              href="/privacy-policy" 
               className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1"
             >
               Nossa Política de Privacidade <ArrowRight size={12} />

@@ -106,15 +106,15 @@ function FeatureCarousel({ cards }: { cards: any[] }) {
                 boxShadow: `0 30px 60px -12px ${card.glowColor.replace('0.3', '0.4')}`,
                 borderColor: card.glowColor.replace('0.3', '0.5')
               }}
-              className="bg-white p-6 md:p-7 rounded-[2rem] border border-gray-100 shadow-xl shadow-gray-200/50 flex flex-col items-center text-center group transition-all duration-300"
+              className="bg-white dark:bg-slate-800 p-6 md:p-7 rounded-[2rem] border border-gray-100 dark:border-slate-700 shadow-xl shadow-gray-200/50 dark:shadow-black/20 flex flex-col items-center text-center group transition-all duration-300"
             >
               <div className={`w-11 h-11 md:w-12 md:h-12 ${card.color} rounded-xl flex items-center justify-center mb-4 shadow-inner group-hover:rotate-3 transition-all duration-500`}>
                 {React.cloneElement(card.icon as React.ReactElement, { size: 20 })}
               </div>
-              <h3 className="text-xs md:text-sm font-black text-gray-900 mb-1 tracking-tight leading-tight px-1">
+              <h3 className="text-xs md:text-sm font-black text-gray-900 dark:text-white mb-1 tracking-tight leading-tight px-1 transition-colors">
                 {card.title}
               </h3>
-              <p className="text-[9px] md:text-[10px] text-gray-500 font-black uppercase tracking-[0.15em] leading-relaxed">
+              <p className="text-[9px] md:text-[10px] text-zinc-500 dark:text-zinc-400 font-black uppercase tracking-[0.15em] leading-relaxed transition-colors">
                 {card.desc}
               </p>
             </motion.div>
@@ -169,48 +169,58 @@ export default function InstitutionalHomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white selection:bg-lime-100 selection:text-lime-900 font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 selection:bg-lime-100 selection:text-lime-900 font-sans overflow-x-hidden">
       <PublicHeader />
       <WhatsAppButton />
       
       <main ref={targetRef}>
         {/* HERO SECTION WITH ANIMATED TEXT & LOWERED POSITION */}
-        <section className="relative min-h-[700px] md:min-h-[950px] flex items-center overflow-hidden bg-[#fffdf9]">
+        <section className="relative min-h-[650px] md:min-h-[950px] flex items-end md:items-center overflow-hidden bg-[#fffdf9] dark:bg-slate-950">
           
           {/* Main Banner Image Background */}
           <div className="absolute inset-0 z-0">
+            {/* Mobile Banner */}
             <img 
-              src="/images/banermundomagico.png" 
-              className="w-full h-full object-cover object-right md:object-center"
-              alt="Mundo Mágico Banner"
+              src="/images/banne%20rmobile.png" 
+              className="w-full h-full object-cover object-center md:hidden"
+              alt="Mundo Mágico Banner Mobile"
               onError={(e) => {
                 e.currentTarget.src = 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=2000&auto=format&fit=crop';
               }}
             />
-            {/* Soft overlay for mobile readability */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/10 to-transparent md:hidden" />
+            {/* Desktop Banner */}
+            <img 
+              src="/images/banermundomagico.png" 
+              className="w-full h-full object-cover object-center hidden md:block"
+              alt="Mundo Mágico Banner Desktop"
+              onError={(e) => {
+                e.currentTarget.src = 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=2000&auto=format&fit=crop';
+              }}
+            />
+            {/* Very subtle dark overlay at the bottom for better contrast if needed, otherwise clean */}
+            <div className="absolute inset-0 bg-black/5 md:bg-transparent" />
           </div>
           
-          <div className="container mx-auto px-6 relative z-20 pt-24 md:pt-40">
+          <div className="container mx-auto px-4 md:px-6 relative z-20 pb-32 md:pb-0 md:pt-40">
             <div className="max-w-3xl">
               <motion.div 
                 style={{ opacity, scale }}
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="flex flex-col items-start"
+                className="flex flex-col items-start text-left bg-white/60 dark:bg-zinc-950/60 backdrop-blur-xl md:bg-transparent md:backdrop-blur-none p-5 md:p-0 rounded-[2rem] md:rounded-none border border-white/40 md:border-none shadow-2xl shadow-black/10 md:shadow-none w-full sm:w-auto"
               >
                 {/* LOGO-STYLE ANIMATED TITLE */}
                 <motion.h1 
                   variants={itemVariants}
-                  className="font-fredoka text-5xl md:text-8xl font-black mb-6 tracking-tight flex flex-wrap gap-x-8 items-center"
+                  className="font-fredoka text-3xl sm:text-5xl md:text-8xl font-black mb-3 md:mb-6 tracking-tight flex flex-wrap gap-x-3 md:gap-x-8 items-center"
                   style={{
                     textShadow: `
-                      -4px -4px 0 #fff,  
-                       4px -4px 0 #fff,
-                      -4px  4px 0 #fff,
-                       4px  4px 0 #fff,
-                       0px 8px 15px rgba(0,0,0,0.1)
+                      -2px -2px 0 #fff,  
+                       2px -2px 0 #fff,
+                      -2px  2px 0 #fff,
+                       2px  2px 0 #fff,
+                       0px 4px 10px rgba(0,0,0,0.1)
                     `
                   }}
                 >
@@ -234,8 +244,7 @@ export default function InstitutionalHomePage() {
                         {item.l}
                         {item.star && (
                           <Star 
-                            size={20} 
-                            className="absolute inset-0 m-auto text-white fill-white translate-y-[2px]" 
+                            className="absolute inset-0 m-auto text-white fill-white translate-y-[1px] w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" 
                           />
                         )}
                       </motion.span>
@@ -263,13 +272,12 @@ export default function InstitutionalHomePage() {
                         {item.l}
                         {item.star && (
                           <Star 
-                            size={20} 
-                            className="absolute inset-0 m-auto text-white fill-white translate-y-[2px]" 
+                            className="absolute inset-0 m-auto text-white fill-white translate-y-[1px] w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" 
                           />
                         )}
                         {item.starTop && (
                           <div className="absolute -top-1 left-1/2 -translate-x-1/2">
-                             <Star size={12} className="text-[#e91e63] fill-[#e91e63]" />
+                             <Star size={10} className="text-[#e91e63] fill-[#e91e63] md:w-3 md:h-3" />
                           </div>
                         )}
                       </motion.span>
@@ -279,39 +287,34 @@ export default function InstitutionalHomePage() {
                 
                 <motion.h2 
                   variants={itemVariants}
-                  className="text-2xl md:text-3xl font-black text-[#5d2a7a] mb-8 tracking-tight"
+                  className="text-base sm:text-2xl md:text-3xl font-black text-[#5d2a7a] dark:text-indigo-300 mb-4 md:mb-8 tracking-tight"
                 >
                   Brinquedoteca Infantil em Cajamar
                 </motion.h2>
                 
                 <motion.div 
                   variants={itemVariants}
-                  className="flex items-start gap-4 mb-10 max-w-lg"
+                  className="flex items-start gap-3 mb-6 md:mb-10 max-w-lg"
                 >
-                   <motion.div 
-                    initial={{ scale: 0, rotate: -20 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ delay: 1.2, type: "spring" }}
-                    className="mt-1 p-1.5 bg-amber-50 rounded-full"
-                   >
-                     <Star size={20} className="text-amber-400 fill-amber-400" />
-                   </motion.div>
-                   <p className="text-lg md:text-xl text-gray-700 font-bold leading-snug">
+                   <div className="mt-1 p-1.5 bg-amber-50 rounded-full shrink-0">
+                     <Star size={16} className="text-amber-400 fill-amber-400" />
+                   </div>
+                   <p className="text-sm md:text-xl text-zinc-800 dark:text-zinc-200 font-bold leading-snug">
                      Um espaço seguro, divertido e cheio de carinho para as crianças.
                    </p>
                 </motion.div>
 
                 <motion.div 
                   variants={itemVariants}
-                  className="flex flex-col sm:flex-row gap-4 mb-12"
+                  className="flex flex-col sm:flex-row gap-4 mb-6 md:mb-12 w-full sm:w-auto"
                 >
                   <MotionLink 
                     href="https://wa.me/5511972090986" 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-8 py-4 bg-[#e91e63] text-white rounded-full font-black text-xl shadow-xl shadow-rose-200 flex items-center justify-center gap-3 transition-all"
+                    className="px-6 py-4 md:px-8 md:py-4 bg-[#e91e63] text-white rounded-full font-black text-lg md:text-xl shadow-xl shadow-rose-200 flex items-center justify-center gap-3 transition-all"
                   >
-                    <Calendar size={24} />
+                    <Calendar size={20} className="md:w-6 md:h-6" />
                     Agende uma visita
                   </MotionLink>
                 </motion.div>
@@ -324,7 +327,7 @@ export default function InstitutionalHomePage() {
                       transition: { staggerChildren: 0.1, delayChildren: 1.5 }
                     }
                   }}
-                  className="flex items-center gap-10"
+                  className="flex flex-wrap items-center gap-4 md:gap-10"
                 >
                    {[
                      { text: 'Equipe acolhedora', color: 'text-lime-600' },
@@ -336,10 +339,10 @@ export default function InstitutionalHomePage() {
                          hidden: { opacity: 0, x: -20 },
                          visible: { opacity: 1, x: 0 }
                        }}
-                       className="flex items-center gap-3 text-gray-500 font-black text-xs uppercase tracking-widest"
+                       className="flex items-center gap-2 text-gray-600 dark:text-gray-400 font-black text-[10px] uppercase tracking-widest"
                      >
-                       <div className="w-7 h-7 bg-lime-100 rounded-full flex items-center justify-center">
-                          <CheckCircle2 size={14} className="text-lime-600" />
+                       <div className="w-6 h-6 bg-lime-100 rounded-full flex items-center justify-center shrink-0">
+                          <CheckCircle2 size={12} className="text-lime-600" />
                        </div>
                        {item.text}
                      </motion.div>
@@ -353,6 +356,7 @@ export default function InstitutionalHomePage() {
         {/* REFINED FLOATING FEATURE CARDS - Subtle Floating Overlay */}
         <section className="relative z-30 -mt-12 md:-mt-20 bg-transparent">
           <div className="container mx-auto px-6">
+            {/* Dark mode cards handled via featureCards data or styles below */}
             <FeatureCarousel cards={featureCards} />
           </div>
         </section>
@@ -379,7 +383,7 @@ export default function InstitutionalHomePage() {
         </section>
 
         {/* ABOUT SECTION - Um lugar feito com muito carinho */}
-        <section className="py-16 md:py-24 bg-white" id="sobre">
+        <section className="py-16 md:py-24 bg-white dark:bg-zinc-950" id="sobre">
           <div className="container mx-auto px-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center">
               <div className="relative">
@@ -397,11 +401,11 @@ export default function InstitutionalHomePage() {
 
               <div>
                 <span className="text-lime-600 font-black uppercase tracking-[0.4em] text-[10px] mb-6 block">Sobre Nós</span>
-                <h2 className="text-4xl md:text-6xl font-black text-gray-900 mb-8 tracking-tightest leading-[1.05]">
+                <h2 className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white mb-8 tracking-tightest leading-[1.05]">
                   Um lugar feito com <br />
                   <span className="text-rose-500 italic">muito carinho.</span>
                 </h2>
-                <p className="text-lg text-gray-600 mb-10 leading-relaxed font-medium">
+                <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-10 leading-relaxed font-medium">
                   A Mundo Mágico é um espaço pensado para oferecer experiências de desenvolvimento, socialização, criatividade e diversão em um ambiente seguro e acolhedor. Nosso objetivo é proporcionar tranquilidade para as famílias e momentos inesquecíveis para as crianças.
                 </p>
                 
@@ -419,7 +423,7 @@ export default function InstitutionalHomePage() {
                         <CheckCircle2 size={20} />
                       </div>
                       <div>
-                        <h4 className="font-black text-gray-900 text-sm tracking-tight">{item.title}</h4>
+                        <h4 className="font-black text-gray-900 dark:text-white text-sm tracking-tight">{item.title}</h4>
                         <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">{item.desc}</p>
                       </div>
                     </div>
@@ -442,8 +446,8 @@ export default function InstitutionalHomePage() {
                       className="w-full aspect-square object-cover object-center rounded-[3rem] shadow-2xl border-4 border-white/20 rotate-2 group-hover:rotate-0 transition-transform duration-500" 
                       alt="Diretora Betta" 
                     />
-                    <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-3xl shadow-xl">
-                      <h4 className="font-black text-gray-900">Betta</h4>
+                    <div className="absolute -bottom-6 -right-6 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-xl border border-white/10">
+                      <h4 className="font-black text-gray-900 dark:text-white">Betta</h4>
                       <p className="text-rose-500 font-bold text-xs uppercase tracking-widest">Diretora</p>
                     </div>
                   </div>
@@ -478,13 +482,13 @@ export default function InstitutionalHomePage() {
         </section>
 
         {/* PRICING SECTION */}
-        <section className="py-16 md:py-24 bg-rose-50/20" id="planos">
+        <section className="py-16 md:py-24 bg-rose-50/20 dark:bg-zinc-950/40" id="planos">
           <div className="container mx-auto px-6">
             <div className="text-center mb-20">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-rose-100 border border-rose-200 rounded-full mb-6">
                 <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Planos e valores</span>
               </div>
-              <h2 className="text-4xl md:text-6xl font-black text-gray-900 mb-6 tracking-tightest">
+              <h2 className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white mb-6 tracking-tightest">
                 Escolha o plano <span className="text-rose-500">ideal</span> para sua família
               </h2>
               <p className="text-lg text-gray-500 font-medium">Opções flexíveis para cada rotina, sempre com muito carinho e qualidade.</p>
@@ -492,10 +496,10 @@ export default function InstitutionalHomePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {/* Diária Meio Período */}
-              <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-100 border border-gray-100 overflow-hidden flex flex-col relative">
+              <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-2xl shadow-zinc-100 dark:shadow-black/40 border border-zinc-100 dark:border-zinc-800 overflow-hidden flex flex-col relative">
                 <div className="h-2 w-full bg-orange-400" />
                 <div className="p-10 flex flex-col flex-1">
-                  <h3 className="text-2xl font-black text-gray-900 mb-2 leading-tight">Diária Meio Período</h3>
+                  <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2 leading-tight">Diária Meio Período</h3>
                   <p className="text-sm text-gray-400 font-medium mb-10">Ideal para necessidades pontuais</p>
                   
                   <div className="flex items-baseline gap-1 mb-10">
@@ -527,7 +531,7 @@ export default function InstitutionalHomePage() {
               </div>
 
               {/* Diária Integral */}
-              <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-100 border border-gray-100 overflow-hidden flex flex-col relative">
+              <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-2xl shadow-zinc-100 dark:shadow-black/40 border border-zinc-100 dark:border-zinc-800 overflow-hidden flex flex-col relative">
                 <div className="h-2 w-full bg-sky-400" />
                 <div className="p-10 flex flex-col flex-1">
                   <h3 className="text-2xl font-black text-gray-900 mb-2 leading-tight">Diária Integral</h3>
@@ -562,7 +566,7 @@ export default function InstitutionalHomePage() {
               </div>
 
               {/* Pacote Mensal/Integral */}
-              <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-purple-100 border-2 border-purple-100 overflow-hidden flex flex-col relative">
+              <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-2xl shadow-purple-100 dark:shadow-purple-900/20 border-2 border-purple-100 dark:border-purple-900/30 overflow-hidden flex flex-col relative">
                 <div className="h-2 w-full bg-purple-500" />
                 
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
@@ -605,7 +609,7 @@ export default function InstitutionalHomePage() {
               </div>
 
               {/* Pacote Mensal/Meio Período */}
-              <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-100 border border-gray-100 overflow-hidden flex flex-col relative">
+              <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-2xl shadow-zinc-100 dark:shadow-black/40 border border-zinc-100 dark:border-zinc-800 overflow-hidden flex flex-col relative">
                 <div className="h-2 w-full bg-lime-400" />
                 <div className="p-10 flex flex-col flex-1">
                   <h3 className="text-2xl font-black text-gray-900 mb-2 leading-tight">Pacote Mensal/Meio Período</h3>
@@ -643,11 +647,11 @@ export default function InstitutionalHomePage() {
         </section>
 
         {/* GALLERY SECTION - Momentos Mágicos */}
-        <section className="py-16 md:py-24 bg-slate-50/50" id="galeria">
+        <section className="py-16 md:py-24 bg-zinc-50/50 dark:bg-zinc-900/50" id="galeria">
           <div className="container mx-auto px-6">
             <div className="text-center mb-20">
               <span className="text-lime-600 font-black uppercase tracking-[0.4em] text-[10px] mb-6 block">Nossa Brinquedoteca</span>
-              <h2 className="text-4xl md:text-6xl font-black text-gray-900 mb-6 tracking-tightest">
+              <h2 className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white mb-6 tracking-tightest">
                 Conheça nosso <span className="text-sky-500 italic">espaço</span>
               </h2>
               <p className="text-lg text-gray-500 font-medium max-w-2xl mx-auto">Cada cantinho da Mundo Mágico foi pensado para proporcionar conforto, segurança e experiências especiais para as crianças.</p>
@@ -737,7 +741,7 @@ export default function InstitutionalHomePage() {
         </section>
 
         {/* FINAL CTA */}
-        <section className="py-16 md:py-24 bg-white" id="contato">
+        <section className="py-16 md:py-24 bg-white dark:bg-zinc-950" id="contato">
           <div className="container mx-auto px-6 text-center">
             <div className="max-w-5xl mx-auto bg-gradient-to-tr from-[#2d5a27] to-sky-950 rounded-[4rem] p-16 md:p-28 text-white relative overflow-hidden shadow-2xl">
                <h2 className="text-4xl md:text-6xl font-black mb-10 tracking-tight">O Mundo Mágico <br /><span className="text-lime-400 italic">espera por você.</span></h2>

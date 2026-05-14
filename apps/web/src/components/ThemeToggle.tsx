@@ -20,7 +20,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-      className="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:text-primary dark:hover:text-primary transition-all duration-300 shadow-sm"
+      className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 dark:bg-black/10 backdrop-blur-md border border-zinc-200 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:text-primary dark:hover:text-primary transition-all duration-300 shadow-sm"
       aria-label="Alternar tema"
     >
       <AnimatePresence mode="wait" initial={false}>

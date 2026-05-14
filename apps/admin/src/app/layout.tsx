@@ -27,8 +27,8 @@ export default function RootLayout({
       <body className={`${inter.variable} ${outfit.variable} font-sans bg-background text-foreground`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
         >
           <AuthProvider>
