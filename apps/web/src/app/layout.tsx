@@ -19,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${fredoka.variable} scroll-smooth`}>
-      <body className="font-sans antialiased text-gray-900 bg-white">
+      <body className="font-fredoka antialiased text-gray-900 bg-white selection:bg-primary/20 selection:text-primary">
         <Providers>
           {children}
         </Providers>

@@ -1,20 +1,13 @@
 import { getToken } from 'next-auth/jwt'
-import { authOptions } from './auth'
+import { authOptions, getApiAuth } from './auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function proxyRequest(req: NextRequest, pathOverride?: string) {
-  // Tenta pegar o token do cookie da requisição
-  const token = await getToken({ 
-    req: req as any, 
-    secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: process.env.NODE_ENV === 'production'
-  })
+  const apiAuth = await getApiAuth()
+  const accessToken = apiAuth?.token
   
-  const accessToken = (token as any)?.accessToken
-
-  // Log apenas em desenvolvimento
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`[Proxy] ${req.method} ${new URL(req.url).pathname} — token: ${!!token} accessToken: ${!!accessToken}`)
+    console.log(`[Proxy] ${req.method} ${new URL(req.url).pathname} | Token: ${!!accessToken}`)
   }
 
   const apiUrl = (process.env.API_URL || 'http://localhost:3333').replace(/\/$/, '')
