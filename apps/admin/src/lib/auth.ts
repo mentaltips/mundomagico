@@ -1,5 +1,6 @@
 import { getServerSession, NextAuthOptions } from 'next-auth'
-import { getToken } from 'next-auth/jwt'
+import { getToken, decode } from 'next-auth/jwt'
+import { cookies } from 'next/headers'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { redirect } from 'next/navigation'
 
@@ -80,37 +81,89 @@ export async function requireAuth() {
 }
 
 export async function getApiAuth(req?: any) {
-  // Se tivermos o request, usamos getToken que é mais robusto em rotas de API
+  // 1. Tentar via getToken (o método oficial e mais seguro)
   if (req) {
-    const token = await getToken({ 
-      req, 
-      secret: process.env.NEXTAUTH_SECRET,
-      // Se estiver usando HTTPS em produção, NextAuth muda o nome do cookie
-      secureCookie: process.env.NODE_ENV === 'production'
-    })
-    
-    if (token) {
-      return {
-        user: {
-          id: token.sub as string,
-          role: token.role as string,
-          schoolId: token.schoolId as string,
-          email: token.email as string,
-        },
-        token: token.accessToken as string | undefined,
+    try {
+      // Tentar pegar o token decodificado
+      const token = await getToken({ 
+        req, 
+        secret: process.env.NEXTAUTH_SECRET,
+      })
+      
+      if (token?.accessToken) {
+        return {
+          user: {
+            id: token.sub as string,
+            role: token.role as string,
+            schoolId: token.schoolId as string,
+            email: token.email as string,
+          },
+          token: token.accessToken as string,
+        }
       }
+
+      // Se não veio o decodificado, tentar o RAW string
+      const rawToken = await getToken({ 
+        req, 
+        secret: process.env.NEXTAUTH_SECRET,
+        raw: true
+      })
+      
+      if (rawToken) {
+        // Se conseguirmos o rawToken, retornamos ele (o backend sabe validar)
+        return {
+          user: {} as any, // Dados do usuário virão da decodificação no backend
+          token: rawToken,
+        }
+      }
+    } catch (err) {
+      console.error('[Auth] getToken error:', err)
     }
   }
 
-  // Fallback para getServerSession (funciona bem em Server Components)
-  const session = await getServerSession(authOptions)
+  // 2. Fallback manual: ler os cookies diretamente
+  try {
+    const cookieStore = cookies()
+    const sessionToken = 
+      cookieStore.get('next-auth.session-token')?.value || 
+      cookieStore.get('__Secure-next-auth.session-token')?.value ||
+      cookieStore.get('authjs.session-token')?.value ||
+      cookieStore.get('__Secure-authjs.session-token')?.value
 
-  if (!session?.user) {
-    return null
+    if (sessionToken && process.env.NEXTAUTH_SECRET) {
+      const decoded = await decode({
+        token: sessionToken,
+        secret: process.env.NEXTAUTH_SECRET,
+      })
+
+      if (decoded?.accessToken) {
+        return {
+          user: {
+            id: decoded.sub as string,
+            role: decoded.role as string,
+            schoolId: decoded.schoolId as string,
+            email: decoded.email as string,
+          },
+          token: decoded.accessToken as string,
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[Auth] Manual token retrieval error:', err)
   }
 
-  return {
-    user: session.user,
-    token: (session as any).accessToken as string | undefined,
+  // 3. Fallback final: getServerSession
+  try {
+    const session = await getServerSession(authOptions)
+    if (session?.user) {
+      return {
+        user: session.user,
+        token: (session as any).accessToken as string | undefined,
+      }
+    }
+  } catch (err) {
+    console.error('[Auth] getServerSession error:', err)
   }
+
+  return null
 }

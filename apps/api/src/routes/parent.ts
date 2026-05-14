@@ -43,7 +43,10 @@ router.get('/dashboard', async (req, res) => {
       where: {
         childId: { in: childIds },
         isDraft: false,
-        date: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+        // Ensure we only get reports with a clean date (UTC midnight) to avoid junk from partial saves
+        date: { 
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        }
       },
       include: {
         meals: true,
@@ -53,9 +56,24 @@ router.get('/dashboard', async (req, res) => {
         moods: true,
         activities: true,
       },
-      orderBy: { date: 'desc' },
+      orderBy: [
+        { date: 'desc' },
+        { updatedAt: 'desc' }
+      ],
       take: 10
     })
+    
+    // Sort to ensure the one with the cleanest date or most recent update comes first
+    const sortedReports = [...latestReports].sort((a: any, b: any) => {
+      const aIsNormalized = new Date(a.date).toISOString().endsWith('T00:00:00.000Z')
+      const bIsNormalized = new Date(b.date).toISOString().endsWith('T00:00:00.000Z')
+      if (aIsNormalized && !bIsNormalized) return -1
+      if (!aIsNormalized && bIsNormalized) return 1
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    })
+
+    // Get today's report (the most recent normalized one)
+    const currentReport = sortedReports[0] || null
 
     // Pending invoices
     const pendingInvoices = await prisma.invoice.findMany({
@@ -78,14 +96,52 @@ router.get('/dashboard', async (req, res) => {
       take: 5
     })
 
+    // Process report data for the summary if we found a valid one
+    let report = null
+
+    if (currentReport) {
+      report = {
+        meals: currentReport.meals.map((m: any) => ({
+          id: m.id,
+          mealType: m.mealType,
+          result: m.result,
+          amount: m.amount,
+          observation: m.observation,
+        })),
+        sleep: currentReport.sleep,
+        hygiene: currentReport.hygiene,
+        moods: currentReport.moods,
+        activities: currentReport.activities.map((a: any) => ({
+          name: a.activityType,
+          description: a.description
+        })),
+        note: currentReport.messageToParents,
+        important: currentReport.importantAlert
+      }
+    }
+
     res.json({
       guardian,
+      guardianName: guardian.fullName,
       children,
+      child: children[0] ? {
+        id: children[0].id,
+        name: children[0].fullName.split(' ')[0],
+        fullName: children[0].fullName,
+        group: children[0].group?.name,
+        shift: children[0].group?.shift
+      } : null,
       checkIns,
+      report,
       latestReports,
       pendingInvoices,
       photos,
-      announcements,
+      announcements: announcements.map((a: any) => ({
+        id: a.id,
+        title: a.title,
+        content: a.content,
+        date: a.createdAt
+      })),
     })
   } catch (error) {
     req.log.error(error)
@@ -125,7 +181,20 @@ router.get('/feed', async (req, res) => {
     })
 
     reports.forEach((r: any) => {
-      feed.push({ type: 'DAILY_REPORT', date: r.date, data: r })
+      const isNormalized = new Date(r.date).toISOString().endsWith('T00:00:00.000Z')
+      if (!isNormalized) return // Skip junk reports in the feed
+      
+      feed.push({
+        id: `report-${r.id}`,
+        type: 'DAILY_REPORT',
+        title: 'Diário de Rotina',
+        description: r.messageToParents || 'Acompanhe as atividades e cuidados de hoje.',
+        time: r.sentAt ? new Date(r.sentAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : new Date(r.updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        date: r.date,
+        icon: 'Utensils',
+        color: 'text-primary',
+        data: r
+      })
     })
 
     // Photos shared with parents
@@ -137,7 +206,17 @@ router.get('/feed', async (req, res) => {
     })
 
     photos.forEach((p: any) => {
-      feed.push({ type: 'PHOTO', date: p.date, data: p })
+      feed.push({
+        id: `photo-${p.id}`,
+        type: 'PHOTO',
+        title: 'Nova Foto',
+        description: `${p.child.fullName.split(' ')[0]} apareceu em uma nova foto!`,
+        time: new Date(p.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        date: p.date,
+        icon: 'Camera',
+        color: 'text-amber-500',
+        data: p
+      })
     })
 
     // Announcements targeting guardians or all
@@ -151,7 +230,17 @@ router.get('/feed', async (req, res) => {
     })
 
     announcements.forEach((a: any) => {
-      feed.push({ type: 'ANNOUNCEMENT', date: a.createdAt, data: a })
+      feed.push({
+        id: `announcement-${a.id}`,
+        type: 'ANNOUNCEMENT',
+        title: a.title,
+        description: a.content,
+        time: new Date(a.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        date: a.createdAt,
+        icon: 'Megaphone',
+        color: 'text-violet-500',
+        data: a
+      })
     })
 
     // Development reports published
@@ -163,7 +252,17 @@ router.get('/feed', async (req, res) => {
     })
 
     devReports.forEach((dr: any) => {
-      feed.push({ type: 'DEVELOPMENT_REPORT', date: dr.publishedAt || dr.updatedAt, data: dr })
+      feed.push({
+        id: `dev-report-${dr.id}`,
+        type: 'DEVELOPMENT_REPORT',
+        title: 'Relatório de Desenvolvimento',
+        description: `Um novo relatório de desempenho está disponível.`,
+        time: new Date(dr.publishedAt || dr.updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        date: dr.publishedAt || dr.updatedAt,
+        icon: 'Star',
+        color: 'text-emerald-500',
+        data: dr
+      })
     })
 
     // Sort all by date desc

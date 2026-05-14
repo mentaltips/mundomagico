@@ -143,7 +143,7 @@ function PaymentsContent() {
           <div className="flex items-center gap-3 mb-1">
             <AlertCircle className="text-amber-500 shrink-0" size={18} />
             <p className="font-black text-amber-500 text-sm uppercase tracking-tight">
-              {pending.length} fatura{pending.length > 1 ? 's' : ''} pendente{pending.length > 1 ? 's' : ''}
+              {pending.length}{' '}fatura{pending.length > 1 ? 's' : ''} pendente{pending.length > 1 ? 's' : ''}
             </p>
           </div>
           <p className="text-xs text-amber-500/80 font-black ml-7 uppercase tracking-widest">

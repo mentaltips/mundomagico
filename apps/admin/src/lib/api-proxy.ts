@@ -32,7 +32,13 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
       try { body = await req.blob() } catch {}
       if (body) headers['Content-Type'] = contentType // repassa com o boundary original
     } else {
-      try { body = await req.text() } catch {}
+      try { 
+        const text = await req.text() 
+        body = text
+        if (process.env.NODE_ENV !== 'production' && text) {
+          console.log(`[Proxy] Body: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`)
+        }
+      } catch {}
     }
   }
 

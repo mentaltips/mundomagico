@@ -53,7 +53,7 @@ type FeedData = {
 }
 
 const ICON_MAP: Record<string, any> = {
-  Utensils, Moon, Droplets, Activity, LogIn, LogOut, Stethoscope, Heart,
+  Utensils, Moon, Droplets, Activity, LogIn, LogOut, Stethoscope, Heart, Camera, Megaphone, Star
 }
 
 const MOOD_EMOJI: Record<string, string> = {

@@ -36,19 +36,8 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
 
-  // Proxy para a API (Porta 3002)
-  async rewrites() {
-    return {
-      // afterFiles garante que o Next.js tente as rotas em src/app/api/ primeiro.
-      // Se não houver uma rota definida lá, ele cai no proxy genérico abaixo.
-      afterFiles: [
-        {
-          source: '/api/:path((?!auth).*)', // Tudo exceto auth
-          destination: 'http://localhost:3002/api/:path*',
-        },
-      ]
-    }
-  },
+  // Proxy para a API agora é gerenciado via src/app/api/[...path]/route.ts
+  // para garantir injeção de token JWT em TODAS as rotas.
 }
 
 module.exports = nextConfig

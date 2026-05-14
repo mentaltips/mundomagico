@@ -576,17 +576,16 @@ function GuardianLinker({ childId }: { childId: string }) {
     if (!confirm('Deseja realmente desvincular este responsável?')) return
 
     try {
-      const res = await fetch(`/api/guardians/link`, {
+      const res = await fetch(`/api/guardians/link?childId=${childId}&guardianId=${guardianId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childId, guardianId })
       })
 
       if (res.ok) {
         toast.success('Vínculo removido')
         queryClient.invalidateQueries({ queryKey: ['child-guardians', childId] })
       } else {
-        toast.error('Erro ao desvincular')
+        const data = await res.json()
+        toast.error(data.error || data.detail || 'Erro ao desvincular')
       }
     } catch (err) {
       toast.error('Erro de conexão')

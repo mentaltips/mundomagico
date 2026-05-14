@@ -134,44 +134,13 @@ export function AdminSidebar() {
       </div>
 
       {/* User Profile Area */}
-      <UserProfileArea collapsed={collapsed && !isOpen} />
+      {mounted && <UserProfileArea collapsed={collapsed && !isOpen} />}
     </>
   )
 
-  if (!mounted) {
-    return (
-      <aside className="hidden lg:flex flex-col h-screen sticky top-0 bg-card border-r border-border w-[280px] shrink-0" />
-    )
-  }
-
   return (
     <>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[60] lg:hidden"
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.aside
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-y-0 left-0 w-72 bg-card border-r border-border z-[70] lg:hidden flex flex-col"
-          >
-            <SidebarContent />
-          </motion.aside>
-        )}
-      </AnimatePresence>
-
+      {/* Desktop Sidebar (Stable structure for hydration) */}
       <motion.aside
         initial={false}
         animate={{ width: collapsed ? 84 : 280 }}
@@ -185,7 +154,39 @@ export function AdminSidebar() {
           {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
       </motion.aside>
-      <OfflineIndicator />
+
+      {/* Mobile Parts (Rendered only after mount to avoid hydration mismatch) */}
+      {mounted && (
+        <>
+          <AnimatePresence>
+            {isOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsOpen(false)}
+                className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[60] lg:hidden"
+              />
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isOpen && (
+              <motion.aside
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed inset-y-0 left-0 w-72 bg-card border-r border-border z-[70] lg:hidden flex flex-col"
+              >
+                <SidebarContent />
+              </motion.aside>
+            )}
+          </AnimatePresence>
+          
+          <OfflineIndicator />
+        </>
+      )}
     </>
   )
 }

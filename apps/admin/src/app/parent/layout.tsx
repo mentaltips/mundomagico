@@ -21,10 +21,10 @@ const NOTIF_ICONS: Record<string, any> = {
   payment: CreditCard,
 }
 const NOTIF_COLORS: Record<string, string> = {
-  announcement: 'text-sky-600 bg-sky-50',
-  alert:        'text-rose-600 bg-rose-50',
-  report:       'text-violet-600 bg-violet-50',
-  payment:      'text-amber-600 bg-amber-50',
+  announcement: 'text-sky-600 bg-sky-50 dark:bg-sky-500/10 dark:text-sky-400',
+  alert:        'text-rose-600 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400',
+  report:       'text-violet-600 bg-violet-50 dark:bg-violet-500/10 dark:text-violet-400',
+  payment:      'text-amber-600 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-400',
 }
 
 const navItems = [
@@ -77,12 +77,12 @@ function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => { setOpen(!open); if (!open) refetch() }}
-        className="relative p-2 text-gray-500 hover:text-sky-600 transition-colors rounded-xl hover:bg-sky-50"
+        className="relative p-2 text-muted-foreground hover:text-primary transition-colors rounded-xl hover:bg-accent"
         aria-label="Notificações"
       >
         <Bell className="h-5 w-5" />
         {unread > 0 && (
-          <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white leading-none px-0.5">
+          <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-card leading-none px-0.5">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
@@ -95,49 +95,48 @@ function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[200]"
+            className="absolute right-0 top-full mt-2 w-80 bg-card rounded-2xl shadow-2xl border border-border overflow-hidden z-[200]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-accent/20">
               <div>
-                <p className="font-black text-foreground text-sm">Notificações</p>
+                <p className="font-black text-foreground text-sm tracking-tight">Notificações</p>
                 {unread > 0 && (
-                  <p className="text-[10px] text-gray-400 font-medium mt-0.5">{unread} não lidas</p>
+                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-0.5">{unread} não lidas</p>
                 )}
               </div>
-              <button onClick={() => setOpen(false)} className="p-1.5 text-gray-300 hover:text-gray-500 rounded-lg">
-                <X className="h-3.5 w-3.5" />
+              <button onClick={() => setOpen(false)} className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors">
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             {/* List */}
-            <div className="max-h-[360px] overflow-y-auto divide-y divide-gray-50">
+            <div className="max-h-[360px] overflow-y-auto divide-y divide-border custom-scrollbar">
               {notifications.length === 0 ? (
-                <div className="py-10 text-center">
-                  <CheckCheck className="h-10 w-10 text-gray-200 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400 font-medium">Tudo em dia!</p>
-                  <p className="text-xs text-gray-300 mt-0.5">Nenhuma notificação</p>
+                <div className="py-12 text-center opacity-40">
+                  <CheckCheck className="h-10 w-10 text-primary mx-auto mb-3" />
+                  <p className="text-xs font-black uppercase tracking-widest">Tudo em dia!</p>
                 </div>
               ) : (
                 notifications.map((n) => {
                   const Icon = NOTIF_ICONS[n.type] ?? Bell
-                  const color = NOTIF_COLORS[n.type] ?? 'text-gray-500 bg-gray-50'
+                  const color = NOTIF_COLORS[n.type] ?? 'text-muted-foreground bg-accent'
                   const isUrgent = n.priority === 'URGENTE'
                   return (
                     <button
                       key={n.id}
                       onClick={() => { setOpen(false); if (n.href) router.push(n.href) }}
-                      className={`w-full flex items-start gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors ${isUrgent ? 'bg-rose-50/40' : ''}`}
+                      className={`w-full flex items-start gap-3 px-5 py-4 text-left hover:bg-accent transition-colors ${isUrgent ? 'bg-rose-500/5' : ''}`}
                     >
                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${color}`}>
                         <Icon className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <p className={`text-xs font-black truncate ${isUrgent ? 'text-rose-700' : 'text-gray-900'}`}>{n.title}</p>
-                          <span className="text-[10px] text-gray-300 font-medium shrink-0">{timeAgo(n.time)}</span>
+                          <p className={`text-[11px] font-black truncate uppercase tracking-widest ${isUrgent ? 'text-rose-500' : 'text-foreground'}`}>{n.title}</p>
+                          <span className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter shrink-0">{timeAgo(n.time)}</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 font-medium mt-0.5 line-clamp-2 leading-relaxed">{n.body}</p>
+                        <p className="text-[11px] text-muted-foreground font-medium mt-0.5 line-clamp-2 leading-relaxed">{n.body}</p>
                       </div>
                     </button>
                   )
@@ -198,29 +197,29 @@ export default function GuardianLayout({ children }: { children: React.ReactNode
 
         {/* Horizontal nav for desktop */}
         <nav className="hidden md:flex items-center gap-1 px-8 pb-3 max-w-2xl mx-auto w-full overflow-x-auto no-scrollbar">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href || (item.href !== '/parent' && pathname.startsWith(item.href))
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all whitespace-nowrap ${
-                  isActive ? 'bg-sky-100 text-sky-700' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {item.label}
-              </Link>
-            )
-          })}
-          <button
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all ml-auto whitespace-nowrap"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Sair
-          </button>
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href || (item.href !== '/parent' && pathname.startsWith(item.href))
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all whitespace-nowrap ${
+                    isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {item.label}
+                </Link>
+              )
+            })}
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all ml-auto whitespace-nowrap"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Sair
+            </button>
         </nav>
       </header>
 
@@ -250,15 +249,14 @@ export default function GuardianLayout({ children }: { children: React.ReactNode
           )
         })}
 
-        {/* "Mais" button */}
         <button
           onClick={() => setMoreOpen(true)}
           className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1"
         >
-          <div className="p-1.5 rounded-xl text-gray-400">
+          <div className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground">
             <ChevronRight className="h-5 w-5" />
           </div>
-          <span className="text-[9px] font-black uppercase tracking-wide text-gray-400">Mais</span>
+          <span className="text-[9px] font-black uppercase tracking-wide text-muted-foreground">Mais</span>
         </button>
       </nav>
 
@@ -274,10 +272,10 @@ export default function GuardianLayout({ children }: { children: React.ReactNode
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-              className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 p-6 pb-10 md:hidden"
+              className="fixed bottom-0 left-0 right-0 bg-card rounded-t-3xl z-50 p-6 pb-10 md:hidden border-t border-border"
             >
-              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-6" />
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Menu completo</p>
+              <div className="w-10 h-1 bg-muted rounded-full mx-auto mb-6" />
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4">Menu completo</p>
               <div className="grid grid-cols-4 gap-3">
                 {navItems.map((item) => {
                   const Icon = item.icon
@@ -287,13 +285,14 @@ export default function GuardianLayout({ children }: { children: React.ReactNode
                       key={item.href}
                       href={item.href}
                       onClick={() => setMoreOpen(false)}
-                      className="flex flex-col items-center gap-2 p-3 rounded-2xl transition-all active:scale-95"
-                      style={{ background: isActive ? '#e0f2fe' : '#f8fafc' }}
+                      className={`flex flex-col items-center gap-2 p-3 rounded-2xl transition-all active:scale-95 ${
+                        isActive ? 'bg-primary/10' : 'bg-accent/40'
+                      }`}
                     >
-                      <div className={`${isActive ? 'text-sky-600' : 'text-gray-500'}`}>
+                      <div className={`${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
                         <Icon className="h-5 w-5" />
                       </div>
-                      <span className={`text-[10px] font-black text-center leading-tight ${isActive ? 'text-sky-700' : 'text-gray-600'}`}>
+                      <span className={`text-[10px] font-black text-center leading-tight ${isActive ? 'text-primary' : 'text-foreground'}`}>
                         {item.label}
                       </span>
                     </Link>

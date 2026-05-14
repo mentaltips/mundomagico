@@ -40,10 +40,14 @@ export default function CalendarClient() {
       const res = await fetch(`/api/calendar?month=${monthStr}`)
       if (res.ok) {
         const data = await res.json()
-        setEvents(data.map((e: any) => ({
-          ...e,
-          date: format(new Date(e.date), 'yyyy-MM-dd'),
-        })))
+        setEvents(data.map((e: any) => {
+          const d = new Date(e.date)
+          const normalized = new Date(d.getTime() + d.getTimezoneOffset() * 60000)
+          return {
+            ...e,
+            date: format(normalized, 'yyyy-MM-dd'),
+          }
+        }))
       }
     } catch (err) {
       console.error(err)

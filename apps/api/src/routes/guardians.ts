@@ -93,6 +93,30 @@ router.patch('/:id', async (req, res) => {
   }
 })
 
+// DELETE /link - Unlink a guardian from a child
+router.delete('/link', async (req, res) => {
+  try {
+    const childId = (req.query.childId || req.body.childId) as string
+    const guardianId = (req.query.guardianId || req.body.guardianId) as string
+    
+    if (!childId || !guardianId) {
+      return res.status(400).json({ error: 'childId and guardianId are required' })
+    }
+
+    await prisma.childGuardian.deleteMany({
+      where: {
+        childId,
+        guardianId
+      }
+    })
+
+    res.json({ success: true })
+  } catch (error: any) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error', detail: error.message })
+  }
+})
+
 // DELETE /:id - Delete guardian
 router.delete('/:id', async (req, res) => {
   try {
@@ -202,26 +226,5 @@ router.post('/link', async (req, res) => {
   }
 })
 
-// DELETE /link - Unlink a guardian from a child
-router.delete('/link', async (req, res) => {
-  try {
-    const { childId, guardianId } = req.body
-    
-    if (!childId || !guardianId) {
-      return res.status(400).json({ error: 'childId and guardianId are required' })
-    }
-
-    await prisma.childGuardian.delete({
-      where: {
-        childId_guardianId: { childId, guardianId }
-      }
-    })
-
-    res.json({ success: true })
-  } catch (error) {
-    req.log.error(error)
-    res.status(500).json({ error: 'Internal server error' })
-  }
-})
 
 export default router
