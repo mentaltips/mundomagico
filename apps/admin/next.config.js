@@ -6,7 +6,6 @@ const nextConfig = {
   // exportam TypeScript diretamente (sem compilar antes)
   transpilePackages: [
     '@mundo-magico/types',
-    '@mundo-magico/database',
   ],
 
   // Resolve o alias @/ explicitamente via webpack
