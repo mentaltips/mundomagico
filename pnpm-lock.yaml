@@ -41,6 +41,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.100.9
         version: 5.100.9(react@18.3.1)
+      autoprefixer:
+        specifier: ^10.4.19
+        version: 10.5.0(postcss@8.5.14)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -65,6 +68,9 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      postcss:
+        specifier: ^8.4.39
+        version: 8.5.14
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -86,6 +92,12 @@ importers:
       tailwind-merge:
         specifier: ^2.6.1
         version: 2.6.1
+      tailwindcss:
+        specifier: ^3.4.6
+        version: 3.4.19(tsx@4.21.0)
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@3.4.19(tsx@4.21.0))
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -105,24 +117,12 @@ importers:
       '@types/recharts':
         specifier: ^2.0.1
         version: 2.0.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react-is@16.13.1)(react@18.3.1)(redux@5.0.1)
-      autoprefixer:
-        specifier: ^10.4.19
-        version: 10.5.0(postcss@8.5.14)
       eslint:
         specifier: ^8.57.0
         version: 8.57.1
       eslint-config-next:
         specifier: 14.2.5
         version: 14.2.5(eslint@8.57.1)(typescript@5.9.3)
-      postcss:
-        specifier: ^8.4.39
-        version: 8.5.14
-      tailwindcss:
-        specifier: ^3.4.6
-        version: 3.4.19(tsx@4.21.0)
-      tailwindcss-animate:
-        specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@3.4.19(tsx@4.21.0))
       typescript:
         specifier: ^5.5.3
         version: 5.9.3
