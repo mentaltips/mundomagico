@@ -14,7 +14,8 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null
 
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL
+          // API_URL é server-only (sem NEXT_PUBLIC_) — preferido em produção
+          const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
           const res = await fetch(`${apiUrl}/api/auth/login`, {
             method: 'POST',
             body: JSON.stringify({
@@ -69,20 +70,23 @@ export const authOptions: NextAuthOptions = {
 
 export async function requireAuth() {
   const session = await getServerSession(authOptions)
-  
+
   if (!session?.user) {
     redirect('/login')
   }
-  
+
   return session.user
 }
 
-export async function getApiAuth(_req?: Request) {
+export async function getApiAuth() {
   const session = await getServerSession(authOptions)
-  
+
   if (!session?.user) {
     return null
   }
-  
-  return session.user
+
+  return {
+    user: session.user,
+    token: (session as any).accessToken as string | undefined,
+  }
 }

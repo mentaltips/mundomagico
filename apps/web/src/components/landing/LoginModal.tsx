@@ -37,7 +37,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setLoading(false)
       } else {
         // Successful login - Redirect to the admin portal
-        window.location.href = 'http://localhost:3001/admin'
+        const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.mundomagicocajamar.com.br'
+        window.location.href = `${adminUrl}/admin`
       }
     } catch (err) {
       setError('Ocorreu um erro ao tentar entrar. Tente novamente.')
