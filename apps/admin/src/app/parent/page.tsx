@@ -231,7 +231,7 @@ function GuardianDashboard() {
               ) : (
                 <div className="space-y-1">
                   {report.meals.slice(0, 3).map((m, i) => (
-                    <p key={i} className="text-xs font-black text-foreground truncate">
+                    <p key={`meal-${m.id || i}`} className="text-xs font-black text-foreground truncate">
                       {m.mealType}: <span className="text-muted-foreground font-bold">{m.result || m.amount || '—'}</span>
                     </p>
                   ))}
@@ -298,7 +298,7 @@ function GuardianDashboard() {
               ) : (
                 <div className="flex flex-wrap gap-1.5">
                   {report.moods.slice(0, 3).map((m, i) => (
-                    <span key={i} className="text-xs font-black text-foreground bg-accent px-2 py-1 rounded-lg">
+                    <span key={`mood-${i}`} className="text-xs font-black text-foreground bg-accent px-2 py-1 rounded-lg">
                       {MOOD_EMOJI[m.mood] ?? '😊'} {m.mood}
                     </span>
                   ))}
@@ -318,7 +318,7 @@ function GuardianDashboard() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {report.activities.map((a, i) => (
-                  <span key={i} className="badge badge-amber font-black uppercase tracking-wider text-[9px]">{a.name}</span>
+                  <span key={`act-${i}`} className="badge badge-amber font-black uppercase tracking-wider text-[9px]">{a.name}</span>
                 ))}
               </div>
             </div>
@@ -376,10 +376,10 @@ function GuardianDashboard() {
           <div className="relative space-y-3 before:absolute before:inset-0 before:ml-[18px] before:h-full before:w-0.5 before:bg-gradient-to-b before:from-sky-200 before:via-gray-100 before:to-transparent">
             {feed
               .filter((i) => i.icon !== 'LogIn' && i.icon !== 'LogOut')
-              .map((item) => {
+              .map((item, idx) => {
                 const ItemIcon = ICON_MAP[item.icon] || Heart
                 return (
-                  <div key={item.id} className="relative flex items-start gap-3">
+                  <div key={item.id || `feed-${idx}`} className="relative flex items-start gap-3">
                     <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-4 border-background bg-card shadow-sm z-10">
                       <ItemIcon className="h-4 w-4 text-primary" />
                     </div>

@@ -31,7 +31,6 @@ import settingsRoutes from './routes/settings'
 import usersRoutes from './routes/users'
 import notificationsRoutes from './routes/notifications'
 import parentRoutes from './routes/parent'
-import guardianFeedRoutes from './routes/guardian-feed'
 import teacherRoutes from './routes/teacher'
 import dailyReportsRoutes from './routes/daily-reports'
 import documentsRoutes from './routes/documents'
@@ -99,7 +98,6 @@ app.use('/api/settings', requireApiAuth, settingsRoutes)
 app.use('/api/users', requireApiAuth, usersRoutes)
 app.use('/api/notifications', requireApiAuth, notificationsRoutes)
 app.use('/api/parent', requireApiAuth, parentRoutes)
-app.use('/api/guardian-feed', requireApiAuth, guardianFeedRoutes)
 app.use('/api/teacher', requireApiAuth, teacherRoutes)
 app.use('/api/daily-reports', requireApiAuth, dailyReportsRoutes)
 app.use('/api/documents', requireApiAuth, documentsRoutes)

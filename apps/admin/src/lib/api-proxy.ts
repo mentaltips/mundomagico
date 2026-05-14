@@ -10,7 +10,7 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
     console.log(`[Proxy] ${req.method} ${new URL(req.url).pathname} | Token: ${!!accessToken}`)
   }
 
-  const apiUrl = (process.env.API_URL || 'http://localhost:3333').replace(/\/$/, '')
+  const apiUrl = (process.env.API_URL || 'http://localhost:3002').replace(/\/$/, '')
   
   const url = new URL(req.url)
   // Mantém o /api pois a API no servidor Express espera este prefixo

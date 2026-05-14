@@ -253,3 +253,12 @@ export function Avatar({ name = '?', photoUrl, size = 'md', color = 'bg-primary/
   }
   return <div className={cls}>{name.charAt(0).toUpperCase()}</div>
 }
+
+// ── Section Label ─────────────────────────────────────────────────────────────
+export function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4">
+      {children}
+    </h3>
+  )
+}
