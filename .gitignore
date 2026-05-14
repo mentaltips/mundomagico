@@ -29,6 +29,10 @@ yarn-error.log*
 .env.prod
 nginx/ssl/
 
+# configuração local de deploy (contém IPs e caminho de chave SSH)
+# crie em: ~/.deploy-vps.env  (fora do repositório)
+.deploy-vps.env
+
 # vercel
 .vercel
 

@@ -11,15 +11,11 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
   })
   
   const accessToken = (token as any)?.accessToken
-  
-  console.log(`[Proxy] Request: ${req.method} ${req.url}`)
-  console.log(`[Proxy] Token object exists: ${!!token}`)
-  console.log(`[Proxy] AccessToken: ${!!accessToken}`)
-  
-  const headersObj: any = {}
-  req.headers.forEach((v, k) => { headersObj[k] = k.includes('cookie') ? '[HIDDEN]' : v })
-  console.log(`[Proxy] Headers:`, JSON.stringify(headersObj, null, 2))
-  console.log(`[Proxy] Cookies list:`, req.cookies.getAll().map(c => c.name).join(', '))
+
+  // Log apenas em desenvolvimento
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[Proxy] ${req.method} ${new URL(req.url).pathname} — token: ${!!token} accessToken: ${!!accessToken}`)
+  }
 
   const apiUrl = (process.env.API_URL || 'http://localhost:3333').replace(/\/$/, '')
   

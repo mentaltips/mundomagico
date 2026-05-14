@@ -1,5 +1,7 @@
 import { Router } from 'express'
 import { prisma } from '@mundo-magico/database'
+import { validate } from '../middleware/validate'
+import { checkInOutSchema } from '../schemas'
 
 const router = Router()
 
@@ -33,7 +35,7 @@ router.get('/', async (req, res) => {
 })
 
 // POST / - Register check-in or check-out
-router.post('/', async (req, res) => {
+router.post('/', validate(checkInOutSchema), async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
     const checkedById = req.user?.sub

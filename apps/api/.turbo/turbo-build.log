@@ -2,3 +2,10 @@
 > @mundo-magico/api@1.0.0 build C:\Users\meent\Desktop\mundomagico\apps\api
 > tsc
 
+src/routes/guardians.ts(148,7): error TS2322: Type '{ email: string; password: string; name: string; role: string; phone: string; schoolId: string | undefined; }' is not assignable to type '(Without<UserCreateInput, UserUncheckedCreateInput> & UserUncheckedCreateInput) | (Without<...> & UserCreateInput)'.
+  Type '{ email: string; password: string; name: string; role: string; phone: string; schoolId: string | undefined; }' is not assignable to type 'Without<UserUncheckedCreateInput, UserCreateInput> & UserCreateInput'.
+    Type '{ email: string; password: string; name: string; role: string; phone: string; schoolId: string | undefined; }' is not assignable to type 'Without<UserUncheckedCreateInput, UserCreateInput>'.
+      Types of property 'schoolId' are incompatible.
+        Type 'string | undefined' is not assignable to type 'undefined'.
+          Type 'string' is not assignable to type 'undefined'.
+ ELIFECYCLE  Command failed with exit code 2.

@@ -5,7 +5,7 @@ import helmet from 'helmet'
 import pino from 'pino-http'
 
 import './workers/whatsapp.worker'
-import { whatsappQueue } from './services/queue'
+import { whatsappQueue, isRedisHealthy } from './services/queue'
 import { requireApiAuth } from './middleware/auth'
 
 // Existing routes
@@ -13,6 +13,7 @@ import studentRoutes from './routes/students'
 import groupRoutes from './routes/groups'
 import statsRoutes from './routes/stats'
 import authRoutes from './routes/auth'
+import webhooksRoutes from './routes/webhooks'
 
 // New routes
 import childrenRoutes from './routes/children'
@@ -62,8 +63,19 @@ app.use(express.json())
 app.use(pino())
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+  const redis = isRedisHealthy()
+  res.status(redis ? 200 : 207).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    services: {
+      api: 'ok',
+      redis: redis ? 'ok' : 'unavailable — notificações WhatsApp pausadas',
+    },
+  })
 })
+
+// Webhooks públicos (sem auth — verificação própria por assinatura)
+app.use('/api/webhooks', webhooksRoutes)
 
 // Existing routes
 app.use('/api/students', requireApiAuth, studentRoutes)

@@ -1,8 +1,12 @@
 import { Router } from 'express'
 import { prisma } from '@mundo-magico/database'
 import bcrypt from 'bcryptjs'
+import { requireRole } from '../middleware/requireRole'
 
 const router = Router()
+
+// Roles que podem gerenciar usuários
+const MANAGERS = ['ADMIN', 'DIRECTOR']
 
 // GET / - List users of school
 router.get('/', async (req, res) => {
@@ -30,8 +34,8 @@ router.get('/', async (req, res) => {
   }
 })
 
-// POST / - Create user
-router.post('/', async (req, res) => {
+// POST / - Create user (apenas ADMIN e DIRECTOR)
+router.post('/', requireRole(...MANAGERS), async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
     const { password, ...rest } = req.body
@@ -82,8 +86,8 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// PATCH /:id - Update user
-router.patch('/:id', async (req, res) => {
+// PATCH /:id - Update user (apenas ADMIN e DIRECTOR)
+router.patch('/:id', requireRole(...MANAGERS), async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
     const { password, ...rest } = req.body
@@ -107,8 +111,8 @@ router.patch('/:id', async (req, res) => {
   }
 })
 
-// DELETE /:id - Delete user (soft delete by deactivating)
-router.delete('/:id', async (req, res) => {
+// DELETE /:id - Desativa usuário (apenas ADMIN e DIRECTOR)
+router.delete('/:id', requireRole(...MANAGERS), async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
     const result = await prisma.user.updateMany({

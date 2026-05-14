@@ -16,9 +16,9 @@ services:
       retries: 5
     networks:
       - internal
-      - public
-    ports:
-      - "5432:5432"
+    # SEGURANÇA: porta 5432 NÃO exposta externamente.
+    # Acesso apenas pela rede interna Docker (serviço 'api').
+    # Para conectar via psql localmente: docker exec -it <container> psql -U $POSTGRES_USER $POSTGRES_DB
 
   # ─── Cache / Filas ────────────────────────────────────────────
   redis:
@@ -80,6 +80,43 @@ services:
     networks:
       - public
 
+  # ─── Backup automático do banco ───────────────────────────────
+  backup:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+    volumes:
+      - backups:/backups
+    networks:
+      - internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Roda pg_dump todo dia às 03:00 e mantém os últimos N dias
+    entrypoint: >
+      /bin/sh -c '
+        echo "🔒 Serviço de backup iniciado. Próximo backup às 03:00.";
+        while true; do
+          NEXT=$$(date -d "tomorrow 03:00" +%s 2>/dev/null || date -v+1d -v3H -v0M -v0S +%s);
+          NOW=$$(date +%s);
+          SLEEP_SEC=$$((NEXT - NOW));
+          echo "[Backup] Aguardando $${SLEEP_SEC}s até 03:00...";
+          sleep $$SLEEP_SEC;
+          DATE=$$(date +"%Y-%m-%d_%H-%M-%S");
+          FILE="/backups/backup_$${DATE}.sql.gz";
+          echo "[Backup $$(date)] ▶ Iniciando...";
+          PGPASSWORD=$$POSTGRES_PASSWORD pg_dump -h postgres -U $$POSTGRES_USER -d $$POSTGRES_DB | gzip > $$FILE;
+          SIZE=$$(du -sh $$FILE | cut -f1);
+          echo "[Backup $$(date)] ✅ Salvo: backup_$${DATE}.sql.gz ($$SIZE)";
+          find /backups -name "backup_*.sql.gz" -mtime +$${RETENTION_DAYS} -delete;
+          echo "[Backup $$(date)] 🗑️  Backups antigos removidos (retenção: $${RETENTION_DAYS} dias)";
+        done
+      '
+
   # ─── SSL (Let's Encrypt) ──────────────────────────────────────
   certbot:
     image: certbot/certbot
@@ -93,6 +130,7 @@ volumes:
   redisdata:
   certbot-www:
   certbot-certs:
+  backups:
 
 networks:
   internal:

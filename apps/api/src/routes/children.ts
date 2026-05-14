@@ -1,5 +1,7 @@
 import { Router } from 'express'
 import { prisma } from '@mundo-magico/database'
+import { validate } from '../middleware/validate'
+import { createChildSchema, updateChildSchema, createAuthorizedPickupSchema } from '../schemas'
 
 const router = Router()
 
@@ -23,7 +25,7 @@ router.get('/', async (req, res) => {
 })
 
 // POST / - Create child
-router.post('/', async (req, res) => {
+router.post('/', validate(createChildSchema), async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
     const { birthDate, entryDate, exitDate, imageAuthDate, ...rest } = req.body
@@ -67,7 +69,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // PATCH /:id - Update child
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', validate(updateChildSchema), async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
     const { birthDate, entryDate, exitDate, imageAuthDate, ...rest } = req.body
@@ -135,7 +137,7 @@ router.get('/:id/authorized-pickups', async (req, res) => {
 })
 
 // POST /:id/authorized-pickups
-router.post('/:id/authorized-pickups', async (req, res) => {
+router.post('/:id/authorized-pickups', validate(createAuthorizedPickupSchema), async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
     const child = await prisma.child.findFirst({ where: { id: req.params.id, schoolId } })
