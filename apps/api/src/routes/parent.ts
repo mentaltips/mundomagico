@@ -25,8 +25,8 @@ router.get('/dashboard', async (req, res) => {
       }
     })
 
-    const children = childGuardians.map(cg => cg.child)
-    const childIds = children.map(c => c.id)
+    const children = childGuardians.map((cg: any) => cg.child)
+    const childIds = children.map((c: any) => c.id)
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)

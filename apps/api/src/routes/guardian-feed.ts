@@ -15,7 +15,7 @@ router.get('/feed', async (req, res) => {
     if (!guardian) return res.status(404).json({ error: 'Guardian profile not found' })
 
     const childGuardians = await prisma.childGuardian.findMany({ where: { guardianId: guardian.id } })
-    const childIds = childGuardians.map(cg => cg.childId)
+    const childIds = childGuardians.map((cg: any) => cg.childId)
 
     const feed: any[] = []
 
@@ -34,7 +34,7 @@ router.get('/feed', async (req, res) => {
       skip
     })
 
-    reports.forEach(r => {
+    reports.forEach((r: any) => {
       feed.push({ type: 'DAILY_REPORT', date: r.date, data: r })
     })
 
@@ -46,7 +46,7 @@ router.get('/feed', async (req, res) => {
       take: Number(limit),
     })
 
-    photos.forEach(p => {
+    photos.forEach((p: any) => {
       feed.push({ type: 'PHOTO', date: p.date, data: p })
     })
 
@@ -60,7 +60,7 @@ router.get('/feed', async (req, res) => {
       take: Number(limit),
     })
 
-    announcements.forEach(a => {
+    announcements.forEach((a: any) => {
       feed.push({ type: 'ANNOUNCEMENT', date: a.createdAt, data: a })
     })
 
@@ -72,7 +72,7 @@ router.get('/feed', async (req, res) => {
       take: 10,
     })
 
-    devReports.forEach(dr => {
+    devReports.forEach((dr: any) => {
       feed.push({ type: 'DEVELOPMENT_REPORT', date: dr.publishedAt || dr.updatedAt, data: dr })
     })
 

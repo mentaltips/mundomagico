@@ -15,9 +15,9 @@ router.get('/', async (req, res) => {
 
     // Low stock child items
     const allItems = await prisma.childItem.findMany({ where: { schoolId } })
-    const lowStockItems = allItems.filter(i => (i.quantityReceived - i.quantityUsed) <= i.alertThreshold)
+    const lowStockItems = allItems.filter((i: any) => (i.quantityReceived - i.quantityUsed) <= i.alertThreshold)
 
-    lowStockItems.forEach(item => {
+    lowStockItems.forEach((item: any) => {
       notifications.push({
         type: 'LOW_STOCK',
         severity: 'warning',
@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
         take: 20
       })
 
-      overdueInvoices.forEach(inv => {
+      overdueInvoices.forEach((inv: any) => {
         notifications.push({
           type: 'OVERDUE_INVOICE',
           severity: 'error',
@@ -61,7 +61,7 @@ router.get('/', async (req, res) => {
       take: 5
     })
 
-    pinned.forEach(ann => {
+    pinned.forEach((ann: any) => {
       notifications.push({
         type: 'PINNED_ANNOUNCEMENT',
         severity: 'info',

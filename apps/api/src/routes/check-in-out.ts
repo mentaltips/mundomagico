@@ -144,7 +144,7 @@ router.get('/children', async (req, res) => {
       orderBy: { fullName: 'asc' },
     })
 
-    const result = children.map((child) => ({
+    const result = children.map((child: any) => ({
       id: child.id,
       fullName: child.fullName,
       nickname: child.nickname,
@@ -153,14 +153,14 @@ router.get('/children', async (req, res) => {
       usesDiapers: child.usesDiapers,
       checkInOut: child.checkInOuts[0] ?? null,
       authorizedPersons: [
-        ...child.guardians.map((cg) => ({
+        ...child.guardians.map((cg: any) => ({
           name: cg.guardian.fullName,
           relationship: cg.guardian.relationship,
           phone: cg.guardian.phone,
           cpf: cg.guardian.cpf,
           type: 'guardian' as const,
         })),
-        ...child.authorizedPickups.map((ap) => ({
+        ...child.authorizedPickups.map((ap: any) => ({
           name: ap.fullName,
           relationship: ap.relationship,
           phone: ap.phone,
