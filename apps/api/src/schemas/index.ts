@@ -18,7 +18,10 @@ export const createChildSchema = z.object({
   birthDate: isoDate,
   nickname: optionalString,
   photoUrl: optionalString,
-  gender: z.enum(['MASCULINO', 'FEMININO', 'OUTRO']).optional().nullable(),
+  gender: z.preprocess(
+    (v) => (v === '' ? null : v),
+    z.enum(['MASCULINO', 'FEMININO', 'OUTRO']).optional().nullable()
+  ),
   groupId: optionalString,
   registrationNumber: optionalString,
   shift: z.enum(['MANHA', 'TARDE', 'INTEGRAL', 'NOTURNO']).default('MANHA'),

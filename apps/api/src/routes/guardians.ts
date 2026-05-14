@@ -169,4 +169,56 @@ router.post('/:id/create-user', async (req, res) => {
   }
 })
 
+// POST /link - Link an existing guardian to a child
+router.post('/link', async (req, res) => {
+  try {
+    const { childId, guardianId, isPrimary } = req.body
+    
+    if (!childId || !guardianId) {
+      return res.status(400).json({ error: 'childId and guardianId are required' })
+    }
+
+    const link = await prisma.childGuardian.upsert({
+      where: {
+        childId_guardianId: { childId, guardianId }
+      },
+      update: {
+        isPrimary: isPrimary ?? false
+      },
+      create: {
+        childId,
+        guardianId,
+        isPrimary: isPrimary ?? false
+      }
+    })
+
+    res.json(link)
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// DELETE /link - Unlink a guardian from a child
+router.delete('/link', async (req, res) => {
+  try {
+    const { childId, guardianId } = req.body
+    
+    if (!childId || !guardianId) {
+      return res.status(400).json({ error: 'childId and guardianId are required' })
+    }
+
+    await prisma.childGuardian.delete({
+      where: {
+        childId_guardianId: { childId, guardianId }
+      }
+    })
+
+    res.json({ success: true })
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 export default router

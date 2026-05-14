@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,6 +10,7 @@ import Link from 'next/link'
 import {
   User, Heart, Baby, Shield, Plus, Trash2, Camera, AlertTriangle
 } from 'lucide-react'
+import { ImageUpload } from '@/components/ui/ImageUpload'
 
 const schema = z.object({
   // Dados pessoais
@@ -58,6 +59,21 @@ const TABS = [
   { id: 'guardians',label: 'Responsáveis',     icon: Shield },
 ]
 
+// Converte JSON string de array (do banco) → texto com uma linha por item
+function jsonArrayToText(val: any): string {
+  if (!val) return ''
+  if (Array.isArray(val)) return val.join('\n')
+  try { const arr = JSON.parse(val); return Array.isArray(arr) ? arr.join('\n') : String(val) }
+  catch { return String(val) }
+}
+
+// Normaliza gender vindo do banco (valores antigos 'M'/'F' → novos)
+function normalizeGender(g: any): string {
+  if (!g) return ''
+  const map: Record<string, string> = { M: 'MASCULINO', F: 'FEMININO', outro: 'OUTRO' }
+  return map[g] ?? g
+}
+
 export function ChildForm({ groups, defaultValues, childId }: Props) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('personal')
@@ -67,6 +83,8 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
     register,
     handleSubmit,
     watch,
+    setValue,
+    reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -77,24 +95,57 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
       usesBottle: false,
       usesNipple: false,
       imageAuthorized: false,
-      ...defaultValues,
     },
   })
+
+  // Popula o formulário com os dados da criança após o mount,
+  // garantindo que a normalização dos valores do banco seja aplicada.
+  useEffect(() => {
+    if (!defaultValues) return
+    reset({
+      status: 'ATIVO',
+      shift: 'MANHA',
+      usesDiapers: false,
+      usesBottle: false,
+      usesNipple: false,
+      imageAuthorized: false,
+      ...(defaultValues as any),
+      // Normaliza campos que o banco pode armazenar em formatos legados
+      gender: normalizeGender((defaultValues as any)?.gender),
+      allergies: jsonArrayToText((defaultValues as any)?.allergies),
+      continuousMeds: jsonArrayToText((defaultValues as any)?.continuousMeds),
+      dietaryRestrictions: jsonArrayToText((defaultValues as any)?.dietaryRestrictions),
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const onSubmit = async (data: FormData) => {
     setLoading(true)
     try {
       const url = childId ? `/api/children/${childId}` : '/api/children'
       const method = childId ? 'PATCH' : 'POST'
+
+      const payload: Record<string, any> = {
+        ...data,
+        // Enums / FKs: converte string vazia → undefined (Zod rejeita '' nos enums; Prisma rejeita '' como UUID)
+        gender: data.gender || undefined,
+        groupId: data.groupId || undefined,
+        // Converte textarea (uma linha por item) → JSON string de array, como o banco espera
+        allergies: data.allergies
+          ? JSON.stringify(data.allergies.split('\n').map((s) => s.trim()).filter(Boolean))
+          : undefined,
+        continuousMeds: data.continuousMeds
+          ? JSON.stringify(data.continuousMeds.split('\n').map((s) => s.trim()).filter(Boolean))
+          : undefined,
+        dietaryRestrictions: data.dietaryRestrictions
+          ? JSON.stringify(data.dietaryRestrictions.split('\n').map((s) => s.trim()).filter(Boolean))
+          : undefined,
+      }
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          allergies: data.allergies?.split('\n').map((s) => s.trim()).filter(Boolean),
-          continuousMeds: data.continuousMeds?.split('\n').map((s) => s.trim()).filter(Boolean),
-          dietaryRestrictions: data.dietaryRestrictions?.split('\n').map((s) => s.trim()).filter(Boolean),
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (!res.ok) throw new Error(await res.text())
@@ -124,7 +175,7 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
                   ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -159,9 +210,9 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
               <label className="label">Gênero</label>
               <select {...register('gender')} className="input">
                 <option value="">Selecionar</option>
-                <option value="M">Masculino</option>
-                <option value="F">Feminino</option>
-                <option value="outro">Outro</option>
+                <option value="MASCULINO">Masculino</option>
+                <option value="FEMININO">Feminino</option>
+                <option value="OUTRO">Outro</option>
               </select>
             </div>
 
@@ -212,13 +263,16 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
             </div>
 
             <div className="md:col-span-2">
-              <label className="label">URL da foto</label>
-              <input {...register('photoUrl')} className="input" placeholder="https://..." />
+              <ImageUpload
+                label="Foto da Criança"
+                value={watch('photoUrl') || ''}
+                onChange={(url) => setValue('photoUrl', url, { shouldValidate: true })}
+              />
             </div>
 
             <div className="md:col-span-2 flex items-center gap-2">
-              <input {...register('imageAuthorized')} type="checkbox" id="imageAuth" className="rounded" />
-              <label htmlFor="imageAuth" className="text-sm text-gray-700">
+              <input {...register('imageAuthorized')} type="checkbox" id="imageAuth" className="rounded border-border bg-accent" />
+              <label htmlFor="imageAuth" className="text-sm text-muted-foreground font-medium">
                 Responsável autorizou uso de imagem da criança
               </label>
             </div>
@@ -293,27 +347,27 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
       {activeTab === 'routine' && (
         <div className="card p-6 space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <label className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
-              <input {...register('usesDiapers')} type="checkbox" className="rounded" />
+            <label className="flex items-center gap-3 p-4 rounded-xl border border-border cursor-pointer hover:bg-accent/50 transition-colors">
+              <input {...register('usesDiapers')} type="checkbox" className="rounded border-border bg-accent" />
               <div>
-                <p className="font-medium text-gray-900">Usa fralda</p>
-                <p className="text-xs text-gray-500">Controle de troca no diário</p>
+                <p className="font-bold text-foreground">Usa fralda</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Controle de troca no diário</p>
               </div>
             </label>
 
-            <label className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
-              <input {...register('usesBottle')} type="checkbox" className="rounded" />
+            <label className="flex items-center gap-3 p-4 rounded-xl border border-border cursor-pointer hover:bg-accent/50 transition-colors">
+              <input {...register('usesBottle')} type="checkbox" className="rounded border-border bg-accent" />
               <div>
-                <p className="font-medium text-gray-900">Usa mamadeira</p>
-                <p className="text-xs text-gray-500">Registrar mamadeira no diário</p>
+                <p className="font-bold text-foreground">Usa mamadeira</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Registrar mamadeira no diário</p>
               </div>
             </label>
 
-            <label className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
-              <input {...register('usesNipple')} type="checkbox" className="rounded" />
+            <label className="flex items-center gap-3 p-4 rounded-xl border border-border cursor-pointer hover:bg-accent/50 transition-colors">
+              <input {...register('usesNipple')} type="checkbox" className="rounded border-border bg-accent" />
               <div>
-                <p className="font-medium text-gray-900">Usa chupeta</p>
-                <p className="text-xs text-gray-500">Controle de chupeta</p>
+                <p className="font-bold text-foreground">Usa chupeta</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Controle de chupeta</p>
               </div>
             </label>
           </div>
@@ -333,10 +387,10 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
       {activeTab === 'guardians' && (
         <div className="card p-6 space-y-6">
           {!childId ? (
-            <div className="text-center py-10 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
-              <Shield className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 font-medium">Salve a criança primeiro para poder vincular os responsáveis.</p>
-              <p className="text-xs text-gray-400 mt-2">Isso garante a integridade dos dados no sistema.</p>
+            <div className="text-center py-12 bg-accent/20 rounded-[2.5rem] border-2 border-dashed border-border/50">
+              <Shield className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+              <p className="text-foreground font-black tracking-tight">Salve a criança primeiro</p>
+              <p className="text-xs text-muted-foreground font-bold mt-2">Isso garante a integridade dos dados antes de vincular os responsáveis.</p>
             </div>
           ) : (
             <GuardianLinker childId={childId} />
@@ -396,21 +450,49 @@ function GuardianLinker({ childId }: { childId: string }) {
     }
   }
 
-  useState(() => { fetchData() })
+  useEffect(() => { 
+    fetchData() 
+  }, [childId])
 
   const handleLink = async (guardianId: string) => {
     try {
-      const res = await fetch(`/api/children/${childId}/guardians`, {
+      const res = await fetch(`/api/guardians/link`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guardianId, relationship: 'Mãe', isPrimary: links.length === 0 })
+        body: JSON.stringify({ childId, guardianId, isPrimary: links.length === 0 })
       })
+
       if (res.ok) {
         toast.success('Responsável vinculado!')
+        setSearch('')
         fetchData()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erro ao vincular')
       }
     } catch (err) {
-      toast.error('Erro ao vincular')
+      toast.error('Erro de conexão')
+    }
+  }
+
+  const handleUnlink = async (guardianId: string) => {
+    if (!confirm('Deseja realmente desvincular este responsável?')) return
+
+    try {
+      const res = await fetch(`/api/guardians/link`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId, guardianId })
+      })
+
+      if (res.ok) {
+        toast.success('Vínculo removido')
+        fetchData()
+      } else {
+        toast.error('Erro ao desvincular')
+      }
+    } catch (err) {
+      toast.error('Erro de conexão')
     }
   }
 
@@ -422,62 +504,74 @@ function GuardianLinker({ childId }: { childId: string }) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Responsáveis Vinculados</h3>
+        <h3 className="text-lg font-black text-foreground tracking-tight mb-4">Responsáveis Vinculados</h3>
         {links.length === 0 ? (
-          <p className="text-sm text-gray-500 italic bg-gray-50 p-4 rounded-xl text-center">Nenhum responsável vinculado ainda.</p>
+          <p className="text-sm text-muted-foreground font-bold italic bg-accent/20 p-6 rounded-[2rem] text-center border border-border/50">Nenhum responsável vinculado ainda.</p>
         ) : (
           <div className="grid gap-3">
             {links.map(link => (
-              <div key={link.id} className="flex items-center justify-between p-4 bg-lime-50 rounded-2xl border border-lime-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-primary font-black shadow-sm">
+              <div key={link.id} className="flex items-center justify-between p-4 bg-primary/5 rounded-[2rem] border border-primary/10">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center text-primary font-black shadow-sm border border-border">
                     {link.guardian.fullName.charAt(0)}
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">{link.guardian.fullName}</p>
-                    <p className="text-xs text-primary font-medium">{link.isPrimary ? 'Responsável Principal' : 'Responsável Secundário'}</p>
+                    <p className="font-black text-foreground tracking-tight">{link.guardian.fullName}</p>
+                    <p className="text-[10px] text-primary font-black uppercase tracking-widest">{link.isPrimary ? 'Responsável Principal' : 'Responsável Secundário'}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => handleUnlink(link.guardianId)}
+                  className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                  title="Desvincular"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      <div className="pt-4 border-t border-gray-100">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Vincular Novo Responsável</h3>
-        <div className="relative mb-4">
+      <div className="pt-6 border-t border-border/50">
+        <h3 className="text-lg font-black text-foreground tracking-tight mb-4">Vincular Novo Responsável</h3>
+        <div className="relative mb-6">
           <input 
             type="text" 
             placeholder="Pesquisar responsável por nome..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-4 pr-4 py-3 bg-gray-50 border-transparent border-2 rounded-xl focus:bg-white focus:border-primary focus:ring-0 text-sm font-bold transition-all outline-none"
+            className="input-lg"
           />
         </div>
 
         {search.length > 0 && (
-          <div className="grid gap-2 max-h-[200px] overflow-y-auto pr-2">
+          <div className="grid gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
             {filteredGuardians.length === 0 ? (
-              <p className="text-xs text-gray-500 text-center py-4">Nenhum responsável encontrado com este nome.</p>
+              <p className="text-xs text-muted-foreground font-bold text-center py-6 bg-accent/10 rounded-2xl border border-dashed border-border">Nenhum responsável encontrado.</p>
             ) : (
               filteredGuardians.map(g => (
                 <button
                   key={g.id}
                   type="button"
                   onClick={() => handleLink(g.id)}
-                  className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl text-left group transition-colors"
+                  className="flex items-center justify-between p-4 hover:bg-accent rounded-2xl text-left group transition-all"
                 >
-                  <span className="text-sm font-bold text-gray-700">{g.fullName}</span>
-                  <Plus className="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors" />
+                  <span className="text-sm font-black text-foreground tracking-tight">{g.fullName}</span>
+                  <div className="w-8 h-8 rounded-xl bg-accent flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <Plus className="w-4 h-4" />
+                  </div>
                 </button>
               ))
             )}
           </div>
         )}
         
-        <div className="mt-4 p-4 bg-rose-50 rounded-2xl border border-rose-100">
-          <p className="text-xs text-rose-600 font-medium">Não encontrou o responsável? Cadastre-o primeiro na seção de <Link href="/admin/guardians" className="underline font-black">Responsáveis</Link> e depois volte aqui.</p>
+        <div className="mt-6 p-5 bg-rose-500/5 rounded-[2rem] border border-rose-500/10">
+          <p className="text-xs text-rose-500 font-bold leading-relaxed">
+            Não encontrou o responsável? Cadastre-o primeiro na seção de <Link href="/admin/guardians" className="underline font-black hover:text-rose-600 transition-colors">Responsáveis</Link> e depois volte aqui.
+          </p>
         </div>
       </div>
     </div>

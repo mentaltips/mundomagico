@@ -13,6 +13,7 @@ router.get('/', async (req, res) => {
       where: { schoolId },
       include: {
         group: true,
+        guardians: { include: { guardian: true } },
         _count: { select: { guardians: true, medications: true, documents: true } }
       },
       orderBy: { fullName: 'asc' }

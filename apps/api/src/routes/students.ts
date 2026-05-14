@@ -9,7 +9,8 @@ router.get('/', async (req, res) => {
   try {
     const students = await prisma.student.findMany({
       include: {
-        group: true
+        group: true,
+        guardians: { include: { guardian: true } }
       },
       orderBy: {
         fullName: 'asc'

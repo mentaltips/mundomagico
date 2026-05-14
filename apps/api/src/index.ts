@@ -36,10 +36,13 @@ import dailyReportsRoutes from './routes/daily-reports'
 import documentsRoutes from './routes/documents'
 import billingRoutes from './routes/billing'
 import reportsRoutes from './routes/reports'
+import uploadRoutes from './routes/upload'
 
 const app = express()
 
-app.use(helmet())
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}))
 
 // CORS - aceita requisições do admin Vercel e de localhost em dev
 const allowedOrigins = [
@@ -105,6 +108,14 @@ app.use('/api/daily-reports', requireApiAuth, dailyReportsRoutes)
 app.use('/api/documents', requireApiAuth, documentsRoutes)
 app.use('/api/billing', requireApiAuth, billingRoutes)
 app.use('/api/reports', requireApiAuth, reportsRoutes)
+app.use('/api/upload', requireApiAuth, uploadRoutes)
+
+// Serve arquivos de upload (fotos) como estático
+import path from 'path'
+import fs from 'fs'
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads')
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+app.use('/uploads', express.static(UPLOAD_DIR))
 
 app.post('/api/whatsapp/send', requireApiAuth, async (req, res) => {
   const { to, templateName, languageCode, components } = req.body

@@ -183,11 +183,14 @@ export default async function ChildrenPage({
                         </span>
                       </td>
                       <td className="table-cell">
-                        {guardian ? (
+                        {child.guardians && child.guardians.length > 0 ? (
                           <div>
-                            <p className="text-sm font-bold text-foreground">{guardian.fullName.split(' ')[0]}</p>
-                            {guardian.phone && (
-                              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{guardian.phone}</p>
+                            <p className="text-sm font-bold text-foreground">
+                              {child.guardians.slice(0, 2).map((g: any) => g.guardian.fullName.split(' ')[0]).join(', ')}
+                              {child.guardians.length > 2 && ` +${child.guardians.length - 2}`}
+                            </p>
+                            {child.guardians[0].guardian.phone && (
+                              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{child.guardians[0].guardian.phone}</p>
                             )}
                           </div>
                         ) : (
@@ -239,7 +242,9 @@ export default async function ChildrenPage({
                     </div>
                     <p className="text-xs text-muted-foreground font-medium mt-2">
                       {formatAge(child.birthDate)}
-                      {guardian ? ` · ${guardian.fullName.split(' ')[0]}` : ''}
+                      {child.guardians && child.guardians.length > 0 && (
+                        <> · {child.guardians.slice(0, 2).map((g: any) => g.guardian.fullName.split(' ')[0]).join(', ')}</>
+                      )}
                     </p>
                   </div>
                   <ChevronRight size={20} className="text-muted-foreground shrink-0" />

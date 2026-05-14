@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Trash, Edit, Phone, Mail, Key, Copy, CheckCircle2, UserPlus, Loader2, Users, Search } from 'lucide-react'
 import { PageHeader, EmptyState, SkeletonCard, Badge, Modal, Alert, Avatar } from '@/components/ui'
+import { ImageUpload } from '@/components/ui/ImageUpload'
 import toast from 'react-hot-toast'
 
 type Guardian = {
@@ -25,7 +26,7 @@ export default function GuardiansPage() {
   const [credentials, setCredentials] = useState<{ email: string, password: string } | null>(null)
   const [generatingFor, setGeneratingFor] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState({ fullName: '', cpf: '', phone: '', email: '', relationship: 'Mae' })
+  const [formData, setFormData] = useState({ fullName: '', cpf: '', phone: '', email: '', relationship: 'Mae', photoUrl: '' })
 
   const fetchGuardians = async () => {
     setLoading(true)
@@ -55,10 +56,11 @@ export default function GuardiansPage() {
         phone: guardian.phone || '',
         email: guardian.email || '',
         relationship: (guardian as any).relationship || 'Mae',
+        photoUrl: (guardian as any).photoUrl || '',
       })
     } else {
       setEditingGuardian(null)
-      setFormData({ fullName: '', cpf: '', phone: '', email: '', relationship: 'Mae' })
+      setFormData({ fullName: '', cpf: '', phone: '', email: '', relationship: 'Mae', photoUrl: '' })
     }
     setShowModal(true)
   }
@@ -70,6 +72,7 @@ export default function GuardiansPage() {
     const payload = {
       fullName: formData.fullName,
       relationship: formData.relationship,
+      photoUrl: formData.photoUrl || undefined,
       cpf: formData.cpf || undefined,
       phone: formData.phone || undefined,
       email: formData.email || undefined,
@@ -204,7 +207,7 @@ export default function GuardiansPage() {
           {filteredGuardians.map(g => (
             <div key={g.id} className="card-hover p-6 flex flex-col group">
               <div className="flex items-center gap-4 mb-6">
-                <Avatar name={g.fullName} size="md" />
+                <Avatar name={g.fullName} photoUrl={(g as any).photoUrl} size="md" />
                 <div className="min-w-0 flex-1">
                   <h3 className="font-black text-foreground leading-tight truncate">{g.fullName}</h3>
                   <div className="flex items-center gap-2 mt-1">
@@ -274,6 +277,12 @@ export default function GuardiansPage() {
         title={editingGuardian ? 'Editar Responsável' : 'Novo Responsável'}
       >
         <form onSubmit={handleSubmit} className="space-y-5">
+          <ImageUpload
+            label="Foto do Responsável"
+            size="md"
+            value={formData.photoUrl}
+            onChange={(url) => setFormData({ ...formData, photoUrl: url })}
+          />
           <div>
             <label className="label">Nome Completo *</label>
             <input 
