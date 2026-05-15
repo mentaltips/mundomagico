@@ -48,7 +48,8 @@ export default function PhotosPage() {
     const formData = new FormData()
     formData.append('file', file)
     try {
-      const res = await fetch('/api/upload/image', { method: 'POST', body: formData })
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '/api').replace(/\/$/, '')
+      const res = await fetch(`${apiUrl}/upload/image`, { method: 'POST', body: formData })
       const data = await res.json()
       if (data.url) { setForm(p => ({ ...p, url: data.url })); toast.success('Upload concluído!') }
       else toast.error('Erro no upload')

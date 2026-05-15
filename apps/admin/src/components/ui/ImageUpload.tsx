@@ -33,7 +33,8 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
       const fd = new FormData()
       fd.append('file', file)
 
-      const res = await fetch('/api/upload/image', { method: 'POST', body: fd })
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '/api').replace(/\/$/, '')
+      const res = await fetch(`${apiUrl}/upload/image`, { method: 'POST', body: fd })
       const data = await res.json()
 
       if (!res.ok) throw new Error(data.error || 'Erro no upload')
