@@ -39,6 +39,7 @@ function RotatingHeroBanner({ current, onSetCurrent }: { current: number; onSetC
           src={src}
           alt={`Banner ${i + 1}`}
           className="absolute inset-0 w-full h-full object-cover object-center hidden md:block"
+          initial={false}
           animate={{ opacity: i === current ? 1 : 0 }}
           transition={{ duration: 1.2, ease: 'easeInOut' }}
         />
@@ -50,6 +51,7 @@ function RotatingHeroBanner({ current, onSetCurrent }: { current: number; onSetC
           alt={`Banner mobile ${i + 1}`}
           className="absolute inset-0 w-full h-full object-cover md:hidden"
           style={{ objectPosition: 'center 15%' }}
+          initial={false}
           animate={{ opacity: i === current ? 1 : 0 }}
           transition={{ duration: 1.2, ease: 'easeInOut' }}
         />
@@ -264,8 +266,10 @@ export default function InstitutionalHomePage() {
 
   // Banner rotation state
   const [bannerIndex, setBannerIndex] = useState(0)
+  const [isMounted, setIsMounted] = useState(false)
   
   useEffect(() => {
+    setIsMounted(true)
     // 15 seconds for main banner (enough for all 5 subtitles to animate), 8 seconds for app banner
     const delay = bannerIndex === 0 ? 15000 : 8000;
     const t = setTimeout(() => {
