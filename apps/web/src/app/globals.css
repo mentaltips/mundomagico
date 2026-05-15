@@ -65,6 +65,10 @@
   h1, h2, h3, h4 { @apply tracking-tight font-black text-foreground; }
 }
 
+.font-baloo {
+  font-family: var(--font-baloo), sans-serif;
+}
+
 .glass {
   @apply bg-white/70 backdrop-blur-lg border border-white/20 dark:bg-black/70;
 }
