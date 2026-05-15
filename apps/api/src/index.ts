@@ -79,6 +79,17 @@ app.use((req, res, next) => {
     // Remove o query parameter para evitar loops ou confusão
     delete req.query.path
   }
+
+  // VACINA: Se a requisição não começar com /api, /uploads ou /health, injetamos o /api automaticamente
+  if (
+    !req.url.startsWith('/api') && 
+    !req.url.startsWith('/uploads') && 
+    !req.url.startsWith('/health') &&
+    req.url !== '/'
+  ) {
+    req.url = `/api${req.url}`
+  }
+
   next()
 })
 
