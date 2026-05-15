@@ -126,4 +126,40 @@ router.get('/me', requireApiAuth, async (req, res) => {
   }
 })
 
+// ─── POST /auth/change-password ──────────────────────────────────────────────
+router.post('/change-password', requireApiAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Senha atual e nova senha são obrigatórias' })
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres' })
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user?.sub } })
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, user.password!)
+    if (!isValid) {
+      return res.status(401).json({ error: 'Senha atual incorreta' })
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword }
+    })
+
+    res.json({ success: true, message: 'Senha alterada com sucesso' })
+  } catch (error) {
+    console.error('[Auth] Change password error:', error)
+    res.status(500).json({ error: 'Erro interno do servidor' })
+  }
+})
+
 export default router
