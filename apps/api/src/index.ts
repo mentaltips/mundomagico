@@ -70,6 +70,18 @@ app.use(cors({
 
 app.use(express.json())
 app.use(pino())
+
+// Middleware para capturar requisições que chegam via ?path= (comum em proxies mal configurados)
+app.use((req, res, next) => {
+  if (req.query.path && typeof req.query.path === 'string') {
+    const newPath = req.query.path.startsWith('/') ? req.query.path : `/${req.query.path}`
+    req.url = newPath
+    // Remove o query parameter para evitar loops ou confusão
+    delete req.query.path
+  }
+  next()
+})
+
 app.use(analyticsMiddleware)
 
 // Static files
