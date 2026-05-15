@@ -26,6 +26,7 @@ const schema = z.object({
   shift: z.enum(['MANHA', 'TARDE', 'INTEGRAL', 'NOTURNO']),
   contractedHours: z.string().optional(),
   entryDate: z.string().optional(),
+  exitDate: z.string().optional(),
   status: z.enum(['ATIVO', 'INATIVO', 'ADAPTACAO', 'AGUARDANDO_VAGA', 'CANCELADO']),
   // Saúde
   bloodType: z.string().optional(),
@@ -41,6 +42,7 @@ const schema = z.object({
   observations: z.string().optional(),
   // Imagem
   imageAuthorized: z.boolean().default(false),
+  imageAuthDate: z.string().optional(),
 })
 
 type FormData = z.infer<typeof schema>
