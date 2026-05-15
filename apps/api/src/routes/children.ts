@@ -18,7 +18,6 @@ router.get('/', async (req, res) => {
       },
       orderBy: { fullName: 'asc' }
     })
-
     res.json(children)
   } catch (error) {
     req.log.error(error)
@@ -179,16 +178,6 @@ router.get('/:id/documents', async (req, res) => {
     const schoolId = req.user?.schoolId
     const child = await prisma.child.findFirst({ where: { id: req.params.id, schoolId } })
     if (!child) return res.status(404).json({ error: 'Child not found' })
-    const documents = await prisma.childDocument.findMany({ where: { childId: req.params.id } })
-    res.json(documents)
-  } catch (error) {
-    req.log.error(error)
-    res.status(500).json({ error: 'Internal server error' })
-  }
-})
-
-export default router
-404).json({ error: 'Child not found' })
     const documents = await prisma.childDocument.findMany({ where: { childId: req.params.id } })
     res.json(documents)
   } catch (error) {
