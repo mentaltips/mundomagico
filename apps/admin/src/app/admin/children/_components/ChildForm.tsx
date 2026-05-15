@@ -180,9 +180,12 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
 
       const payload: Record<string, any> = {
         ...data,
-        // Enums / FKs: converte string vazia → null (Zod rejeita '' nos enums; Prisma rejeita '' como UUID)
+        // Enums / FKs / Datas: converte string vazia → null
         gender: data.gender || null,
         groupId: data.groupId || null,
+        entryDate: data.entryDate || null,
+        exitDate: data.exitDate || null,
+        imageAuthDate: data.imageAuthDate || null,
         // Converte textarea (uma linha por item) → JSON string de array, como o banco espera
         allergies: data.allergies
           ? JSON.stringify(data.allergies.split('\n').map((s) => s.trim()).filter(Boolean))
@@ -214,8 +217,13 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
     }
   }
 
+  const onInvalid = (errors: any) => {
+    console.log('Validation Errors:', errors)
+    toast.error('Preencha os campos obrigatórios corretamente.')
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         {TABS.map((tab) => {
