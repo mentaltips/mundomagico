@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { prisma } from '@mundo-magico/database'
+import bcrypt from 'bcryptjs'
 
 const router = Router()
 
@@ -130,6 +131,53 @@ router.delete('/link', async (req, res) => {
       where: { childId, guardianId }
     })
     res.json({ success: true })
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /:id/create-user - Generate User access for a guardian
+router.post('/:id/create-user', async (req, res) => {
+  try {
+    const guardianId = req.params.id
+    const guardian = await prisma.guardian.findUnique({ where: { id: guardianId } })
+
+    if (!guardian) {
+      return res.status(404).json({ error: 'Responsável não encontrado' })
+    }
+    if (!guardian.email) {
+      return res.status(400).json({ error: 'Responsável não possui e-mail cadastrado' })
+    }
+    
+    let user = await prisma.user.findUnique({ where: { email: guardian.email } })
+    const passwordStr = Math.floor(100000 + Math.random() * 900000).toString() // 6 digit password
+    const hashedPassword = await bcrypt.hash(passwordStr, 10)
+
+    if (user) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword, role: 'GUARDIAN' }
+      })
+    } else {
+      user = await prisma.user.create({
+        data: {
+          name: guardian.fullName,
+          email: guardian.email,
+          password: hashedPassword,
+          role: 'GUARDIAN',
+          schoolId: guardian.schoolId,
+          active: true,
+        }
+      })
+    }
+
+    await prisma.guardian.update({
+      where: { id: guardian.id },
+      data: { userId: user.id }
+    })
+
+    res.json({ email: user.email, password: passwordStr })
   } catch (error) {
     req.log.error(error)
     res.status(500).json({ error: 'Internal server error' })
