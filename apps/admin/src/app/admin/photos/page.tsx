@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { PageHeader, EmptyState, LoadingState, Modal } from '@/components/ui'
+import { useSession } from 'next-auth/react'
 
 type Photo = {
   id: string
@@ -21,6 +22,7 @@ type Photo = {
 }
 
 export default function PhotosPage() {
+  const { data: session } = useSession()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [preview, setPreview]     = useState<Photo | null>(null)
@@ -49,7 +51,12 @@ export default function PhotosPage() {
     formData.append('file', file)
     try {
       const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '/api').replace(/\/$/, '')
-      const res = await fetch(`${apiUrl}/upload/image`, { method: 'POST', body: formData })
+      const token = (session as any)?.accessToken
+      const res = await fetch(`${apiUrl}/upload/image`, { 
+        method: 'POST', 
+        body: formData,
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
       const data = await res.json()
       if (data.url) { setForm(p => ({ ...p, url: data.url })); toast.success('Upload concluído!') }
       else toast.error('Erro no upload')

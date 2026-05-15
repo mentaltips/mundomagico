@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { Camera, Loader2, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useSession } from 'next-auth/react'
 
 interface ImageUploadProps {
   value?: string
@@ -12,6 +13,7 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: ImageUploadProps) {
+  const { data: session } = useSession()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(value || null)
@@ -34,7 +36,12 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
       fd.append('file', file)
 
       const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '/api').replace(/\/$/, '')
-      const res = await fetch(`${apiUrl}/upload/image`, { method: 'POST', body: fd })
+      const token = (session as any)?.accessToken
+      const res = await fetch(`${apiUrl}/upload/image`, { 
+        method: 'POST', 
+        body: fd,
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
       const data = await res.json()
 
       if (!res.ok) throw new Error(data.error || 'Erro no upload')
