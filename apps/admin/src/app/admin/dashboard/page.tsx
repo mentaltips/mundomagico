@@ -163,7 +163,7 @@ export default function DashboardPage() {
           
           <div className="h-[240px] w-full">
             {mounted ? (
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
                 <BarChart data={stats?.weeklyAttendance ?? weekData} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                   <XAxis 
