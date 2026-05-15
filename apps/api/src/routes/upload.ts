@@ -45,7 +45,10 @@ router.post('/image', (req: Request, res: Response, next: NextFunction) => {
       return res.status(400).json({ error: 'Nenhum arquivo enviado' })
     }
 
-    const baseUrl = (process.env.API_BASE_URL || `http://localhost:${process.env.API_PORT || 3002}`).replace(/\/$/, '')
+    // Usar o Host header passado pelo Nginx (ou localhost fallback)
+    const host = req.get('host') || 'localhost:3002'
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http'
+    const baseUrl = `${protocol}://${host}`
     const url = `${baseUrl}/uploads/${req.file.filename}`
 
     res.json({ url, filename: req.file.filename })
