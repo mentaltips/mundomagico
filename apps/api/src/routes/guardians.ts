@@ -49,8 +49,6 @@ router.post('/', async (req, res) => {
           studentId,
           guardianId: guardian.id,
           isPrimary: isPrimary ?? false,
-          canPickup: canPickup ?? true,
-          receiveNotif: receiveNotif ?? true,
         }
       })
     }

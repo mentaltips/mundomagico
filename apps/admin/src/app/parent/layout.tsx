@@ -162,6 +162,13 @@ export default function GuardianLayout({ children }: { children: React.ReactNode
   const pathname = usePathname()
   const { data: session } = useSession()
   const [moreOpen, setMoreOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
 
   const firstName = session?.user?.name?.split(' ')[0] ?? 'Responsável'
 

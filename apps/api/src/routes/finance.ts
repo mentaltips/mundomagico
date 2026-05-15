@@ -154,12 +154,11 @@ router.post('/invoices/:id/pay', async (req, res) => {
         status: 'PAGO',
         paidAt: new Date(),
         payments: {
-          create: {
-            amount: amount || invoice.amount,
-            method: paymentMethod || 'DINHEIRO',
-            notes: notes || null,
-            paidAt: new Date(),
-          }
+            create: {
+              amount: amount || invoice.amount,
+              method: paymentMethod || 'DINHEIRO',
+              paidAt: new Date(),
+            }
         }
       },
       include: { payments: true }

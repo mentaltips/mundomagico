@@ -7,7 +7,7 @@ import {
   AlertCircle, ArrowRight, Sparkles,
   ChevronLeft
 } from 'lucide-react'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -36,9 +36,22 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setError('E-mail ou senha incorretos.')
         setLoading(false)
       } else {
-        // Successful login - Redirect to the admin portal
-        const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.mundomagicocajamar.com.br'
-        window.location.href = `${adminUrl}/admin`
+        // Successful login - Get session to check role
+        const session = await getSession()
+        const role = (session?.user as any)?.role?.toLowerCase()
+        const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3001'
+        
+        // Redirect based on role
+        if (role === 'admin' || role === 'director') {
+          window.location.href = `${adminUrl}/admin`
+        } else if (role === 'teacher') {
+          window.location.href = `${adminUrl}/teacher`
+        } else if (role === 'guardian' || role === 'parent') {
+          window.location.href = `${adminUrl}/parent`
+        } else {
+          // Default fallback
+          window.location.href = `${adminUrl}/dashboard`
+        }
       }
     } catch (err) {
       setError('Ocorreu um erro ao tentar entrar. Tente novamente.')

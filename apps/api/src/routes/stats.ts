@@ -18,7 +18,7 @@ router.get('/pending-config', async (req, res) => {
             { monthlyFee: null }
           ]
         },
-        select: { id: true, name: true }
+        select: { id: true, fullName: true }
       }),
       prisma.student.findMany({
         where: { 
@@ -29,14 +29,14 @@ router.get('/pending-config', async (req, res) => {
             { monthlyFee: null }
           ]
         },
-        select: { id: true, name: true }
+        select: { id: true, fullName: true }
       })
     ])
 
     res.json({
       pending: [
-        ...children.map(c => ({ ...c, type: 'Criança' })),
-        ...students.map(s => ({ ...s, type: 'Estudante' }))
+        ...children.map(c => ({ id: c.id, name: c.fullName, type: 'Criança' })),
+        ...students.map(s => ({ id: s.id, name: s.fullName, type: 'Estudante' }))
       ]
     })
   } catch (error) {
