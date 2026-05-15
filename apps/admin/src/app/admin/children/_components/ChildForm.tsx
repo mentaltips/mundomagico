@@ -180,19 +180,19 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
 
       const payload: Record<string, any> = {
         ...data,
-        // Enums / FKs: converte string vazia → undefined (Zod rejeita '' nos enums; Prisma rejeita '' como UUID)
-        gender: data.gender || undefined,
-        groupId: data.groupId || undefined,
+        // Enums / FKs: converte string vazia → null (Zod rejeita '' nos enums; Prisma rejeita '' como UUID)
+        gender: data.gender || null,
+        groupId: data.groupId || null,
         // Converte textarea (uma linha por item) → JSON string de array, como o banco espera
         allergies: data.allergies
           ? JSON.stringify(data.allergies.split('\n').map((s) => s.trim()).filter(Boolean))
-          : undefined,
+          : null,
         continuousMeds: data.continuousMeds
           ? JSON.stringify(data.continuousMeds.split('\n').map((s) => s.trim()).filter(Boolean))
-          : undefined,
+          : null,
         dietaryRestrictions: data.dietaryRestrictions
           ? JSON.stringify(data.dietaryRestrictions.split('\n').map((s) => s.trim()).filter(Boolean))
-          : undefined,
+          : null,
       }
 
       const res = await fetch(url, {
