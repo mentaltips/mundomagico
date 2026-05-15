@@ -16,33 +16,33 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 const schema = z.object({
   // Dados pessoais
   fullName: z.string().min(2, 'Nome obrigatório'),
-  nickname: z.string().optional(),
+  nickname: z.string().nullable().optional(),
   birthDate: z.string().min(1, 'Data de nascimento obrigatória'),
-  gender: z.string().optional(),
-  photoUrl: z.string().url().optional().or(z.literal('')),
+  gender: z.string().nullable().optional(),
+  photoUrl: z.string().url().nullable().optional().or(z.literal('')),
   // Matrícula
-  registrationNumber: z.string().optional(),
-  groupId: z.string().optional(),
+  registrationNumber: z.string().nullable().optional(),
+  groupId: z.string().nullable().optional(),
   shift: z.enum(['MANHA', 'TARDE', 'INTEGRAL', 'NOTURNO']),
-  contractedHours: z.string().optional(),
-  entryDate: z.string().optional(),
-  exitDate: z.string().optional(),
+  contractedHours: z.string().nullable().optional(),
+  entryDate: z.string().nullable().optional(),
+  exitDate: z.string().nullable().optional(),
   status: z.enum(['ATIVO', 'INATIVO', 'ADAPTACAO', 'AGUARDANDO_VAGA', 'CANCELADO']),
   // Saúde
-  bloodType: z.string().optional(),
-  allergies: z.string().optional(),       // textarea → split em array
-  continuousMeds: z.string().optional(),
-  dietaryRestrictions: z.string().optional(),
-  healthObservations: z.string().optional(),
+  bloodType: z.string().nullable().optional(),
+  allergies: z.string().nullable().optional(),       // textarea → split em array
+  continuousMeds: z.string().nullable().optional(),
+  dietaryRestrictions: z.string().nullable().optional(),
+  healthObservations: z.string().nullable().optional(),
   // Rotina
   usesDiapers: z.boolean().default(false),
   usesBottle: z.boolean().default(false),
   usesNipple: z.boolean().default(false),
-  specialSleep: z.string().optional(),
-  observations: z.string().optional(),
+  specialSleep: z.string().nullable().optional(),
+  observations: z.string().nullable().optional(),
   // Imagem
   imageAuthorized: z.boolean().default(false),
-  imageAuthDate: z.string().optional(),
+  imageAuthDate: z.string().nullable().optional(),
 })
 
 type FormData = z.infer<typeof schema>
