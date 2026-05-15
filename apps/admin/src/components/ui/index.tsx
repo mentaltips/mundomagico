@@ -273,7 +273,7 @@ const AVATAR_SIZES = {
 export function Avatar({ name = '?', photoUrl, size = 'md', color = 'bg-primary/10 text-primary' }: AvatarProps) {
   const cls = `${AVATAR_SIZES[size]} rounded-2xl overflow-hidden flex items-center justify-center font-black shrink-0 ${color} border border-border/50 shadow-sm`
   if (photoUrl) {
-    const safeUrl = photoUrl.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br')
+    const safeUrl = photoUrl.replace('http://localhost:3333', '/api')
     return <div className={cls}><img src={safeUrl} alt={name} className="w-full h-full object-cover" /></div>
   }
   return <div className={cls}>{name.charAt(0).toUpperCase()}</div>
