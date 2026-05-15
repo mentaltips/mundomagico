@@ -113,3 +113,25 @@ router.get('/', async (req, res) => {
 })
 
 export default router
+        id: ann.id,
+        type: 'announcement',
+        priority: ann.isPinned ? 'ALTA' : 'NORMAL',
+        title: ann.title,
+        body: ann.content?.slice(0, 80) || '',
+        time: ann.createdAt,
+        createdAt: ann.createdAt,
+        href: '/admin/announcements'
+      })
+    })
+
+    // Sort by time desc
+    notifications.sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime())
+
+    res.json(notifications.slice(0, 20))
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+export default router

@@ -60,26 +60,16 @@ echo "🔨 Fazendo build da API..."
 $SSH "cd /root/mundomagico/apps/api && pnpm build 2>&1 | tail -10"
 
 echo ""
-echo "🔄 Reiniciando serviço da API..."
-$SSH "
-  # Tenta pm2 primeiro, depois systemctl, depois docker
-  if command -v pm2 &>/dev/null; then
-    pm2 restart api 2>/dev/null || pm2 restart all 2>/dev/null || echo 'pm2: sem processo chamado api'
-    pm2 list
-  elif systemctl is-active --quiet mundomagico-api 2>/dev/null; then
-    systemctl restart mundomagico-api
-    echo 'systemctl: reiniciado'
-  else
-    echo 'Verificando docker...'
-    docker ps --format 'table {{.Names}}\t{{.Status}}' 2>/dev/null || echo 'docker não encontrado'
-  fi
-"
+echo "🔄 Reiniciando containers Docker..."
+$SSH "cd /root/mundomagico && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build api 2>&1 | tail -10"
 
 echo ""
-echo "🏥 Testando health da API..."
-sleep 3
-$SSH "curl -s http://localhost:3002/health || curl -s http://localhost:3333/health || echo 'API não respondeu em localhost'"
+echo "⏳ Aguardando API inicializar..."
+sleep 5
+
+echo ""
+echo "🩺 Verificando saúde da API..."
+$SSH "curl -s https://api.mundomagicocajamar.com.br/health | python3 -m json.tool 2>/dev/null || echo 'API ainda iniciando...'"
 
 echo ""
 echo "✅ Deploy concluído!"
-echo "   Verifique os logs com: ssh -i $VPS_KEY $VPS_USER@$VPS_IP 'pm2 logs api --lines 20'"

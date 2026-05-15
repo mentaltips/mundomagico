@@ -228,3 +228,15 @@ router.post('/link', async (req, res) => {
 
 
 export default router
+        childId,
+        guardianId,
+      }
+    })
+    res.json({ success: true })
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+export default router

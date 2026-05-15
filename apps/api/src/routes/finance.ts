@@ -427,3 +427,22 @@ router.post('/automation/run', async (req, res) => {
 })
 
 export default router
+ schoolId },
+      data: {
+        ...rest,
+        ...(dueDate && { dueDate: new Date(dueDate) }),
+        ...(boletoExpiry && { boletoExpiry: new Date(boletoExpiry) }),
+        ...(pixExpiry && { pixExpiry: new Date(pixExpiry) }),
+        ...(paidAt && { paidAt: new Date(paidAt) }),
+      }
+    })
+    if (result.count === 0) return res.status(404).json({ error: 'Invoice not found' })
+    const updated = await prisma.invoice.findUnique({ where: { id: req.params.id } })
+    res.json(updated)
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+export default router

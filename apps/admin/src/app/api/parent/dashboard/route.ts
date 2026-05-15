@@ -6,3 +6,5 @@ export const POST = (req: NextRequest) => proxyRequest(req, '/api/parent/dashboa
 export const PATCH = (req: NextRequest) => proxyRequest(req, '/api/parent/dashboard')
 export const PUT = (req: NextRequest) => proxyRequest(req, '/api/parent/dashboard')
 export const DELETE = (req: NextRequest) => proxyRequest(req, '/api/parent/dashboard')
+proxyRequest(req, '/api/parent/dashboard')
+export const DELETE = (req: NextRequest) => proxyRequest(req, '/api/parent/dashboard')

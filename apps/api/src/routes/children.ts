@@ -188,3 +188,13 @@ router.get('/:id/documents', async (req, res) => {
 })
 
 export default router
+404).json({ error: 'Child not found' })
+    const documents = await prisma.childDocument.findMany({ where: { childId: req.params.id } })
+    res.json(documents)
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+export default router

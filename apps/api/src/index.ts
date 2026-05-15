@@ -131,9 +131,11 @@ app.use('/api/daily-reports', requireApiAuth, dailyReportsRoutes)
 app.use('/api/documents', requireApiAuth, documentsRoutes)
 app.use('/api/billing', requireApiAuth, billingRoutes)
 app.use('/api/reports', requireApiAuth, reportsRoutes)
-app.use('/api/analytics', requireApiAuth, analyticsRoutes)
+app.use('/api/analytics', analyticsRoutes)
 
-const PORT = process.env.API_PORT || 3002
+const PORT = process.env.PORT || 3002
 app.listen(PORT, () => {
-  console.log(`🚀 API rodando em http://localhost:${PORT}`)
+  console.log(`API running on port ${PORT}`)
 })
+
+export default app
