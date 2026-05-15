@@ -54,11 +54,16 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
       return new NextResponse(null, { status: response.status })
     }
 
-    const text = await response.text()
+    const arrayBuffer = await response.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
     const resContentType = response.headers.get('content-type') || 'application/json'
-    return new NextResponse(text, {
+    
+    return new NextResponse(buffer, {
       status: response.status,
-      headers: { 'Content-Type': resContentType },
+      headers: { 
+        'Content-Type': resContentType,
+        'Cache-Control': 'public, max-age=31536000, immutable' // Cache agressivo para imagens
+      },
     })
   } catch (err: any) {
     console.error(`[Proxy Error] ${req.method} ${path}:`, err.message)

@@ -5,6 +5,8 @@ import { Camera, Loader2, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useSession } from 'next-auth/react'
 
+import { getSafeUrl } from '@/lib/utils'
+
 interface ImageUploadProps {
   value?: string
   onChange: (url: string) => void
@@ -16,7 +18,7 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
   const { data: session } = useSession()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
-  const safeValue = value ? value.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br') : null
+  const safeValue = getSafeUrl(value) || null
   const [preview, setPreview] = useState<string | null>(safeValue)
 
   const dimensions = { sm: 'w-20 h-20', md: 'w-28 h-28', lg: 'w-36 h-36' }[size]

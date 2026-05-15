@@ -11,18 +11,35 @@ import { Modal, PageHeader, EmptyState, LoadingState, StatCard } from '@/compone
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 
+import { getSafeUrl } from '@/lib/utils'
+
 // Avatar simples para os alunos
 function MiniAvatar({ name, photoUrl }: { name: string; photoUrl?: string | null }) {
   const initials = (name || '').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
   const colors = ['bg-primary/20 text-primary', 'bg-blue-500/20 text-blue-500', 'bg-emerald-500/20 text-emerald-500', 'bg-amber-500/20 text-amber-600', 'bg-rose-500/20 text-rose-500']
   const color = colors[name.charCodeAt(0) % colors.length]
-  // Corrige imagens que foram upadas localmente para funcionarem em produção
-  const safePhotoUrl = photoUrl?.replace('http://localhost:3333', '/api')
+  const safePhotoUrl = getSafeUrl(photoUrl)
 
   return (
-    <div className="w-7 h-7 rounded-full border-2 border-card overflow-hidden shrink-0">
+    <div className="w-7 h-7 rounded-full border-2 border-card overflow-hidden shrink-0 flex items-center justify-center">
       {safePhotoUrl
-        ? <img src={safePhotoUrl} alt={name} className="w-full h-full object-cover" />
+        ? (
+          <img 
+            src={safePhotoUrl} 
+            alt={name} 
+            className="w-full h-full object-cover" 
+            onError={(e) => {
+              (e.target as any).style.display = 'none'
+              const parent = (e.target as any).parentElement
+              if (parent) {
+                const div = document.createElement('div')
+                div.className = `w-full h-full flex items-center justify-center text-[9px] font-black ${color}`
+                div.innerText = initials
+                parent.appendChild(div)
+              }
+            }}
+          />
+        )
         : <div className={`w-full h-full flex items-center justify-center text-[9px] font-black ${color}`}>{initials}</div>
       }
     </div>

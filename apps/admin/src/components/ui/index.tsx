@@ -5,6 +5,8 @@ import { X, Loader2, AlertCircle, CheckCircle2, Info, TrendingUp, TrendingDown, 
 import { ReactNode, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
+import { getSafeUrl } from '@/lib/utils'
+
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
 interface StatCardProps {
@@ -272,9 +274,28 @@ const AVATAR_SIZES = {
 }
 export function Avatar({ name = '?', photoUrl, size = 'md', color = 'bg-primary/10 text-primary' }: AvatarProps) {
   const cls = `${AVATAR_SIZES[size]} rounded-2xl overflow-hidden flex items-center justify-center font-black shrink-0 ${color} border border-border/50 shadow-sm`
-  if (photoUrl) {
-    const safeUrl = photoUrl.replace('http://localhost:3333', '/api')
-    return <div className={cls}><img src={safeUrl} alt={name} className="w-full h-full object-cover" /></div>
+  const safeUrl = getSafeUrl(photoUrl)
+  
+  if (safeUrl) {
+    return (
+      <div className={cls}>
+        <img 
+          src={safeUrl} 
+          alt={name} 
+          className="w-full h-full object-cover" 
+          onError={(e) => {
+            // Se falhar (404), esconde a imagem e mostra a inicial
+            (e.target as any).style.display = 'none'
+            const parent = (e.target as any).parentElement
+            if (parent) {
+              const span = document.createElement('span')
+              span.innerText = name.charAt(0).toUpperCase()
+              parent.appendChild(span)
+            }
+          }}
+        />
+      </div>
+    )
   }
   return <div className={cls}>{name.charAt(0).toUpperCase()}</div>
 }
