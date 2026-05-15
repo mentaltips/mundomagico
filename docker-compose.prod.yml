@@ -45,6 +45,7 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       PORT: 3333
       API_PORT: 3333
+      API_BASE_URL: https://api.mundomagicocajamar.com.br
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
