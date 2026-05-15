@@ -9,16 +9,20 @@ import {
 } from 'lucide-react'
 import { Modal, PageHeader, EmptyState, LoadingState, StatCard } from '@/components/ui'
 import toast from 'react-hot-toast'
+import Link from 'next/link'
 
 // Avatar simples para os alunos
 function MiniAvatar({ name, photoUrl }: { name: string; photoUrl?: string | null }) {
   const initials = (name || '').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
   const colors = ['bg-primary/20 text-primary', 'bg-blue-500/20 text-blue-500', 'bg-emerald-500/20 text-emerald-500', 'bg-amber-500/20 text-amber-600', 'bg-rose-500/20 text-rose-500']
   const color = colors[name.charCodeAt(0) % colors.length]
+  // Corrige imagens que foram upadas localmente para funcionarem em produção
+  const safePhotoUrl = photoUrl?.replace('http://localhost:3333', '/api')
+
   return (
     <div className="w-7 h-7 rounded-full border-2 border-card overflow-hidden shrink-0">
-      {photoUrl
-        ? <img src={photoUrl} alt={name} className="w-full h-full object-cover" />
+      {safePhotoUrl
+        ? <img src={safePhotoUrl} alt={name} className="w-full h-full object-cover" />
         : <div className={`w-full h-full flex items-center justify-center text-[9px] font-black ${color}`}>{initials}</div>
       }
     </div>
@@ -254,9 +258,9 @@ export default function GroupsPage() {
                       </>
                     )}
                   </div>
-                  <button className="text-xs font-black text-primary flex items-center gap-1 hover:underline">
+                  <Link href={`/admin/children?groupId=${group.id}`} className="text-xs font-black text-primary flex items-center gap-1 hover:underline">
                     Gerenciar Turma <ChevronRight size={14} />
-                  </button>
+                  </Link>
                 </div>
               </motion.div>
             )
