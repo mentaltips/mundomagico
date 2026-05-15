@@ -125,7 +125,12 @@ export default function GuardiansPage() {
       return
     }
     
-    if (!confirm(`Deseja gerar um acesso para ${guardian.fullName}?`)) return
+    const isReset = !!guardian.userId
+    const message = isReset 
+      ? `Deseja resetar a senha de ${guardian.fullName}? Uma nova senha de 6 dígitos será gerada e a atual deixará de funcionar.`
+      : `Deseja gerar um acesso para ${guardian.fullName}?`
+
+    if (!confirm(message)) return
     
     setGeneratingFor(guardian.id)
     try {
@@ -265,8 +270,18 @@ export default function GuardiansPage() {
                     Liberar Acesso Portal
                   </button>
                 ) : (
-                  <div className="flex items-center justify-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/5 py-3 rounded-xl border border-emerald-500/10">
-                    <CheckCircle2 size={12} /> Portal da Família Ativo
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/5 py-3 rounded-xl border border-emerald-500/10">
+                      <CheckCircle2 size={12} /> Portal da Família Ativo
+                    </div>
+                    <button 
+                      onClick={() => handleGenerateAccess(g)}
+                      disabled={generatingFor === g.id}
+                      className="w-full bg-white text-gray-400 hover:text-primary hover:bg-primary/5 py-2.5 text-[10px] font-black gap-2 rounded-xl border border-dashed border-gray-200 hover:border-primary/30 transition-all flex items-center justify-center"
+                    >
+                      {generatingFor === g.id ? <Loader2 size={12} className="animate-spin" /> : <Key size={12} />}
+                      Resetar e Enviar Nova Senha
+                    </button>
                   </div>
                 )}
               </div>
