@@ -159,14 +159,16 @@ export default function PhotosPage() {
         />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {Array.isArray(photos) && photos.map(photo => (
+          {Array.isArray(photos) && photos.map(photo => {
+            const safeUrl = photo.url?.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br')
+            return (
             <div
               key={photo.id}
               className="relative group cursor-pointer rounded-2xl overflow-hidden aspect-square bg-accent"
               onClick={() => setPreview(photo)}
             >
               <img
-                src={photo.url}
+                src={safeUrl}
                 alt={photo.caption ?? 'Foto'}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=Foto' }}
@@ -186,7 +188,7 @@ export default function PhotosPage() {
                 </div>
               )}
             </div>
-          ))}
+          )})}
         </div>
       )}
 
@@ -207,7 +209,7 @@ export default function PhotosPage() {
               </div>
             ) : (
               <div className="relative rounded-2xl overflow-hidden aspect-video bg-accent group">
-                <img src={form.url} alt="Preview" className="w-full h-full object-cover" />
+                <img src={form.url.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br')} alt="Preview" className="w-full h-full object-cover" />
                 <button type="button" onClick={() => setForm(p => ({ ...p, url: '' }))} className="absolute top-3 right-3 p-2 bg-rose-500 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
                   <Trash2 size={14} />
                 </button>
@@ -271,7 +273,7 @@ export default function PhotosPage() {
             <div className="bg-card rounded-[2rem] overflow-hidden border border-border shadow-2xl">
               <div className="relative bg-black flex items-center justify-center" style={{ maxHeight: '60vh' }}>
                 <img
-                  src={preview.url}
+                  src={preview.url?.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br')}
                   alt={preview.caption ?? 'Foto'}
                   className="max-w-full max-h-[60vh] object-contain"
                   onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/1200x800?text=Erro' }}

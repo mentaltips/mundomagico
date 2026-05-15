@@ -53,7 +53,7 @@ export default function GuardianPhotosPage() {
                 onClick={() => setPreview(photo)}
               >
                 <img
-                  src={photo.url}
+                  src={photo.url?.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br')}
                   alt={photo.caption ?? 'Foto'}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=Foto' }}
@@ -81,7 +81,7 @@ export default function GuardianPhotosPage() {
           </button>
           <div className="max-w-lg w-full">
             <img
-              src={preview.url}
+              src={preview.url?.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br')}
               alt={preview.caption ?? 'Foto'}
               className="w-full rounded-3xl max-h-[70vh] object-contain"
               onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/800x600?text=Foto' }}
