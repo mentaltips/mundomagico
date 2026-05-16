@@ -6,7 +6,11 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
   const accessToken = apiAuth?.token
 
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`[Proxy] ${req.method} ${new URL(req.url).pathname} | Token: ${!!accessToken}`)
+    console.log(`[Proxy] ${req.method} ${new URL(req.url).pathname}`)
+    console.log(`[Proxy] Auth found: ${!!apiAuth} | Token length: ${accessToken?.length || 0}`)
+    if (!accessToken) {
+      console.warn(`[Proxy] WARNING: No access token found for ${req.method} ${req.url}`)
+    }
   }
 
   const apiUrl = (process.env.API_URL || 'http://127.0.0.1:3333').replace(/\/$/, '')

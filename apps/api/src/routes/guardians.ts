@@ -7,7 +7,10 @@ const router = Router()
 // GET / - List guardians of this school
 router.get('/', async (req, res) => {
   try {
-    const schoolId = req.user?.schoolId!
+    const schoolId = req.user?.schoolId
+    if (!schoolId) {
+      return res.status(401).json({ error: 'Não autorizado: schoolId não encontrado no token' })
+    }
     const guardians = await prisma.guardian.findMany({
       where: { schoolId },
       include: {
@@ -190,13 +193,24 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params
     const schoolId = req.user?.schoolId
     
-    if (!schoolId) return res.status(401).json({ error: 'Not authorized' })
-
-    const guardian = await prisma.guardian.findFirst({
-      where: { id, schoolId }
+    // Primeiro buscamos o responsável para verificar a qual escola ele pertence
+    const guardian = await prisma.guardian.findUnique({
+      where: { id }
     })
 
-    if (!guardian) return res.status(404).json({ error: 'Responsável não encontrado' })
+    if (!guardian) {
+      return res.status(404).json({ error: 'Responsável não encontrado' })
+    }
+
+    // Se o usuário logado tem um schoolId, ele só pode deletar se for da mesma escola
+    // Se for um ADMIN global (sem schoolId no token), ele pode deletar qualquer um (opcional)
+    if (schoolId && guardian.schoolId !== schoolId) {
+      return res.status(403).json({ error: 'Você não tem permissão para excluir este responsável' })
+    }
+
+    if (!schoolId && req.user?.role !== 'ADMIN') {
+       return res.status(401).json({ error: 'Não autorizado: schoolId ausente' })
+    }
 
     // Delete associations first to avoid foreign key errors
     await prisma.childGuardian.deleteMany({ where: { guardianId: id } })

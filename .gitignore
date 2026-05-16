@@ -42,4 +42,10 @@ next-env.d.ts
 
 # prisma
 *.sqlite
-*.sqlite-journal
+
+# build artifacts
+dist/
+build/
+.next/
+out/
+
