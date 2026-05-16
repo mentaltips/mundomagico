@@ -146,7 +146,7 @@ app.use('/api/billing', requireApiAuth, billingRoutes)
 app.use('/api/reports', requireApiAuth, reportsRoutes)
 app.use('/api/analytics', analyticsRoutes)
 
-const PORT = process.env.PORT || 3002
+const PORT = process.env.PORT || 3333
 app.listen(PORT, () => {
   console.log(`API running on port ${PORT}`)
 })

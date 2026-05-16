@@ -5,6 +5,7 @@ import { Camera, X, Loader2, Share2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { getSafeUrl } from '@/lib/utils'
 
 type Photo = {
   id: string
@@ -53,7 +54,7 @@ export default function GuardianPhotosPage() {
                 onClick={() => setPreview(photo)}
               >
                 <img
-                  src={photo.url?.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br')}
+                  src={getSafeUrl(photo.url)}
                   alt={photo.caption ?? 'Foto'}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=Foto' }}
@@ -81,7 +82,7 @@ export default function GuardianPhotosPage() {
           </button>
           <div className="max-w-lg w-full">
             <img
-              src={preview.url?.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br')}
+              src={getSafeUrl(preview.url)}
               alt={preview.caption ?? 'Foto'}
               className="w-full rounded-3xl max-h-[70vh] object-contain"
               onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/800x600?text=Foto' }}

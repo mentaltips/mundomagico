@@ -8,6 +8,7 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { PageHeader, EmptyState, LoadingState, Modal } from '@/components/ui'
 import { useSession } from 'next-auth/react'
+import { getSafeUrl } from '@/lib/utils'
 
 type Photo = {
   id: string
@@ -160,7 +161,7 @@ export default function PhotosPage() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {Array.isArray(photos) && photos.map(photo => {
-            const safeUrl = photo.url?.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br')
+            const safeUrl = getSafeUrl(photo.url)
             return (
             <div
               key={photo.id}
@@ -209,7 +210,7 @@ export default function PhotosPage() {
               </div>
             ) : (
               <div className="relative rounded-2xl overflow-hidden aspect-video bg-accent group">
-                <img src={form.url.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br')} alt="Preview" className="w-full h-full object-cover" />
+                <img src={getSafeUrl(form.url)} alt="Preview" className="w-full h-full object-cover" />
                 <button type="button" onClick={() => setForm(p => ({ ...p, url: '' }))} className="absolute top-3 right-3 p-2 bg-rose-500 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
                   <Trash2 size={14} />
                 </button>
@@ -273,7 +274,7 @@ export default function PhotosPage() {
             <div className="bg-card rounded-[2rem] overflow-hidden border border-border shadow-2xl">
               <div className="relative bg-black flex items-center justify-center" style={{ maxHeight: '60vh' }}>
                 <img
-                  src={preview.url?.replace('http://localhost:3333', 'https://api.mundomagicocajamar.com.br')}
+                  src={getSafeUrl(preview.url)}
                   alt={preview.caption ?? 'Foto'}
                   className="max-w-full max-h-[60vh] object-contain"
                   onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/1200x800?text=Erro' }}
