@@ -31,6 +31,7 @@ export default function ChildItemsPage() {
   const [repModal, setRepModal]   = useState<ChildItem | null>(null)
   const [saving, setSaving]       = useState(false)
   const [qty, setQty]             = useState(1)
+  const [search, setSearch]       = useState('')
   const [form, setForm]           = useState({
     childId: '', itemType: 'FRALDA', quantityReceived: '10', alertThreshold: '5', notes: '',
   })
@@ -144,6 +145,18 @@ export default function ChildItemsPage() {
           </button>
         }
       />
+
+      {/* Search Bar */}
+      <div className="mb-6 relative group">
+        <Box className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+        <input 
+          type="text" 
+          placeholder="Buscar por criança ou item..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="input pl-12 w-full bg-accent/30 border-transparent focus:bg-accent/50 focus:border-primary/30 h-14 text-sm font-bold"
+        />
+      </div>
 
       {/* Alerta de estoque baixo */}
       {lowItems.length > 0 && (
