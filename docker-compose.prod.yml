@@ -63,6 +63,8 @@ services:
       - public
     ports:
       - "3333:3333"
+    volumes:
+      - ./uploads:/app/uploads
 
   # ─── Nginx Reverse Proxy ──────────────────────────────────────
   nginx:

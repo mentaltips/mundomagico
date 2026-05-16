@@ -9,7 +9,7 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
     console.log(`[Proxy] ${req.method} ${new URL(req.url).pathname} | Token: ${!!accessToken}`)
   }
 
-  const apiUrl = (process.env.API_URL || 'http://127.0.0.1:3002').replace(/\/$/, '')
+  const apiUrl = (process.env.API_URL || 'http://127.0.0.1:3333').replace(/\/$/, '')
 
   const url = new URL(req.url)
   const path = pathOverride || url.pathname
@@ -54,11 +54,10 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
       return new NextResponse(null, { status: response.status })
     }
 
-    const arrayBuffer = await response.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    const blob = await response.blob()
     const resContentType = response.headers.get('content-type') || 'application/json'
     
-    return new NextResponse(buffer, {
+    return new NextResponse(blob, {
       status: response.status,
       headers: { 
         'Content-Type': resContentType,
