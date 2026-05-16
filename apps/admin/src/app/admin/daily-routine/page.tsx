@@ -22,7 +22,8 @@ export default function DailyRoutinePage() {
   const fetchChildren = async () => {
     try {
       setLoading(true)
-      const res = await fetch('/api/daily-routine')
+      const today = new Date().toISOString().split('T')[0]
+      const res = await fetch(`/api/daily-routine?date=${today}`)
       if (res.ok) {
         const data = await res.json()
         setChildren(Array.isArray(data) ? data : [])

@@ -9,12 +9,11 @@ router.get('/', async (req, res) => {
     const schoolId = req.user?.schoolId
     const { date } = req.query
 
-    // Define the date range for the specified date (or today)
-    const targetDate = date ? new Date(date as string) : new Date()
-    const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0))
-    const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999))
+    // Normalize date to midnight UTC to ensure consistency with POST
+    const d = date ? new Date(date as string) : new Date()
+    const reportDate = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
 
-    // Fetch all children and include their daily reports for the target date
+    // Fetch all children and include their daily reports for the target UTC date
     const children = await prisma.child.findMany({
       where: { schoolId },
       include: {
@@ -23,12 +22,7 @@ router.get('/', async (req, res) => {
           include: { guardian: true }
         },
         dailyReports: {
-          where: {
-            date: {
-              gte: startOfDay,
-              lte: endOfDay,
-            }
-          },
+          where: { date: reportDate },
           include: {
             meals: true,
             sleep: true,

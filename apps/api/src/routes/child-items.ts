@@ -11,7 +11,14 @@ router.get('/', async (req, res) => {
     const items = await prisma.childItem.findMany({
       where: { schoolId, ...(childId && { childId: childId as string }) },
       include: {
-        child: { select: { id: true, fullName: true } },
+        child: { 
+          select: { 
+            id: true, 
+            fullName: true, 
+            photoUrl: true,
+            group: { select: { name: true } }
+          } 
+        },
         _count: { select: { usageHistory: true } }
       },
       orderBy: { createdAt: 'desc' }
@@ -27,10 +34,17 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
-    const { lastReplenished, ...rest } = req.body
+    if (!schoolId) return res.status(401).json({ error: 'School ID not found' })
+
+    const { childId, itemType, quantityReceived, alertThreshold, notes, lastReplenished } = req.body
+    
     const item = await prisma.childItem.create({
       data: {
-        ...rest,
+        childId,
+        itemType,
+        quantityReceived: Number(quantityReceived) || 0,
+        alertThreshold: Number(alertThreshold) || 5,
+        notes,
         schoolId,
         ...(lastReplenished && { lastReplenished: new Date(lastReplenished) }),
       }

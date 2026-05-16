@@ -47,9 +47,14 @@ export default function ChildItemsPage() {
   })
   const children: { id: string; fullName: string }[] = Array.isArray(rawChildren) ? rawChildren : []
 
+  const filteredItems = items.filter(item => 
+    item.child?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+    item.itemType?.toLowerCase().includes(search.toLowerCase())
+  )
+
   // Group items by child
   const grouped: GroupedChild[] = Object.values(
-    items.reduce<Record<string, GroupedChild>>((acc, item) => {
+    filteredItems.reduce<Record<string, GroupedChild>>((acc, item) => {
       if (!acc[item.childId]) {
         acc[item.childId] = { child: item.child, items: [] }
       }
@@ -58,7 +63,7 @@ export default function ChildItemsPage() {
     }, {})
   )
 
-  const lowItems = items.filter(item => item.quantityReceived - item.quantityUsed <= item.alertThreshold)
+  const lowItems = filteredItems.filter(item => (item.quantityReceived - item.quantityUsed) <= item.alertThreshold)
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,8 +85,13 @@ export default function ChildItemsPage() {
         setShowModal(false)
         setForm({ childId: '', itemType: 'FRALDA', quantityReceived: '10', alertThreshold: '5', notes: '' })
         queryClient.invalidateQueries({ queryKey: ['child-items'] })
-      } else { toast.error('Erro ao cadastrar item') }
-    } catch { toast.error('Erro ao cadastrar item') }
+      } else { 
+        const errData = await res.json().catch(() => ({}))
+        toast.error(errData.error || 'Erro ao cadastrar item') 
+      }
+    } catch (err: any) { 
+      toast.error('Erro de conexão com o servidor') 
+    }
     finally { setSaving(false) }
   }
 
