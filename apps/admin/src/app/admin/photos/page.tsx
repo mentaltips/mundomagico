@@ -95,8 +95,17 @@ export default function PhotosPage() {
     if (!confirm('Excluir esta foto?')) return
     try {
       const res = await fetch(`/api/photos/${id}`, { method: 'DELETE' })
-      if (res.ok) { toast.success('Foto excluída'); setPreview(null); queryClient.invalidateQueries({ queryKey: ['photos'] }) }
-    } catch { toast.error('Erro ao excluir') }
+      if (res.ok) {
+        toast.success('Foto excluída')
+        setPreview(null)
+        queryClient.invalidateQueries({ queryKey: ['photos'] })
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast.error(data.error || 'Erro ao excluir')
+      }
+    } catch {
+      toast.error('Erro de conexão ao excluir')
+    }
   }
 
   const handleToggleShare = async (photo: Photo) => {

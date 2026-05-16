@@ -184,4 +184,40 @@ router.post('/:id/create-user', async (req, res) => {
   }
 })
 
+// DELETE /:id - Delete guardian
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const schoolId = req.user?.schoolId
+    
+    if (!schoolId) return res.status(401).json({ error: 'Not authorized' })
+
+    const guardian = await prisma.guardian.findFirst({
+      where: { id, schoolId }
+    })
+
+    if (!guardian) return res.status(404).json({ error: 'Responsável não encontrado' })
+
+    // Delete associations first to avoid foreign key errors
+    await prisma.childGuardian.deleteMany({ where: { guardianId: id } })
+    await prisma.studentGuardian.deleteMany({ where: { guardianId: id } })
+
+    // Delete the guardian
+    await prisma.guardian.delete({ where: { id } })
+
+    // Optionally delete the user if it's not used elsewhere (linked only to this guardian)
+    if (guardian.userId) {
+      // Check if user is only linked here (Guardian relation is 1-1 in schema)
+      await prisma.user.delete({ where: { id: guardian.userId } }).catch(() => {
+        // Ignore if user deletion fails (might be a staff member too)
+      })
+    }
+
+    res.json({ success: true })
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 export default router

@@ -49,9 +49,23 @@ router.post('/', async (req, res) => {
 // DELETE /:id - Delete photo
 router.delete('/:id', async (req, res) => {
   try {
+    const { id } = req.params
     const schoolId = req.user?.schoolId
-    const result = await prisma.childPhoto.deleteMany({ where: { id: req.params.id, schoolId } })
-    if (result.count === 0) return res.status(404).json({ error: 'Photo not found' })
+    
+    if (!schoolId) return res.status(401).json({ error: 'Not authorized' })
+
+    req.log.info({ photoId: id, schoolId }, 'Attempting to delete photo')
+
+    const result = await prisma.childPhoto.deleteMany({
+      where: { id, schoolId }
+    })
+
+    if (result.count === 0) {
+      req.log.warn({ photoId: id, schoolId }, 'Photo not found for deletion')
+      return res.status(404).json({ error: 'Photo not found' })
+    }
+
+    req.log.info({ photoId: id, schoolId }, 'Photo deleted successfully')
     res.json({ success: true })
   } catch (error) {
     req.log.error(error)
