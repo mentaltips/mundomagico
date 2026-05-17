@@ -28,7 +28,7 @@ export const createChildSchema = z.object({
   contractedHours: optionalString,
   entryDate: optionalDate,
   exitDate: optionalDate,
-  status: z.enum(['ATIVO', 'INATIVO', 'ADAPTACAO', 'AGUARDANDO_VAGA', 'CANCELADO']).default('ATIVO'),
+  status: z.enum(['ATIVO', 'INATIVO', 'ADAPTACAO', 'AGUARDANDO_VAGA', 'CANCELADO', 'PENDENTE_PAGAMENTO']).default('ATIVO'),
   // Saúde
   bloodType: optionalString,
   allergies: optionalString,

@@ -1,4 +1,4 @@
-export const CHILD_STATUS = ['ATIVO', 'INATIVO', 'ADAPTACAO', 'AGUARDANDO_VAGA', 'CANCELADO'] as const
+export const CHILD_STATUS = ['ATIVO', 'INATIVO', 'ADAPTACAO', 'AGUARDANDO_VAGA', 'CANCELADO', 'PENDENTE_PAGAMENTO'] as const
 export type ChildStatus = (typeof CHILD_STATUS)[number]
 
 export const CHILD_STATUS_LABELS: Record<ChildStatus, string> = {
@@ -7,6 +7,7 @@ export const CHILD_STATUS_LABELS: Record<ChildStatus, string> = {
   ADAPTACAO:       'Em adaptação',
   AGUARDANDO_VAGA: 'Aguardando vaga',
   CANCELADO:       'Cancelado',
+  PENDENTE_PAGAMENTO: 'Pendente de pagamento',
 }
 
 export const CHILD_STATUS_COLORS: Record<ChildStatus, string> = {
@@ -15,6 +16,7 @@ export const CHILD_STATUS_COLORS: Record<ChildStatus, string> = {
   ADAPTACAO:       'bg-yellow-100 text-yellow-800',
   AGUARDANDO_VAGA: 'bg-blue-100 text-blue-800',
   CANCELADO:       'bg-red-100 text-red-800',
+  PENDENTE_PAGAMENTO: 'bg-rose-100 text-rose-800',
 }
 
 export const SHIFTS = ['MANHA', 'TARDE', 'INTEGRAL', 'NOTURNO'] as const

@@ -27,7 +27,7 @@ const schema = z.object({
   contractedHours: z.string().nullable().optional(),
   entryDate: z.string().nullable().optional(),
   exitDate: z.string().nullable().optional(),
-  status: z.enum(['ATIVO', 'INATIVO', 'ADAPTACAO', 'AGUARDANDO_VAGA', 'CANCELADO']),
+  status: z.enum(['ATIVO', 'INATIVO', 'ADAPTACAO', 'AGUARDANDO_VAGA', 'CANCELADO', 'PENDENTE_PAGAMENTO']),
   // Saúde
   bloodType: z.string().nullable().optional(),
   allergies: z.string().nullable().optional(),       // textarea → split em array
@@ -320,6 +320,7 @@ export function ChildForm({ groups, defaultValues, childId }: Props) {
                 <option value="ATIVO">Ativo</option>
                 <option value="ADAPTACAO">Em adaptação</option>
                 <option value="AGUARDANDO_VAGA">Aguardando vaga</option>
+                <option value="PENDENTE_PAGAMENTO">Pendente de pagamento</option>
                 <option value="INATIVO">Inativo</option>
                 <option value="CANCELADO">Cancelado</option>
               </select>

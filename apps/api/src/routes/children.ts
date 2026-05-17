@@ -97,8 +97,31 @@ router.patch('/:id', validate(updateChildSchema), async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
-    const result = await prisma.child.deleteMany({ where: { id: req.params.id, schoolId } })
-    if (result.count === 0) return res.status(404).json({ error: 'Child not found' })
+    const childId = req.params.id
+
+    const child = await prisma.child.findFirst({ where: { id: childId, schoolId } })
+    if (!child) return res.status(404).json({ error: 'Child not found' })
+
+    await prisma.$transaction([
+      prisma.childGuardian.deleteMany({ where: { childId } }),
+      prisma.authorizedPickupPerson.deleteMany({ where: { childId } }),
+      prisma.childDailyReport.deleteMany({ where: { childId } }),
+      prisma.childCheckInOut.deleteMany({ where: { childId } }),
+      prisma.medicationAdministration.deleteMany({
+        where: { medication: { childId } }
+      }),
+      prisma.medication.deleteMany({ where: { childId } }),
+      prisma.childItemUsage.deleteMany({
+        where: { item: { childId } }
+      }),
+      prisma.childItem.deleteMany({ where: { childId } }),
+      prisma.childPhoto.deleteMany({ where: { childId } }),
+      prisma.developmentReport.deleteMany({ where: { childId } }),
+      prisma.childDocument.deleteMany({ where: { childId } }),
+      prisma.invoice.deleteMany({ where: { childId } }),
+      prisma.child.delete({ where: { id: childId } })
+    ])
+
     res.json({ success: true })
   } catch (error) {
     req.log.error(error)
