@@ -42,8 +42,8 @@ router.post('/login', async (req, res) => {
       return res.status(500).json({ error: 'Erro de configuração do servidor' })
     }
 
-    // Token principal: 8 horas (reduzido de 30 dias)
-    const token = jwt.sign(buildPayload(user), secret, { expiresIn: '8h' })
+    // Token principal: 30 dias (para manter em sincronia com NextAuth e evitar expiração do painel)
+    const token = jwt.sign(buildPayload(user), secret, { expiresIn: '30d' })
 
     // Refresh token: 7 dias — usado apenas para renovar o token principal
     const refreshToken = jwt.sign(
@@ -95,7 +95,7 @@ router.post('/refresh', async (req, res) => {
       return res.status(401).json({ error: 'Usuário inativo ou não encontrado' })
     }
 
-    const newToken = jwt.sign(buildPayload(user), secret, { expiresIn: '8h' })
+    const newToken = jwt.sign(buildPayload(user), secret, { expiresIn: '30d' })
 
     res.json({
       token: newToken,
