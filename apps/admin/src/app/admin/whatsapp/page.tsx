@@ -270,20 +270,20 @@ export default function WhatsAppDashboardPage() {
               <div className="bg-card p-6 md:p-8 rounded-[2rem] border border-border/50 shadow-sm space-y-6">
                 <h3 className="text-lg font-black text-foreground">Disparador de Mensagens</h3>
 
-                {/* Filter Targets */}
+                 {/* Filter Targets */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Público-alvo por Status</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Público-alvo (Responsáveis)</label>
                   <select 
                     value={targetStatus}
                     onChange={(e) => setTargetStatus(e.target.value)}
                     className="w-full px-4 py-3.5 bg-accent/40 border border-border/50 rounded-2xl font-bold text-foreground outline-none focus:ring-2 focus:ring-emerald-500"
                   >
-                    <option value="ALL">Todas as Crianças ({children.length})</option>
-                    <option value="ATIVO">Alunos Ativos ({children.filter(c => c.status === 'ATIVO').length})</option>
-                    <option value="ADAPTACAO">Em Adaptação ({children.filter(c => c.status === 'ADAPTACAO').length})</option>
-                    <option value="AGUARDANDO_VAGA">Aguardando Vaga ({children.filter(c => c.status === 'AGUARDANDO_VAGA').length})</option>
-                    <option value="PENDENTE_PAGAMENTO">Pendente de Pagamento ({children.filter(c => c.status === 'PENDENTE_PAGAMENTO').length})</option>
-                    <option value="INATIVO">Inativos/Cancelados ({children.filter(c => c.status === 'INATIVO' || c.status === 'CANCELADO').length})</option>
+                    <option value="ALL">Todos os Responsáveis ({children.length})</option>
+                    <option value="ATIVO">Responsáveis - Alunos Ativos ({children.filter(c => c.status === 'ATIVO').length})</option>
+                    <option value="ADAPTACAO">Responsáveis - Em Adaptação ({children.filter(c => c.status === 'ADAPTACAO').length})</option>
+                    <option value="AGUARDANDO_VAGA">Responsáveis - Aguardando Vaga ({children.filter(c => c.status === 'AGUARDANDO_VAGA').length})</option>
+                    <option value="PENDENTE_PAGAMENTO">Responsáveis - Pendente de Pagamento ({children.filter(c => c.status === 'PENDENTE_PAGAMENTO').length})</option>
+                    <option value="INATIVO">Responsáveis - Inativos/Cancelados ({children.filter(c => c.status === 'INATIVO' || c.status === 'CANCELADO').length})</option>
                   </select>
                 </div>
 
