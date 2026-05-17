@@ -6,7 +6,7 @@ import {
   MessageCircle, Send, Save, Clock, Smartphone, 
   Users, CheckCircle2, Info, AlertCircle, Hash,
   History, Settings as SettingsIcon, Activity, Check, 
-  AlertTriangle, ExternalLink, Loader2, Sparkles
+  AlertTriangle, ExternalLink, Loader2, Sparkles, Search
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -45,6 +45,7 @@ export default function WhatsAppDashboardPage() {
   const [targetStatus, setTargetStatus] = useState<string>('ALL')
   const [customMessage, setCustomMessage] = useState('Olá {{nome_responsavel}}, tudo bem? Gostaríamos de falar sobre o(a) {{nome_aluno}}... 🏫✨')
   const [sendingBroadcast, setSendingBroadcast] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Fetch children and current settings
   useEffect(() => {
@@ -79,8 +80,16 @@ export default function WhatsAppDashboardPage() {
 
   // Filtered list of targets for direct broadcast
   const targetChildren = children.filter((child) => {
-    if (targetStatus === 'ALL') return true
-    return child.status === targetStatus
+    const statusMatch = targetStatus === 'ALL' || child.status === targetStatus
+    if (!statusMatch) return false
+    
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      const childNameMatch = child.fullName.toLowerCase().includes(q)
+      const guardianNameMatch = child.guardians?.some(g => g.guardian.fullName.toLowerCase().includes(q)) ?? false
+      return childNameMatch || guardianNameMatch
+    }
+    return true
   })
 
   // Variables helpers
@@ -365,6 +374,17 @@ export default function WhatsAppDashboardPage() {
                   <p className="text-xs text-muted-foreground mt-0.5">Clique para falar diretamente com cada pai pelo seu WhatsApp, já carregando a mensagem.</p>
                 </div>
 
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar responsável ou aluno..."
+                    className="w-full pl-9 pr-4 py-2.5 bg-accent/40 border border-border/50 rounded-xl text-xs font-medium outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                  <Search size={14} className="absolute left-3 top-3 text-muted-foreground" />
+                </div>
+
                 <div className="max-h-[220px] overflow-y-auto divide-y divide-border/50 custom-scrollbar pr-1">
                   {targetChildren.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic text-center py-6">Nenhum responsável encontrado para este filtro.</p>
@@ -374,8 +394,8 @@ export default function WhatsAppDashboardPage() {
                       return (
                         <div key={child.id} className="py-2.5 flex items-center justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="text-xs font-bold text-foreground truncate">{child.fullName}</p>
-                            <p className="text-[10px] text-muted-foreground truncate">{guardian?.fullName ?? 'Responsável'} • {guardian?.phone ?? '—'}</p>
+                            <p className="text-xs font-bold text-foreground truncate">{guardian?.fullName ?? 'Responsável'}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">Pai/Mãe de: <span className="font-semibold text-foreground/80">{child.fullName}</span> • {guardian?.phone ?? '—'}</p>
                           </div>
                           <button
                             onClick={() => triggerDirectLink(child)}
