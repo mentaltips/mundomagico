@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash, Edit, Phone, Mail, Key, Copy, CheckCircle2, UserPlus, Loader2, Users, Search } from 'lucide-react'
+import { Plus, Trash, Edit, Phone, Mail, Key, Copy, CheckCircle2, Loader2, Users, Search } from 'lucide-react'
 import { PageHeader, EmptyState, SkeletonCard, Badge, Modal, Alert, Avatar } from '@/components/ui'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import toast from 'react-hot-toast'
@@ -13,6 +13,7 @@ type Guardian = {
   phone: string | null
   email: string | null
   userId: string | null
+  status: string // ATIVO | INATIVO | AUSENTE | INADIMPLENTE
 }
 
 export default function GuardiansPage() {
@@ -26,12 +27,22 @@ export default function GuardiansPage() {
   const [credentials, setCredentials] = useState<{ email: string, password: string } | null>(null)
   const [generatingFor, setGeneratingFor] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState({ fullName: '', cpf: '', phone: '', email: '', relationship: 'Mae', photoUrl: '' })
+  const [formData, setFormData] = useState({ 
+    fullName: '', 
+    cpf: '', 
+    phone: '', 
+    email: '', 
+    relationship: 'Mae', 
+    photoUrl: '',
+    status: 'ATIVO'
+  })
+
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ATIVO' | 'INATIVO' | 'AUSENTE' | 'INADIMPLENTE'>('ALL')
 
   const fetchGuardians = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/guardians')
+      const res = await fetch(`/api/guardians?t=${Date.now()}`)
       if (res.ok) {
         const data = await res.json()
         setGuardians(data)
@@ -57,10 +68,19 @@ export default function GuardiansPage() {
         email: guardian.email || '',
         relationship: (guardian as any).relationship || 'Mae',
         photoUrl: (guardian as any).photoUrl || '',
+        status: guardian.status || 'ATIVO',
       })
     } else {
       setEditingGuardian(null)
-      setFormData({ fullName: '', cpf: '', phone: '', email: '', relationship: 'Mae', photoUrl: '' })
+      setFormData({ 
+        fullName: '', 
+        cpf: '', 
+        phone: '', 
+        email: '', 
+        relationship: 'Mae', 
+        photoUrl: '',
+        status: 'ATIVO'
+      })
     }
     setShowModal(true)
   }
@@ -76,6 +96,7 @@ export default function GuardiansPage() {
       cpf: formData.cpf || undefined,
       phone: formData.phone || undefined,
       email: formData.email || undefined,
+      status: formData.status,
     }
 
     try {
@@ -107,15 +128,47 @@ export default function GuardiansPage() {
     if (!confirm('Deseja realmente excluir este responsável?')) return
 
     try {
+      // Remover imediatamente do estado local para feedback visual instantâneo (evita cliques duplos / 404)
+      setGuardians(prev => prev.filter(g => g.id !== id))
+      
       const res = await fetch(`/api/guardians/${id}`, { method: 'DELETE' })
       if (res.ok) {
         toast.success('Responsável excluído')
         fetchGuardians()
       } else {
         toast.error('Erro ao excluir.')
+        fetchGuardians() // restaura a lista caso o backend tenha falhado
       }
     } catch (err) {
       console.error(err)
+      fetchGuardians()
+    }
+  }
+
+  const handleBulkDelete = async (status: 'INATIVO' | 'AUSENTE') => {
+    const targets = guardians.filter(g => g.status === status)
+    const count = targets.length
+    if (count === 0) return
+
+    const label = status === 'INATIVO' ? 'Inativo' : 'Ausente'
+    if (!confirm(`Deseja realmente excluir TODOS os ${count} responsáveis com status "${label}"? Esta ação é definitiva e apagará também as contas vinculadas.`)) return
+    
+    setSaving(true)
+    let successCount = 0
+    
+    try {
+      for (const t of targets) {
+        const res = await fetch(`/api/guardians/${t.id}`, { method: 'DELETE' })
+        if (res.ok) successCount++
+      }
+      toast.success(`${successCount} de ${count} responsáveis excluídos com sucesso.`)
+      fetchGuardians()
+    } catch (err) {
+      console.error(err)
+      toast.error('Erro ao realizar exclusão em lote.')
+      fetchGuardians()
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -158,11 +211,15 @@ export default function GuardiansPage() {
     toast.success('Copiado para a área de transferência!')
   }
 
-  const filteredGuardians = guardians.filter(g => 
-    (g.fullName || '').toLowerCase().includes(search.toLowerCase()) ||
-    (g.email || '').toLowerCase().includes(search.toLowerCase()) ||
-    (g.phone || '').includes(search)
-  )
+  const filteredGuardians = guardians.filter(g => {
+    const matchesSearch = (g.fullName || '').toLowerCase().includes(search.toLowerCase()) ||
+      (g.email || '').toLowerCase().includes(search.toLowerCase()) ||
+      (g.phone || '').includes(search)
+    
+    const matchesStatus = statusFilter === 'ALL' || g.status === statusFilter
+    
+    return matchesSearch && matchesStatus
+  })
 
   return (
     <div className="page animate-in">
@@ -177,7 +234,7 @@ export default function GuardiansPage() {
         }
       />
 
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative group flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input 
@@ -187,6 +244,84 @@ export default function GuardiansPage() {
             onChange={e => setSearch(e.target.value)}
             className="input pl-12 w-full bg-accent/30 border-transparent focus:bg-accent/50 focus:border-primary/30 h-14 text-sm font-bold"
           />
+        </div>
+      </div>
+
+      {/* Tabs de Filtro por Status Administrativo */}
+      <div className="flex flex-wrap gap-2 mb-8 items-center justify-between">
+        <div className="flex flex-wrap gap-2">
+          <button 
+            onClick={() => setStatusFilter('ALL')} 
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
+              statusFilter === 'ALL' 
+                ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/10' 
+                : 'bg-accent/40 text-muted-foreground border-border/40 hover:bg-accent/60'
+            }`}
+          >
+            Todos ({guardians.length})
+          </button>
+          <button 
+            onClick={() => setStatusFilter('ATIVO')} 
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
+              statusFilter === 'ATIVO' 
+                ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10' 
+                : 'bg-accent/40 text-muted-foreground border-border/40 hover:bg-accent/60'
+            }`}
+          >
+            Ativo ({guardians.filter(g => g.status === 'ATIVO').length})
+          </button>
+          <button 
+            onClick={() => setStatusFilter('INATIVO')} 
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
+              statusFilter === 'INATIVO' 
+                ? 'bg-gray-500 text-white border-gray-500 shadow-md shadow-gray-500/10' 
+                : 'bg-accent/40 text-muted-foreground border-border/40 hover:bg-accent/60'
+            }`}
+          >
+            Inativo ({guardians.filter(g => g.status === 'INATIVO').length})
+          </button>
+          <button 
+            onClick={() => setStatusFilter('AUSENTE')} 
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
+              statusFilter === 'AUSENTE' 
+                ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/10' 
+                : 'bg-accent/40 text-muted-foreground border-border/40 hover:bg-accent/60'
+            }`}
+          >
+            Ausente ({guardians.filter(g => g.status === 'AUSENTE').length})
+          </button>
+          <button 
+            onClick={() => setStatusFilter('INADIMPLENTE')} 
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
+              statusFilter === 'INADIMPLENTE' 
+                ? 'bg-rose-500 text-white border-rose-500 shadow-md shadow-rose-500/10' 
+                : 'bg-accent/40 text-muted-foreground border-border/40 hover:bg-accent/60'
+            }`}
+          >
+            Falta de Pagamento ({guardians.filter(g => g.status === 'INADIMPLENTE').length})
+          </button>
+        </div>
+
+        {/* Botões de Ação em Lote (Remarketing / Limpeza) */}
+        <div className="flex gap-2">
+          {statusFilter === 'INATIVO' && guardians.filter(g => g.status === 'INATIVO').length > 0 && (
+            <button 
+              onClick={() => handleBulkDelete('INATIVO')}
+              disabled={saving}
+              className="bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/20 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2"
+            >
+              <Trash size={14} /> Excluir Todos Inativos
+            </button>
+          )}
+          {statusFilter === 'AUSENTE' && guardians.filter(g => g.status === 'AUSENTE').length > 0 && (
+            <button 
+              onClick={() => handleBulkDelete('AUSENTE')}
+              disabled={saving}
+              className="bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/20 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2"
+            >
+              <Trash size={14} /> Excluir Todos Ausentes (Limpar Mkt)
+            </button>
+          )}
         </div>
       </div>
 
@@ -200,7 +335,7 @@ export default function GuardiansPage() {
         <EmptyState 
           icon={<Users size={32} />}
           title="Nenhum responsável encontrado"
-          description={search ? "Tente buscar com outro termo." : "Você ainda não cadastrou nenhum pai ou responsável."}
+          description={search ? "Tente buscar com outro termo ou filtro." : "Você ainda não cadastrou nenhum pai ou responsável."}
           action={!search && (
             <button onClick={() => handleOpenModal()} className="btn-primary">
               Cadastrar Agora
@@ -216,12 +351,13 @@ export default function GuardiansPage() {
                   <Avatar name={g.fullName} photoUrl={(g as any).photoUrl} size="md" />
                   <div className="min-w-0">
                     <h3 className="font-black text-foreground leading-tight truncate text-base">{g.fullName}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      {g.userId ? (
-                        <Badge label="Ativo" variant="green" size="sm" dot />
-                      ) : (
-                        <Badge label="Sem Acesso" variant="gray" size="sm" />
-                      )}
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      {/* Badge de Status Administrativo */}
+                      {g.status === 'ATIVO' && <Badge label="Ativo" variant="green" size="sm" dot />}
+                      {g.status === 'INATIVO' && <Badge label="Inativo" variant="gray" size="sm" />}
+                      {g.status === 'AUSENTE' && <Badge label="Ausente" variant="amber" size="sm" />}
+                      {g.status === 'INADIMPLENTE' && <Badge label="Falta de Pagamento" variant="red" size="sm" />}
+                      
                       <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{(g as any).relationship || 'Responsável'}</span>
                     </div>
                   </div>
@@ -314,21 +450,37 @@ export default function GuardiansPage() {
               placeholder="Ex: Maria da Silva"
             />
           </div>
-          <div>
-            <label className="label">Parentesco *</label>
-            <select
-              required
-              value={formData.relationship}
-              onChange={(e) => setFormData({...formData, relationship: e.target.value})}
-              className="input"
-            >
-              <option value="Mae">Mãe</option>
-              <option value="Pai">Pai</option>
-              <option value="Avo">Avó / Avô</option>
-              <option value="Tio">Tio / Tia</option>
-              <option value="Responsavel">Responsável Legal</option>
-              <option value="Outro">Outro</option>
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Parentesco *</label>
+              <select
+                required
+                value={formData.relationship}
+                onChange={(e) => setFormData({...formData, relationship: e.target.value})}
+                className="input"
+              >
+                <option value="Mae">Mãe</option>
+                <option value="Pai">Pai</option>
+                <option value="Avo">Avó / Avô</option>
+                <option value="Tio">Tio / Tia</option>
+                <option value="Responsavel">Responsável Legal</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">Status Administrativo *</label>
+              <select
+                required
+                value={formData.status}
+                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                className="input"
+              >
+                <option value="ATIVO">Ativo</option>
+                <option value="INATIVO">Inativo</option>
+                <option value="AUSENTE">Ausente (Remarketing)</option>
+                <option value="INADIMPLENTE">Falta de Pagamento</option>
+              </select>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
