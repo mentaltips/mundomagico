@@ -221,6 +221,7 @@ model Guardian {
   photoUrl     String?
   address      String?
   occupation   String?
+  status       String   @default("ATIVO")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
