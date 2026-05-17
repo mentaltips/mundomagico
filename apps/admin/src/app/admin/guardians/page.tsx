@@ -419,10 +419,11 @@ export default function GuardiansPage() {
                   {g.phone && (
                     <button
                       onClick={() => handleWhatsAppRedirect(g)}
-                      className="p-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all shadow-sm shrink-0"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-emerald-500/20 shrink-0"
                       title="Enviar WhatsApp"
                     >
-                      <MessageCircle size={14} className="fill-current/10" />
+                      <MessageCircle size={13} className="fill-white/10" />
+                      <span>WhatsApp</span>
                     </button>
                   )}
                 </div>
