@@ -11,7 +11,7 @@ import {
   HeartPulse, Calendar, FileText, ShieldAlert,
   SearchIcon, Command, Camera, ClipboardList, Package, ShieldCheck,
   AlertCircle, Megaphone, BarChart2, CheckCheck, Sparkles, Heart,
-  LayoutGrid, LogIn, Image, BarChart, MousePointer2
+  LayoutGrid, LogIn, Image, BarChart, MousePointer2, MessageCircle
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -26,6 +26,7 @@ const menuItems = [
   { icon: <LayoutGrid size={20} />,     label: 'Turmas',            href: '/admin/groups',        group: 'principal' },
   // ── Operacional ────────────────────────────────────────────
   { icon: <Megaphone size={20} />,      label: 'Comunicados',       href: '/admin/announcements', group: 'operacional' },
+  { icon: <MessageCircle size={20} />,    label: 'WhatsApp',          href: '/admin/whatsapp',      group: 'operacional' },
   { icon: <ClipboardCheck size={20} />, label: 'Diário de Rotina',  href: '/admin/daily-routine', group: 'operacional' },
   { icon: <LogIn size={20} />,          label: 'Entrada / Saída',   href: '/admin/check-in-out',  group: 'operacional' },
   { icon: <HeartPulse size={20} />,     label: 'Saúde',             href: '/admin/health',        group: 'operacional' },
