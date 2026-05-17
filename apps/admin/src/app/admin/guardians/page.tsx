@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash, Edit, Phone, Mail, Key, Copy, CheckCircle2, Loader2, Users, Search } from 'lucide-react'
+import { Plus, Trash, Edit, Phone, Mail, Key, Copy, CheckCircle2, Loader2, Users, Search, MessageCircle } from 'lucide-react'
 import { PageHeader, EmptyState, SkeletonCard, Badge, Modal, Alert, Avatar } from '@/components/ui'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import toast from 'react-hot-toast'
@@ -18,6 +18,34 @@ type Guardian = {
 
 export default function GuardiansPage() {
   const [guardians, setGuardians] = useState<Guardian[]>([])
+  
+  const handleWhatsAppRedirect = (guardian: Guardian) => {
+    if (!guardian.phone) {
+      toast.error('Este responsável não possui telefone cadastrado.')
+      return
+    }
+    const phone = guardian.phone.replace(/\D/g, '')
+    const formattedPhone = phone.startsWith('55') ? phone : `55${phone}`
+    
+    let message = ''
+    switch (guardian.status) {
+      case 'INADIMPLENTE':
+        message = `Olá ${guardian.fullName.split(' ')[0]}! Tudo bem? Gostaríamos de conversar de forma amigável sobre algumas pendências financeiras em aberto na Escola Mundo Mágico. Como podemos te ajudar a regularizar? 💸`
+        break
+      case 'AUSENTE':
+        message = `Olá ${guardian.fullName.split(' ')[0]}! Tudo bem? Sentimos a sua falta em nossas atividades na Escola Mundo Mágico. Gostaríamos de conversar para alinhar o retorno. Como podemos te ajudar? ❤️`
+        break
+      case 'INATIVO':
+        message = `Olá ${guardian.fullName.split(' ')[0]}! Tudo bem? Sentimos saudades de vocês aqui na Escola Mundo Mágico. Preparamos uma condição super especial com taxa de matrícula zero para o retorno este semestre. Vamos conversar? 🏫✨`
+        break
+      default:
+        message = `Olá ${guardian.fullName.split(' ')[0]}! Tudo bem? Entramos em contato da Escola Mundo Mágico para trazer atualizações e nos colocar à disposição para qualquer dúvida. Tenha um excelente dia! 🏫`
+        break
+    }
+    
+    const url = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`
+    window.open(url, '_blank')
+  }
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
@@ -381,11 +409,22 @@ export default function GuardiansPage() {
               </div>
 
               <div className="space-y-3 mb-8 bg-accent/20 p-4 rounded-2xl border border-border/20">
-                <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                  <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 shadow-sm">
-                    <Phone size={14} className="text-primary" />
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 shadow-sm">
+                      <Phone size={14} className="text-primary" />
+                    </div>
+                    <span className="truncate">{g.phone || '—'}</span>
                   </div>
-                  <span className="truncate">{g.phone || '—'}</span>
+                  {g.phone && (
+                    <button
+                      onClick={() => handleWhatsAppRedirect(g)}
+                      className="p-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all shadow-sm shrink-0"
+                      title="Enviar WhatsApp"
+                    >
+                      <MessageCircle size={14} className="fill-current/10" />
+                    </button>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
                   <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 shadow-sm">
