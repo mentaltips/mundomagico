@@ -26,13 +26,25 @@ router.get('/', async (req, res) => {
   }
 })
 
-// POST /groups
 router.post('/', async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
     const { name, description, capacity, shift, room, minAge, maxAge } = req.body
+
+    if (!schoolId) {
+      return res.status(401).json({ error: 'School ID is required' })
+    }
+
     const group = await prisma.group.create({
-      data: { name, capacity, shift: shift || 'MANHA', room, minAge, maxAge, schoolId }
+      data: {
+        name,
+        capacity: capacity ? Number(capacity) : undefined,
+        shift: shift || 'MANHA',
+        room,
+        minAge: minAge ? Number(minAge) : undefined,
+        maxAge: maxAge ? Number(maxAge) : undefined,
+        schoolId,
+      },
     })
     res.status(201).json(group)
   } catch (error) {

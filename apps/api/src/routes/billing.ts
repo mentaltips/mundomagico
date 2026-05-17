@@ -105,13 +105,27 @@ router.get('/preview-monthly', requireRole('ADMIN', 'DIRECTOR'), async (req, res
     const [children, students] = await Promise.all([
       prisma.child.findMany({
         where: { schoolId, status: { in: ['ATIVO', 'ADAPTACAO'] }, monthlyFee: { gt: 0 } },
-        include: { invoices: { where: { referenceMonth } } },
-        select: { id: true, fullName: true, monthlyFee: true, dueDay: true, invoices: true },
+        select: {
+          id: true,
+          fullName: true,
+          monthlyFee: true,
+          dueDay: true,
+          invoices: {
+            where: { referenceMonth }
+          }
+        },
       }),
       prisma.student.findMany({
         where: { schoolId, status: 'ATIVO', monthlyFee: { gt: 0 } },
-        include: { invoices: { where: { referenceMonth } } },
-        select: { id: true, fullName: true, monthlyFee: true, dueDay: true, invoices: true },
+        select: {
+          id: true,
+          fullName: true,
+          monthlyFee: true,
+          dueDay: true,
+          invoices: {
+            where: { referenceMonth }
+          }
+        },
       }),
     ])
 
