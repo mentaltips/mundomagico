@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, Baby, ChevronRight, X, Trash2, CreditCard, ShieldAlert } from 'lucide-react'
+import { Plus, Search, Baby, ChevronRight, X, Trash2, CreditCard, ShieldAlert, MessageCircle } from 'lucide-react'
 import { CHILD_STATUS_LABELS, SHIFT_LABELS } from '@mundo-magico/types'
 import { differenceInMonths, differenceInYears } from 'date-fns'
 import { Avatar, PageHeader, EmptyState, Badge } from '@/components/ui'
@@ -126,6 +126,34 @@ export function ChildrenList({ initialChildren, initialGroups }: ChildrenListPro
     } finally {
       setBulkDeleting(false)
     }
+  }
+
+  // Envio de mensagem WhatsApp personalizada
+  const handleWhatsAppRedirect = (child: any) => {
+    const guardian = child.guardians?.[0]?.guardian
+    if (!guardian || !guardian.phone) {
+      toast.error('Nenhum telefone de responsável cadastrado para esta criança.')
+      return
+    }
+
+    const phone = guardian.phone.replace(/\D/g, '')
+    const formattedPhone = phone.startsWith('55') ? phone : `55${phone}`
+    
+    let message = ''
+    if (child.status === 'PENDENTE_PAGAMENTO') {
+      message = `Olá ${guardian.fullName.split(' ')[0]}! Tudo bem? Gostaríamos de conversar sobre as pendências financeiras em aberto do(a) ${child.fullName}. Como podemos te ajudar a regularizar?`
+    } else if (child.status === 'AGUARDANDO_VAGA') {
+      message = `Olá ${guardian.fullName.split(' ')[0]}! Tudo bem? Temos ótimas notícias! Uma vaga para o(a) ${child.fullName} está prestes a se abrir em nossa turma. Vamos agendar uma visita para garantir a matrícula?`
+    } else if (child.status === 'INATIVO' || child.status === 'CANCELADO') {
+      message = `Olá ${guardian.fullName.split(' ')[0]}! Tudo bem? Sentimos saudades do(a) ${child.fullName} aqui na Mundo Mágico. Preparamos uma condição exclusiva com taxa de matrícula zero para o retorno dele este semestre. Vamos conversar?`
+    } else if (child.status === 'ADAPTACAO') {
+      message = `Olá ${guardian.fullName.split(' ')[0]}! Tudo bem? Gostaríamos de falar sobre o processo de adaptação do(a) ${child.fullName} esta semana. Como ele(a) tem se sentido em casa?`
+    } else {
+      message = `Olá ${guardian.fullName.split(' ')[0]}! Tudo bem? Gostaríamos de falar sobre o(a) ${child.fullName}...`
+    }
+
+    const url = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`
+    window.open(url, '_blank')
   }
 
   // Filtragem local
@@ -326,13 +354,24 @@ export function ChildrenList({ initialChildren, initialGroups }: ChildrenListPro
                       </td>
                       <td className="table-cell">
                         {child.guardians && child.guardians.length > 0 ? (
-                          <div>
-                            <p className="text-sm font-bold text-foreground">
-                              {child.guardians.slice(0, 2).map((g: any) => (g.guardian?.fullName || '').split(' ')[0]).join(', ')}
-                              {child.guardians.length > 2 && ` +${child.guardians.length - 2}`}
-                            </p>
+                          <div className="flex items-center justify-between gap-2 max-w-[200px]">
+                            <div>
+                              <p className="text-sm font-bold text-foreground truncate">
+                                {child.guardians.slice(0, 2).map((g: any) => (g.guardian?.fullName || '').split(' ')[0]).join(', ')}
+                                {child.guardians.length > 2 && ` +${child.guardians.length - 2}`}
+                              </p>
+                              {child.guardians[0].guardian?.phone && (
+                                <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{child.guardians[0].guardian.phone}</p>
+                              )}
+                            </div>
                             {child.guardians[0].guardian?.phone && (
-                              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{child.guardians[0].guardian.phone}</p>
+                              <button
+                                onClick={() => handleWhatsAppRedirect(child)}
+                                className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-500/10 transition-colors shrink-0"
+                                title="Enviar mensagem no WhatsApp"
+                              >
+                                <MessageCircle size={16} />
+                              </button>
                             )}
                           </div>
                         ) : (
@@ -347,6 +386,15 @@ export function ChildrenList({ initialChildren, initialGroups }: ChildrenListPro
                       </td>
                       <td className="table-cell text-right">
                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                          {child.guardians?.[0]?.guardian?.phone && (
+                            <button
+                              onClick={() => handleWhatsAppRedirect(child)}
+                              className="btn-ghost text-emerald-500 hover:bg-emerald-500/5 p-2 rounded-xl transition-all"
+                              title="Enviar mensagem no WhatsApp"
+                            >
+                              <MessageCircle size={16} />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDelete(child.id, child.fullName)}
                             disabled={deletingId === child.id}
@@ -398,13 +446,24 @@ export function ChildrenList({ initialChildren, initialGroups }: ChildrenListPro
                   </div>
 
                   {child.guardians && child.guardians.length > 0 && (
-                    <div className="border-t border-border/50 pt-3">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Responsável</p>
-                      <p className="text-xs font-bold text-foreground mt-0.5">
-                        {child.guardians.map((g: any) => g.guardian?.fullName).join(', ')}
-                      </p>
+                    <div className="border-t border-border/50 pt-3 flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Responsável</p>
+                        <p className="text-xs font-bold text-foreground mt-0.5 truncate">
+                          {child.guardians.map((g: any) => g.guardian?.fullName).join(', ')}
+                        </p>
+                        {child.guardians[0].guardian?.phone && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{child.guardians[0].guardian.phone}</p>
+                        )}
+                      </div>
                       {child.guardians[0].guardian?.phone && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{child.guardians[0].guardian.phone}</p>
+                        <button
+                          onClick={() => handleWhatsAppRedirect(child)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 font-black text-[10px] uppercase tracking-widest transition-all hover:bg-emerald-500 hover:text-white shrink-0"
+                          title="Enviar mensagem no WhatsApp"
+                        >
+                          <MessageCircle size={12} /> WhatsApp
+                        </button>
                       )}
                     </div>
                   )}
