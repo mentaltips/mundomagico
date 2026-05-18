@@ -34,10 +34,17 @@ interface ChildData {
 
 interface Props {
   date: string
-  children: ChildData[]
+  initialChildren: ChildData[]
 }
 
-export function CheckInOutPanel({ date, children: initialChildren }: Props) {
+const STATUS_RANK: Record<string, number> = {
+  AUSENTE: 0,
+  PRESENTE: 1,
+  AGUARDANDO_RETIRADA: 2,
+  SAIU_MAIS_CEDO: 3,
+}
+
+export function CheckInOutPanel({ date, initialChildren }: Props) {
   console.log('CheckInOutPanel render:', { date, childrenCount: initialChildren.length, statuses: initialChildren.map(c => c.checkInOut?.status) })
   const router = useRouter()
   const [childrenList, setChildrenList] = useState<ChildData[]>(initialChildren)
@@ -45,9 +52,6 @@ export function CheckInOutPanel({ date, children: initialChildren }: Props) {
   
   // Sincronizar estado local quando os props mudam (ex: após router.refresh)
   // Mantém o estado otimista se o servidor ainda não confirmou a mudança
-  const STATUS_RANK: Record<string, number> = {
-    AUSENTE: 0, PRESENTE: 1, AGUARDANDO_RETIRADA: 2, SAIU_MAIS_CEDO: 3
-  }
   useEffect(() => {
     setChildrenList(prev =>
       initialChildren.map(serverChild => {

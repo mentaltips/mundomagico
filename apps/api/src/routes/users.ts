@@ -111,6 +111,33 @@ router.patch('/:id', requireRole(...MANAGERS), async (req, res) => {
   }
 })
 
+// POST /:id/reset-password - Gera nova senha de acesso (igual ao create-user dos responsáveis)
+router.post('/:id/reset-password', requireRole(...MANAGERS), async (req, res) => {
+  try {
+    const schoolId = req.user?.schoolId
+    const user = await prisma.user.findFirst({
+      where: { id: req.params.id, schoolId },
+      select: { id: true, name: true, email: true, role: true, active: true }
+    })
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' })
+    if (!user.email) return res.status(400).json({ error: 'Usuário não possui e-mail cadastrado' })
+
+    // Gerar senha aleatória de 6 dígitos (mesmo padrão dos responsáveis)
+    const plainPassword = Math.floor(100000 + Math.random() * 900000).toString()
+    const hashed = await bcrypt.hash(plainPassword, 10)
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashed, active: true }
+    })
+
+    res.json({ email: user.email, password: plainPassword, name: user.name })
+  } catch (error) {
+    req.log.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 // DELETE /:id - Desativa usuário (apenas ADMIN e DIRECTOR)
 router.delete('/:id', requireRole(...MANAGERS), async (req, res) => {
   try {

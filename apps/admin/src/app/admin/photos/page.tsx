@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import NextImage from 'next/image'
 import { Camera, Plus, X, Check, Loader2, Trash2, EyeOff, Share2, Users } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -170,17 +171,19 @@ export default function PhotosPage() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {Array.isArray(photos) && photos.map(photo => {
-            const safeUrl = getSafeUrl(photo.url)
+            const safeUrl = getSafeUrl(photo.url) || 'https://placehold.co/400x400?text=Foto'
             return (
             <div
               key={photo.id}
               className="relative group cursor-pointer rounded-2xl overflow-hidden aspect-square bg-accent"
               onClick={() => setPreview(photo)}
             >
-              <img
+              <NextImage
                 src={safeUrl}
                 alt={photo.caption ?? 'Foto'}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                fill
+                sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, 50vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
                 onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=Foto' }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
@@ -219,7 +222,7 @@ export default function PhotosPage() {
               </div>
             ) : (
               <div className="relative rounded-2xl overflow-hidden aspect-video bg-accent group">
-                <img src={getSafeUrl(form.url)} alt="Preview" className="w-full h-full object-cover" />
+                <NextImage src={getSafeUrl(form.url) || 'https://placehold.co/800x450?text=Foto'} alt="Preview" fill sizes="640px" className="object-cover" />
                 <button type="button" onClick={() => setForm(p => ({ ...p, url: '' }))} className="absolute top-3 right-3 p-2 bg-rose-500 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
                   <Trash2 size={14} />
                 </button>
@@ -282,9 +285,11 @@ export default function PhotosPage() {
           <div className="relative z-10 max-w-3xl w-full animate-in zoom-in-95 duration-200">
             <div className="bg-card rounded-[2rem] overflow-hidden border border-border shadow-2xl">
               <div className="relative bg-black flex items-center justify-center" style={{ maxHeight: '60vh' }}>
-                <img
-                  src={getSafeUrl(preview.url)}
+                <NextImage
+                  src={getSafeUrl(preview.url) || 'https://placehold.co/1200x800?text=Erro'}
                   alt={preview.caption ?? 'Foto'}
+                  width={1200}
+                  height={800}
                   className="max-w-full max-h-[60vh] object-contain"
                   onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/1200x800?text=Erro' }}
                 />

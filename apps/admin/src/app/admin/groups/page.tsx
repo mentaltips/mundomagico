@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
+import NextImage from 'next/image'
 import {
   Plus, Users, Search, MoreVertical,
   Trash2, Edit2, Clock,
@@ -21,13 +22,15 @@ function MiniAvatar({ name, photoUrl }: { name: string; photoUrl?: string | null
   const safePhotoUrl = getSafeUrl(photoUrl)
 
   return (
-    <div className="w-7 h-7 rounded-full border-2 border-card overflow-hidden shrink-0 flex items-center justify-center">
+    <div className="relative w-7 h-7 rounded-full border-2 border-card overflow-hidden shrink-0 flex items-center justify-center">
       {safePhotoUrl
         ? (
-          <img 
+          <NextImage
             src={safePhotoUrl} 
             alt={name} 
-            className="w-full h-full object-cover" 
+            fill
+            sizes="28px"
+            className="object-cover" 
             onError={(e) => {
               (e.target as any).style.display = 'none'
               const parent = (e.target as any).parentElement

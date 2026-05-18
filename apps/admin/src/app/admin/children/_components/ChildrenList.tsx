@@ -338,7 +338,7 @@ export function ChildrenList({ initialChildren, initialGroups }: ChildrenListPro
                           <div>
                             <p className="font-black text-foreground text-sm">{child.fullName}</p>
                             {child.nickname && (
-                              <p className="text-[10px] text-muted-foreground font-medium mt-0.5 uppercase tracking-wider italic">"{child.nickname}"</p>
+                              <p className="text-[10px] text-muted-foreground font-medium mt-0.5 uppercase tracking-wider italic">&quot;{child.nickname}&quot;</p>
                             )}
                           </div>
                         </div>

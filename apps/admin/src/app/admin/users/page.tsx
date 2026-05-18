@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash, Edit, UserCircle, Phone, Mail } from 'lucide-react'
+import { Plus, Trash, Edit, UserCircle, Phone, Mail, Key, Copy, Loader2, RefreshCw } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 type User = {
   id: string
@@ -12,12 +13,26 @@ type User = {
   active: boolean
 }
 
+type Credentials = {
+  name: string
+  email: string
+  password: string
+}
+
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Administrador',
-  DIRECTOR: 'Diretor',
-  TEACHER: 'Professor',
-  CAREGIVER: 'Cuidador',
+  DIRECTOR: 'Diretor(a)',
+  TEACHER: 'Professor(a)',
+  CAREGIVER: 'Cuidador(a)',
   STAFF: 'Equipe/Staff'
+}
+
+const ROLE_COLORS: Record<string, string> = {
+  ADMIN: 'bg-red-50 text-red-700',
+  DIRECTOR: 'bg-violet-50 text-violet-700',
+  TEACHER: 'bg-blue-50 text-blue-700',
+  CAREGIVER: 'bg-emerald-50 text-emerald-700',
+  STAFF: 'bg-gray-100 text-gray-600'
 }
 
 export default function UsersPage() {
@@ -25,13 +40,16 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
-  
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    email: '', 
-    phone: '', 
-    role: 'STAFF',
-    password: '',
+  const [saving, setSaving] = useState(false)
+  const [generatingFor, setGeneratingFor] = useState<string | null>(null)
+  const [credentials, setCredentials] = useState<Credentials | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'TEACHER',
     active: true
   })
 
@@ -57,25 +75,31 @@ export default function UsersPage() {
   const handleOpenModal = (user?: User) => {
     if (user) {
       setEditingUser(user)
-      setFormData({ 
-        name: user.name, 
+      setFormData({
+        name: user.name,
         email: user.email,
         phone: user.phone || '',
         role: user.role,
-        password: '',
         active: user.active
       })
     } else {
       setEditingUser(null)
-      setFormData({ name: '', email: '', phone: '', role: 'STAFF', password: '', active: true })
+      setFormData({ name: '', email: '', phone: '', role: 'TEACHER', active: true })
     }
     setShowModal(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const payload: any = {
+
+    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      toast.error('Informe um e-mail válido.')
+      return
+    }
+
+    setSaving(true)
+
+    const payload: Record<string, unknown> = {
       name: formData.name,
       phone: formData.phone || undefined,
       role: formData.role,
@@ -84,13 +108,18 @@ export default function UsersPage() {
 
     if (!editingUser) {
       payload.email = formData.email
-      payload.password = formData.password || undefined
+      // Sem senha no payload — o admin usará "Gerar Acesso" após cadastro
     }
 
     try {
       const url = editingUser ? `/api/users/${editingUser.id}` : '/api/users'
-      const method = editingUser ? 'PUT' : 'POST'
-      
+      const method = editingUser ? 'PATCH' : 'POST'
+
+      if (!editingUser) {
+        // No cadastro novo, gera uma senha temporária aleatória que será trocada via "Gerar Acesso"
+        payload.password = Math.floor(100000 + Math.random() * 900000).toString()
+      }
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -98,32 +127,79 @@ export default function UsersPage() {
       })
 
       if (res.ok) {
+        toast.success(editingUser ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado! Use "Gerar Acesso" para enviar as credenciais.')
         setShowModal(false)
         fetchUsers()
       } else {
         const error = await res.json()
-        alert(error.error || 'Erro ao salvar usuário.')
+        toast.error(error.error || 'Erro ao salvar usuário.')
       }
     } catch (err) {
       console.error(err)
-      alert('Erro inesperado.')
+      toast.error('Erro inesperado. Tente novamente.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleGenerateAccess = async (user: User) => {
+    if (!user.email) {
+      toast.error('Este usuário não possui e-mail cadastrado.')
+      return
+    }
+
+    const isReset = user.active
+    const message = isReset
+      ? `Deseja resetar a senha de ${user.name}? Uma nova senha de 6 dígitos será gerada e a atual deixará de funcionar.`
+      : `Deseja gerar acesso para ${user.name}?`
+
+    if (!confirm(message)) return
+
+    setGeneratingFor(user.id)
+    try {
+      const res = await fetch(`/api/users/${user.id}/reset-password`, { method: 'POST' })
+      const data = await res.json()
+
+      if (res.ok) {
+        setCredentials({ name: data.name, email: data.email, password: data.password })
+        setCopied(false)
+        toast.success('Acesso gerado com sucesso!')
+        fetchUsers()
+      } else {
+        toast.error(data.error || 'Erro ao gerar acesso.')
+      }
+    } catch (err) {
+      toast.error('Erro de conexão.')
+    } finally {
+      setGeneratingFor(null)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Deseja realmente excluir este usuário?')) return
+    if (!confirm('Deseja realmente desativar este usuário?')) return
 
     try {
       const res = await fetch(`/api/users/${id}`, { method: 'DELETE' })
       if (res.ok) {
+        toast.success('Usuário desativado.')
         fetchUsers()
       } else {
         const error = await res.json()
-        alert(error.error || 'Erro ao excluir.')
+        toast.error(error.error || 'Erro ao desativar.')
       }
     } catch (err) {
       console.error(err)
     }
+  }
+
+  const copyCredentials = () => {
+    if (!credentials) return
+    const roleName = ROLE_LABELS[users.find(u => u.email === credentials.email)?.role || ''] || 'Membro da equipe'
+    const text = `Olá, ${credentials.name.split(' ')[0]}! 👋\n\nSeu acesso ao sistema foi criado.\n\n🔑 Login: ${credentials.email}\n🔒 Senha provisória: ${credentials.password}\n\nAo entrar pela primeira vez, você poderá alterar sua senha nas configurações do perfil.`
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    toast.success('Credenciais copiadas para a área de transferência!')
+    setTimeout(() => setCopied(false), 3000)
   }
 
   return (
@@ -131,9 +207,9 @@ export default function UsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Equipe</h1>
-          <p className="text-gray-500">Gerencie professores, direção e funcionários.</p>
+          <p className="text-gray-500">Gerencie professoras, monitoras, direção e funcionários.</p>
         </div>
-        <button 
+        <button
           onClick={() => handleOpenModal()}
           className="flex items-center gap-2 rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
         >
@@ -182,7 +258,7 @@ export default function UsersPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${ROLE_COLORS[u.role] || 'bg-gray-100 text-gray-600'}`}>
                       {ROLE_LABELS[u.role] || u.role}
                     </span>
                   </td>
@@ -192,17 +268,30 @@ export default function UsersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button 
+                    <button
+                      onClick={() => handleGenerateAccess(u)}
+                      disabled={generatingFor === u.id}
+                      className="text-gray-400 hover:text-emerald-600 mr-3 disabled:opacity-40"
+                      title={u.active ? 'Resetar senha de acesso' : 'Gerar acesso ao sistema'}
+                    >
+                      {generatingFor === u.id
+                        ? <Loader2 className="h-4 w-4 inline animate-spin" />
+                        : u.active
+                          ? <RefreshCw className="h-4 w-4 inline" />
+                          : <Key className="h-4 w-4 inline" />
+                      }
+                    </button>
+                    <button
                       onClick={() => handleOpenModal(u)}
                       className="text-gray-400 hover:text-violet-600 mr-3"
                       title="Editar"
                     >
                       <Edit className="h-4 w-4 inline" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleDelete(u.id)}
                       className="text-gray-400 hover:text-red-600"
-                      title="Excluir"
+                      title="Desativar"
                     >
                       <Trash className="h-4 w-4 inline" />
                     </button>
@@ -214,71 +303,79 @@ export default function UsersPage() {
         )}
       </div>
 
+      {/* Modal de cadastro / edição */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <h2 className="text-xl font-bold mb-1">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h2>
+            {!editingUser && (
+              <p className="text-sm text-gray-500 mb-4">Após cadastrar, use o botão <strong>Gerar Acesso</strong> na tabela para enviar as credenciais de login.</p>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
-                <input 
-                  type="text" 
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
+                <input
+                  type="text"
                   required
                   value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  placeholder="Ex: Ana Paula Santos"
                 />
               </div>
-              
-              {!editingUser && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">E-mail (Login)</label>
-                  <input 
-                    type="email" 
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  />
-                </div>
-              )}
-              
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">E-mail (Login) *</label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  disabled={!!editingUser}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 disabled:bg-gray-50 disabled:text-gray-400"
+                  placeholder="email@escola.com.br"
+                />
+                {editingUser && (
+                  <p className="mt-1 text-xs text-gray-400">O e-mail não pode ser alterado. Use &quot;Gerar Acesso&quot; para resetar a senha.</p>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Telefone / WhatsApp</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   placeholder="(11) 99999-9999"
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cargo / Função</label>
-                  <select 
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Cargo / Função *</label>
+                  <select
                     value={formData.role}
-                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   >
                     <option value="TEACHER">Professor(a)</option>
-                    <option value="CAREGIVER">Cuidador(a)</option>
+                    <option value="CAREGIVER">Cuidador(a) / Monitora</option>
                     <option value="STAFF">Equipe Geral</option>
                     <option value="DIRECTOR">Diretor(a)</option>
                     <option value="ADMIN">Administrador</option>
                   </select>
                 </div>
-                
+
                 {editingUser && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <div className="flex items-center h-[42px]">
                       <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={formData.active}
-                          onChange={(e) => setFormData({...formData, active: e.target.checked})}
+                          onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
                           className="rounded text-violet-600 focus:ring-violet-500"
                         />
                         <span className="text-sm text-gray-700">Acesso Ativo</span>
@@ -288,35 +385,72 @@ export default function UsersPage() {
                 )}
               </div>
 
-              {!editingUser && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Senha (Padrão: 123456)</label>
-                  <input 
-                    type="password" 
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                    placeholder="Deixe em branco para usar 123456"
-                  />
-                </div>
-              )}
-
               <div className="mt-6 flex justify-end gap-3 pt-4 border-t">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowModal(false)}
                   className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
-                  className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex items-center gap-2 rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-60"
                 >
+                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   Salvar
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de credenciais geradas */}
+      {credentials && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                <Key className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Acesso gerado!</h2>
+                <p className="text-sm text-gray-500">Compartilhe as credenciais abaixo com {credentials.name.split(' ')[0]}.</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-200 mb-4">
+              <div>
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Login (E-mail)</p>
+                <p className="text-sm font-bold text-gray-900 mt-0.5">{credentials.email}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Senha provisória</p>
+                <p className="text-2xl font-black text-violet-600 tracking-[0.3em] mt-0.5">{credentials.password}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-400 mb-4">
+              Esta senha é temporária. A professora/monitora poderá alterá-la nas configurações do perfil após o primeiro acesso.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={copyCredentials}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all ${copied ? 'bg-emerald-600 text-white' : 'bg-gray-900 text-white hover:bg-gray-700'}`}
+              >
+                <Copy className="h-4 w-4" />
+                {copied ? 'Copiado!' : 'Copiar mensagem de acesso'}
+              </button>
+              <button
+                onClick={() => setCredentials(null)}
+                className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       )}

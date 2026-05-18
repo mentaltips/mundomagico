@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Calendar, ChevronLeft, ChevronRight, Download,
   Users, CheckCircle2, Clock, Printer, BarChart2
@@ -57,9 +57,7 @@ export default function RelatorioMensalPage() {
     fetch('/api/groups?active=true').then(r => r.json()).then(setGroups).catch(() => {})
   }, [])
 
-  useEffect(() => { fetchReport() }, [year, month, groupId])
-
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({ year: String(year), month: String(month) })
@@ -72,7 +70,9 @@ export default function RelatorioMensalPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [groupId, month, year])
+
+  useEffect(() => { fetchReport() }, [fetchReport])
 
   const prevMonth = () => { if (month === 1) { setMonth(12); setYear(y => y-1) } else setMonth(m => m-1) }
   const nextMonth = () => { if (month === 12) { setMonth(1); setYear(y => y+1) } else setMonth(m => m+1) }

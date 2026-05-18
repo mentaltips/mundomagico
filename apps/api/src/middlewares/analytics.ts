@@ -18,7 +18,9 @@ export const analyticsMiddleware = async (req: Request, res: Response, next: Nex
           try {
             const decoded = jwt.decode(token) as any
             schoolId = decoded?.schoolId
-          } catch (e) {}
+          } catch {
+            // Ignore malformed analytics tokens; auth middleware handles protected routes.
+          }
         }
       }
 
@@ -31,7 +33,9 @@ export const analyticsMiddleware = async (req: Request, res: Response, next: Nex
           schoolId: schoolId || null
         }
       }).catch((err: Error) => console.error('Error tracking visit:', err))
-    } catch (e) {}
+    } catch (error) {
+      console.error('Error scheduling analytics tracking:', error)
+    }
   }
   
   next()

@@ -68,6 +68,8 @@ model School {
   calendarEvents  CalendarEvent[]
   invoices        Invoice[]
   guardians       Guardian[]
+  staff           Staff[]
+  staffPayments   StaffPayment[]
 }
 
 // ─────────────────────────────────────────
@@ -80,7 +82,7 @@ model User {
   name      String
   email     String   @unique
   password  String
-  // ADMIN | DIRECTOR | TEACHER | CAREGIVER | GUARDIAN | STAFF
+  // ADMIN | SCHOOL_ADMIN | DIRECTOR | COORDINATOR | TEACHER | MONITOR | CAREGIVER | GUARDIAN | FINANCE | STAFF
   role      String   @default("STAFF")
   phone     String?
   avatarUrl String?
@@ -93,6 +95,7 @@ model User {
   checkIns     ChildCheckInOut[]          @relation("CheckedBy")
   medAdmins    MedicationAdministration[] @relation("AdminBy")
   dailyReports ChildDailyReport[]         @relation("ReportCreatedBy")
+  staff        Staff?
 }
 
 // ─────────────────────────────────────────
@@ -113,9 +116,10 @@ model Group {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  school   School    @relation(fields: [schoolId], references: [id])
-  children Child[]
-  students Student[]
+  school           School                 @relation(fields: [schoolId], references: [id])
+  children         Child[]
+  students         Student[]
+  staffAssignments StaffGroupAssignment[]
 }
 
 // ─────────────────────────────────────────
@@ -711,4 +715,176 @@ model PrivacyConsent {
   ip        String?
   version   String   @default("1.0")
   acceptedAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────
+// EQUIPE PEDAGÓGICA
+// Professoras, Monitoras, Cuidadoras, Coordenadoras
+// ─────────────────────────────────────────
+
+model Staff {
+  id        String   @id @default(cuid())
+  schoolId  String
+  userId    String?  @unique  // vínculo com User para login no portal
+
+  // Dados pessoais
+  name      String
+  email     String?
+  phone     String?
+  whatsapp  String?
+  cpf       String?
+  birthDate DateTime?
+  photoUrl  String?
+
+  // Perfil profissional
+  // TEACHER | MONITOR | CAREGIVER | COORDINATOR | ASSISTANT
+  roleType      String   @default("TEACHER")
+  // ACTIVE | INACTIVE | SUSPENDED
+  status        String   @default("ACTIVE")
+  admissionDate DateTime?
+  notes         String?
+
+  // Dados financeiros (visível apenas para ADMIN/SCHOOL_ADMIN/FINANCE)
+  baseSalary     Float?
+  paymentDay     Int?      // dia do mês para pagamento (ex: 5)
+  pixKey         String?
+  bankName       String?
+  bankAgency     String?
+  bankAccount    String?
+  financialNotes String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  school            School                 @relation(fields: [schoolId], references: [id])
+  user              User?                  @relation(fields: [userId], references: [id])
+  groupAssignments  StaffGroupAssignment[]
+  payments          StaffPayment[]
+  paymentBonuses    StaffPaymentBonus[]
+  paymentDeductions StaffPaymentDeduction[]
+}
+
+// ─────────────────────────────────────────
+// VÍNCULO PROFISSIONAL ↔ TURMA/GRUPO
+// ─────────────────────────────────────────
+
+model StaffGroupAssignment {
+  id       String   @id @default(cuid())
+  schoolId String
+  staffId  String
+  groupId  String
+
+  // MAIN_TEACHER | ASSISTANT | MONITOR | CAREGIVER
+  assignmentType String   @default("MAIN_TEACHER")
+  startDate      DateTime @default(now())
+  endDate        DateTime?
+  // ACTIVE | INACTIVE
+  status         String   @default("ACTIVE")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, groupId])
+}
+
+// ─────────────────────────────────────────
+// PAGAMENTO MENSAL DA EQUIPE
+// ─────────────────────────────────────────
+
+model StaffPayment {
+  id              String    @id @default(cuid())
+  schoolId        String
+  staffId         String
+  referenceMonth  Int       // 1–12
+  referenceYear   Int       // ex: 2025
+  baseSalary      Float     @default(0)
+  totalBonuses    Float     @default(0)
+  totalDeductions Float     @default(0)
+  finalAmount     Float     @default(0)
+
+  // DRAFT | PENDING | PAID | CANCELED
+  status        String    @default("DRAFT")
+  paymentDate   DateTime?
+  // PIX | CASH | BANK_TRANSFER | OTHER
+  paymentMethod String?
+  notes         String?
+  createdBy     String    // userId de quem gerou
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school     School                 @relation(fields: [schoolId], references: [id])
+  staff      Staff                  @relation(fields: [staffId], references: [id])
+  bonuses    StaffPaymentBonus[]
+  deductions StaffPaymentDeduction[]
+
+  @@unique([staffId, referenceMonth, referenceYear])
+}
+
+// ─────────────────────────────────────────
+// BÔNUS DO PAGAMENTO
+// ─────────────────────────────────────────
+
+model StaffPaymentBonus {
+  id             String  @id @default(cuid())
+  schoolId       String
+  staffPaymentId String
+  staffId        String
+  title          String
+  description    String?
+  amount         Float
+
+  // BONUS | EXTRA_HOURS | PERFORMANCE | EVENT | REPLACEMENT | MANUAL | OTHER
+  type      String   @default("MANUAL")
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staffPayment StaffPayment @relation(fields: [staffPaymentId], references: [id], onDelete: Cascade)
+  staff        Staff        @relation(fields: [staffId], references: [id])
+}
+
+// ─────────────────────────────────────────
+// DESCONTOS DO PAGAMENTO
+// ─────────────────────────────────────────
+
+model StaffPaymentDeduction {
+  id             String  @id @default(cuid())
+  schoolId       String
+  staffPaymentId String
+  staffId        String
+  title          String
+  description    String?
+  amount         Float
+
+  // ABSENCE | ADVANCE | DISCOUNT | OTHER
+  type      String   @default("DISCOUNT")
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staffPayment StaffPayment @relation(fields: [staffPaymentId], references: [id], onDelete: Cascade)
+  staff        Staff        @relation(fields: [staffId], references: [id])
+}
+
+// -----------------------------------------
+// LOG DE AUDITORIA FINANCEIRA
+// -----------------------------------------
+
+model StaffAuditLog {
+  id          String   @id @default(cuid())
+  schoolId    String
+  staffId     String?
+  paymentId   String?
+  action      String
+  entityType  String
+  entityId    String
+  before      String?
+  after       String?
+  performedBy String
+  performedAt DateTime @default(now())
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import NextImage from 'next/image'
 import { useParams } from 'next/navigation'
 import { Baby, ChevronRight, CheckCircle2, Circle } from 'lucide-react'
 import Link from 'next/link'
@@ -58,9 +59,9 @@ export default function TeacherClassPage() {
             className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-violet-200"
           >
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 overflow-hidden">
+              <div className="relative h-12 w-12 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 overflow-hidden">
                 {child.photoUrl ? (
-                  <img src={child.photoUrl} alt={child.fullName} className="h-full w-full object-cover" />
+                  <NextImage src={child.photoUrl} alt={child.fullName} fill sizes="48px" className="object-cover" />
                 ) : (
                   <Baby className="h-6 w-6" />
                 )}

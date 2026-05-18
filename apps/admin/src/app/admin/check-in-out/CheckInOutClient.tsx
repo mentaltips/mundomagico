@@ -125,7 +125,7 @@ export default async function CheckInOutClient({
         <CheckInOutPanel
           key={`${today}-${childrenData.length}-${childrenData.map((c: any) => c.checkInOut?.status).join(',')}`}
           date={today}
-          children={childrenData}
+          initialChildren={childrenData}
         />
       </div>
     </div>

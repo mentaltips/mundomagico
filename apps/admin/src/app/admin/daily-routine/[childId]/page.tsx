@@ -3,6 +3,7 @@ import { DailyRoutineForm } from '../_components/DailyRoutineForm'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import Link from 'next/link'
+import NextImage from 'next/image'
 import { ArrowLeft } from 'lucide-react'
 import { apiGet } from '@/lib/server-api'
 
@@ -41,7 +42,9 @@ export default async function ChildDailyRoutinePage({
       {/* Header da criança */}
       <div className="card p-5 flex items-center gap-4">
         {child.photoUrl ? (
-          <img src={child.photoUrl} className="w-16 h-16 rounded-full object-cover" alt={child.fullName} />
+          <span className="relative block w-16 h-16 rounded-full overflow-hidden">
+            <NextImage src={child.photoUrl} className="object-cover" alt={child.fullName} fill sizes="64px" />
+          </span>
         ) : (
           <div className="w-16 h-16 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 text-2xl font-bold">
             {child.fullName.charAt(0)}

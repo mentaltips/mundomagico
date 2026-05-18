@@ -8,6 +8,7 @@ import path from 'path'
 import './workers/whatsapp.worker'
 import { whatsappQueue, isRedisHealthy } from './services/queue'
 import { requireApiAuth } from './middleware/auth'
+import { requireRole } from './middleware/requireRole'
 import { analyticsMiddleware } from './middlewares/analytics'
 
 // Existing routes
@@ -40,6 +41,7 @@ import billingRoutes from './routes/billing'
 import reportsRoutes from './routes/reports'
 import uploadRoutes from './routes/upload'
 import analyticsRoutes from './routes/analytics'
+import staffRoutes from './routes/staff'
 
 const app = express()
 
@@ -139,12 +141,13 @@ app.use('/api/settings', requireApiAuth, settingsRoutes)
 app.use('/api/users', requireApiAuth, usersRoutes)
 app.use('/api/notifications', requireApiAuth, notificationsRoutes)
 app.use('/api/parent', requireApiAuth, parentRoutes)
-app.use('/api/teacher', requireApiAuth, teacherRoutes)
+app.use('/api/teacher', requireApiAuth, requireRole('ADMIN', 'DIRECTOR', 'TEACHER', 'COORDINATOR', 'MONITOR', 'CAREGIVER'), teacherRoutes)
 app.use('/api/daily-reports', requireApiAuth, dailyReportsRoutes)
 app.use('/api/documents', requireApiAuth, documentsRoutes)
 app.use('/api/billing', requireApiAuth, billingRoutes)
 app.use('/api/reports', requireApiAuth, reportsRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api/staff', requireApiAuth, requireRole('ADMIN', 'DIRECTOR'), staffRoutes)
 
 const PORT = process.env.PORT || 3333
 app.listen(PORT, () => {

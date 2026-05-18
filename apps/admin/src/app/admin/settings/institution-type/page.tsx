@@ -107,7 +107,7 @@ export default function InstitutionTypeSettingsPage() {
         <div className="space-y-1">
           <p className="font-black text-primary text-sm uppercase tracking-widest">Informação Importante</p>
           <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-            Ao mudar o tipo, o sistema irá adaptar automaticamente os termos usados (ex: "Aluno" → "Criança") 
+            Ao mudar o tipo, o sistema irá adaptar automaticamente os termos usados (ex: &quot;Aluno&quot; → &quot;Criança&quot;) 
             e ativar módulos correspondentes. Seus dados existentes não serão afetados.
           </p>
         </div>

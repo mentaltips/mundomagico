@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import NextImage from 'next/image'
 import { Settings as SettingsIcon, Save, Loader2, Building2, MessageCircle, Mail, CreditCard, Download, ArrowRight, AlertCircle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -221,9 +222,12 @@ export default function SettingsPage() {
                   <InputField fieldKey="logoUrl" label="URL do Logotipo" type="url" placeholder="https://..." />
                   {form.logoUrl && (
                     <div className="mt-4 p-4 rounded-2xl bg-accent/20 border border-border inline-block">
-                      <img
+                      <NextImage
                         src={form.logoUrl}
                         alt="Logo preview"
+                        width={160}
+                        height={48}
+                        unoptimized
                         className="h-12 w-auto object-contain"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />

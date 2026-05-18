@@ -55,7 +55,7 @@ export default function PublicPrivacyPolicyPage() {
             <h3 className="text-2xl font-black text-zinc-900 dark:text-white">Compromisso Mundo Mágico</h3>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
               A segurança das crianças é a nossa prioridade número um. Isso se estende ao mundo digital. 
-              Nossa plataforma foi construída com "Privacy by Design", o que significa que a proteção 
+              Nossa plataforma foi construída com &quot;Privacy by Design&quot;, o que significa que a proteção 
               da privacidade está integrada em cada linha de código que escrevemos.
             </p>
           </div>

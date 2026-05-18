@@ -5,6 +5,7 @@ import { X, Loader2, AlertCircle, CheckCircle2, Info, TrendingUp, TrendingDown, 
 import { ReactNode, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
+import NextImage from 'next/image'
 import { getSafeUrl } from '@/lib/utils'
 
 
@@ -273,16 +274,18 @@ const AVATAR_SIZES = {
   xl: 'w-24 h-24 text-3xl'
 }
 export function Avatar({ name = '?', photoUrl, size = 'md', color = 'bg-primary/10 text-primary' }: AvatarProps) {
-  const cls = `${AVATAR_SIZES[size]} rounded-2xl overflow-hidden flex items-center justify-center font-black shrink-0 ${color} border border-border/50 shadow-sm`
+  const cls = `${AVATAR_SIZES[size]} relative rounded-2xl overflow-hidden flex items-center justify-center font-black shrink-0 ${color} border border-border/50 shadow-sm`
   const safeUrl = getSafeUrl(photoUrl)
   
   if (safeUrl) {
     return (
       <div className={cls}>
-        <img 
+        <NextImage
           src={safeUrl} 
           alt={name} 
-          className="w-full h-full object-cover" 
+          fill
+          sizes="96px"
+          className="object-cover" 
           onError={(e) => {
             // Se falhar (404), esconde a imagem e mostra a inicial
             (e.target as any).style.display = 'none'

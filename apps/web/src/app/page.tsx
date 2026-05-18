@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import {
   PublicHeader,
@@ -728,8 +729,10 @@ export default function InstitutionalHomePage() {
                 <div className="absolute -inset-8 bg-gradient-to-br from-lime-100/60 to-rose-100/40 rounded-[4rem] blur-2xl" />
 
                 <div className="relative z-10">
-                  <img
+                  <Image
                     src="/images/bannersobrenos.png"
+                    width={900}
+                    height={675}
                     className="w-full aspect-[4/3] md:aspect-auto md:h-[580px] object-cover rounded-[3rem] shadow-2xl border-[6px] border-white"
                     style={{ objectPosition: '80% center' }}
                     alt="Sobre a Mundo Mágico"
@@ -1067,9 +1070,11 @@ export default function InstitutionalHomePage() {
 
                 {/* LEFT — Photo full height */}
                 <div className="relative min-h-[380px] md:min-h-[560px]">
-                  <img
+                  <Image
                     src="/images/betta.png"
-                    className="absolute inset-0 w-full h-full object-cover object-center"
+                    fill
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    className="object-cover object-center"
                     alt="Diretora Betta"
                   />
                   {/* Gradient overlay bottom */}
@@ -1132,7 +1137,7 @@ export default function InstitutionalHomePage() {
 
                     {/* Quote */}
                     <div className="relative bg-white/10 border border-white/20 rounded-2xl p-5 mb-8">
-                      <div className="text-lime-300 text-4xl font-serif leading-none mb-1 opacity-60">"</div>
+                      <div className="text-lime-300 text-4xl font-serif leading-none mb-1 opacity-60">&quot;</div>
                       <p className="text-white/90 text-sm leading-relaxed italic font-medium">
                         Nossa equipe atua com carinho, responsabilidade e dedicação no cuidado diário com as crianças.
                       </p>
@@ -1181,11 +1186,13 @@ export default function InstitutionalHomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="col-span-2 row-span-2 overflow-hidden rounded-[2.5rem] group shadow-xl"
+                className="relative col-span-2 row-span-2 overflow-hidden rounded-[2.5rem] group shadow-xl"
               >
-                <img
+                <Image
                   src="/images/galeria/1.webp"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700"
                   alt="Galeria 1"
                 />
               </motion.div>
@@ -1194,11 +1201,13 @@ export default function InstitutionalHomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="overflow-hidden rounded-[2.5rem] group shadow-xl h-[250px] md:h-full"
+                className="relative overflow-hidden rounded-[2.5rem] group shadow-xl h-[250px] md:h-full"
               >
-                <img
+                <Image
                   src="/images/galeria/2.webp"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  fill
+                  sizes="(min-width: 768px) 25vw, 100vw"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700"
                   alt="Galeria 2"
                 />
               </motion.div>
@@ -1207,11 +1216,13 @@ export default function InstitutionalHomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="overflow-hidden rounded-[2.5rem] group shadow-xl h-[250px] md:h-full"
+                className="relative overflow-hidden rounded-[2.5rem] group shadow-xl h-[250px] md:h-full"
               >
-                <img
+                <Image
                   src="/images/galeria/3.webp"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  fill
+                  sizes="(min-width: 768px) 25vw, 100vw"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700"
                   alt="Galeria 3"
                 />
               </motion.div>
@@ -1220,11 +1231,13 @@ export default function InstitutionalHomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="col-span-2 overflow-hidden rounded-[2.5rem] group shadow-xl h-[250px]"
+                className="relative col-span-2 overflow-hidden rounded-[2.5rem] group shadow-xl h-[250px]"
               >
-                <img
+                <Image
                   src="/images/galeria/4.webp"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700"
                   alt="Galeria 4"
                 />
               </motion.div>
@@ -1233,11 +1246,13 @@ export default function InstitutionalHomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="overflow-hidden rounded-[2.5rem] group shadow-xl h-[250px]"
+                className="relative overflow-hidden rounded-[2.5rem] group shadow-xl h-[250px]"
               >
-                <img
+                <Image
                   src="/images/galeria/5.webp"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  fill
+                  sizes="(min-width: 768px) 25vw, 100vw"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700"
                   alt="Galeria 5"
                 />
               </motion.div>
@@ -1246,11 +1261,13 @@ export default function InstitutionalHomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
-                className="overflow-hidden rounded-[2.5rem] group shadow-xl h-[250px]"
+                className="relative overflow-hidden rounded-[2.5rem] group shadow-xl h-[250px]"
               >
-                <img
+                <Image
                   src="/images/galeria/6.webp"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  fill
+                  sizes="(min-width: 768px) 25vw, 100vw"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700"
                   alt="Galeria 6"
                 />
               </motion.div>

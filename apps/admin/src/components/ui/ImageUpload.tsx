@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { Camera, Loader2, Upload } from 'lucide-react'
+import NextImage from 'next/image'
 import toast from 'react-hot-toast'
 import { useSession } from 'next-auth/react'
 
@@ -86,7 +87,7 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
           <Loader2 size={24} className="animate-spin text-primary" />
         ) : preview ? (
           <>
-            <img src={preview} alt="preview" className="w-full h-full object-cover" />
+            <NextImage src={preview} alt="preview" fill sizes="192px" className="object-cover" />
             {/* Hover: câmera + remover */}
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
               <Camera size={20} className="text-white" />

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import NextImage from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { Baby, ArrowLeft, LogIn, LogOut, CheckCircle2 } from 'lucide-react'
 
@@ -77,9 +78,9 @@ export default function AttendanceListPage() {
             className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
           >
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+              <div className="relative h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                 {child.photoUrl ? (
-                  <img src={child.photoUrl} alt={child.fullName} className="h-full w-full object-cover" />
+                  <NextImage src={child.photoUrl} alt={child.fullName} fill sizes="40px" className="object-cover" />
                 ) : (
                   <Baby className="h-5 w-5 text-gray-400" />
                 )}

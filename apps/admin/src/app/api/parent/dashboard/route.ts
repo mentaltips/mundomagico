@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import { proxyRequest } from '@/lib/api-proxy'
 
+export const dynamic = 'force-dynamic'
+
 export const GET = (req: NextRequest) => proxyRequest(req, '/api/parent/dashboard')
 export const POST = (req: NextRequest) => proxyRequest(req, '/api/parent/dashboard')
 export const PATCH = (req: NextRequest) => proxyRequest(req, '/api/parent/dashboard')

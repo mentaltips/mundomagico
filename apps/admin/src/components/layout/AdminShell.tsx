@@ -11,7 +11,7 @@ import {
   HeartPulse, Calendar, FileText, ShieldAlert,
   SearchIcon, Command, Camera, ClipboardList, Package, ShieldCheck,
   AlertCircle, Megaphone, BarChart2, CheckCheck, Sparkles, Heart,
-  LayoutGrid, LogIn, Image, BarChart, MousePointer2, MessageCircle
+  LayoutGrid, LogIn, Image as ImageIcon, BarChart, MousePointer2, MessageCircle, UserCog
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -20,10 +20,11 @@ import { OfflineIndicator } from '@/components/OfflineIndicator'
 
 const menuItems = [
   // ── Principal ──────────────────────────────────────────────
-  { icon: <LayoutDashboard size={20} />, label: 'Dashboard',        href: '/admin/dashboard',     group: 'principal' },
-  { icon: <GraduationCap size={20} />,  label: 'Crianças',          href: '/admin/children',      group: 'principal' },
-  { icon: <Users size={20} />,          label: 'Responsáveis',      href: '/admin/guardians',     group: 'principal' },
-  { icon: <LayoutGrid size={20} />,     label: 'Turmas',            href: '/admin/groups',        group: 'principal' },
+  { icon: <LayoutDashboard size={20} />, label: 'Dashboard',              href: '/admin/dashboard',     group: 'principal' },
+  { icon: <GraduationCap size={20} />,  label: 'Crianças',              href: '/admin/children',      group: 'principal' },
+  { icon: <Users size={20} />,          label: 'Responsáveis',          href: '/admin/guardians',     group: 'principal' },
+  { icon: <UserCog size={20} />,        label: 'Professoras / Monitoras', href: '/admin/users',        group: 'principal' },
+  { icon: <LayoutGrid size={20} />,     label: 'Turmas',                href: '/admin/groups',        group: 'principal' },
   // ── Operacional ────────────────────────────────────────────
   { icon: <Megaphone size={20} />,      label: 'Comunicados',       href: '/admin/announcements', group: 'operacional' },
   { icon: <MessageCircle size={20} />,    label: 'WhatsApp',          href: '/admin/whatsapp',      group: 'operacional' },
@@ -31,8 +32,9 @@ const menuItems = [
   { icon: <LogIn size={20} />,          label: 'Entrada / Saída',   href: '/admin/check-in-out',  group: 'operacional' },
   { icon: <HeartPulse size={20} />,     label: 'Saúde',             href: '/admin/health',        group: 'operacional' },
   { icon: <Package size={20} />,        label: 'Itens das Crianças',href: '/admin/child-items',   group: 'operacional' },
-  { icon: <Image size={20} />,          label: 'Fotos do Dia',      href: '/admin/photos',        group: 'operacional' },
+  { icon: <ImageIcon size={20} />,      label: 'Fotos do Dia',      href: '/admin/photos',        group: 'operacional' },
   { icon: <CreditCard size={20} />,     label: 'Financeiro',        href: '/admin/finance',       group: 'operacional' },
+  { icon: <FileText size={20} />,       label: 'Folha de Pagamento',href: '/admin/finance/staff-payments', group: 'operacional' },
   { icon: <Calendar size={20} />,       label: 'Calendário',        href: '/admin/calendar',      group: 'operacional' },
   { icon: <BarChart size={20} />,       label: 'Relatórios',        href: '/admin/reports',       group: 'operacional' },
   { icon: <MousePointer2 size={20} />,  label: 'Acessos',           href: '/admin/analytics',     group: 'operacional' },

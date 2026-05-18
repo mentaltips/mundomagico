@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useCallback } from 'react'
+import NextImage from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -303,9 +304,12 @@ function PaymentsContent() {
                     <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-6">Pagamento via PIX</p>
                     {paymentResult.qrCodeBase64 && (
                       <div className="bg-white p-4 rounded-3xl inline-block shadow-xl mb-6">
-                        <img
+                        <NextImage
                           src={`data:image/png;base64,${paymentResult.qrCodeBase64}`}
                           alt="QR Code PIX"
+                          width={192}
+                          height={192}
+                          unoptimized
                           className="w-48 h-48 mx-auto"
                         />
                       </div>

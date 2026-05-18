@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -81,7 +81,7 @@ function FinancePageContent() {
     selectedIds: [] as string[],
   })
 
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     setLoading(true)
     try {
       const url = filterStatus ? `/api/finance/invoices?status=${filterStatus}` : '/api/finance/invoices'
@@ -89,14 +89,14 @@ function FinancePageContent() {
       if (res.ok) setInvoices(await res.json())
     } catch { toast.error('Erro ao carregar faturas') }
     finally { setLoading(false) }
-  }
+  }, [filterStatus])
 
   const fetchChildren = async () => {
     const res = await fetch('/api/children')
     if (res.ok) setChildren(await res.json())
   }
 
-  useEffect(() => { fetchInvoices() }, [filterStatus])
+  useEffect(() => { fetchInvoices() }, [fetchInvoices])
   useEffect(() => { fetchChildren() }, [])
 
   const handleCreate = async (e: React.FormEvent) => {

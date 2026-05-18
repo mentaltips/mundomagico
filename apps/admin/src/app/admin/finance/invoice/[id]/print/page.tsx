@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import NextImage from 'next/image'
 import { useParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -80,9 +81,12 @@ export default function PrintInvoicePage() {
               <div className="pt-4 border-t border-gray-100 flex gap-4 items-center">
                 {invoice.pixQrCode && (
                   <div className="bg-white p-2 border border-gray-200 rounded-xl">
-                    <img 
+                    <NextImage
                       src={`data:image/png;base64,${invoice.pixQrCode}`} 
                       alt="PIX QR Code" 
+                      width={96}
+                      height={96}
+                      unoptimized
                       className="w-24 h-24"
                     />
                   </div>

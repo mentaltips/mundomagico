@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import NextImage from 'next/image'
 import { Plus, AlertTriangle, CheckCircle, Clock, Pill } from 'lucide-react'
 import { format } from 'date-fns'
 import { requireAuth } from '@/lib/auth'
@@ -91,7 +92,9 @@ export default async function MedicationsPage() {
               <div key={med.id} className="p-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   {med.child?.photoUrl ? (
-                    <img src={med.child.photoUrl} className="w-10 h-10 rounded-full object-cover" alt={med.child.fullName} />
+                    <span className="relative block w-10 h-10 rounded-full overflow-hidden">
+                      <NextImage src={med.child.photoUrl} className="object-cover" alt={med.child.fullName} fill sizes="40px" />
+                    </span>
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-sm">
                       {med.child?.fullName?.charAt(0) ?? '?'}

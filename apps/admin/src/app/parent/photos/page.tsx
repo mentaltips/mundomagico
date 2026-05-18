@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import NextImage from 'next/image'
 import { Camera, X, Loader2, Share2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
@@ -53,10 +54,12 @@ export default function GuardianPhotosPage() {
                 className="relative group cursor-pointer rounded-2xl overflow-hidden aspect-square bg-gray-100"
                 onClick={() => setPreview(photo)}
               >
-                <img
-                  src={getSafeUrl(photo.url)}
+                <NextImage
+                  src={getSafeUrl(photo.url) || 'https://placehold.co/400x400?text=Foto'}
                   alt={photo.caption ?? 'Foto'}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  fill
+                  sizes="(min-width: 768px) 33vw, 50vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=Foto' }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
@@ -81,9 +84,11 @@ export default function GuardianPhotosPage() {
             <X size={24} />
           </button>
           <div className="max-w-lg w-full">
-            <img
-              src={getSafeUrl(preview.url)}
+            <NextImage
+              src={getSafeUrl(preview.url) || 'https://placehold.co/800x600?text=Foto'}
               alt={preview.caption ?? 'Foto'}
+              width={800}
+              height={600}
               className="w-full rounded-3xl max-h-[70vh] object-contain"
               onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/800x600?text=Foto' }}
             />

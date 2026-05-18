@@ -1,6 +1,8 @@
 import { getApiAuth } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 const API_URL = (process.env.API_URL || 'http://127.0.0.1:3002').replace(/\/$/, '')
 
 export async function POST(req: NextRequest) {

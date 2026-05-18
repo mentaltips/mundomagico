@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { Inter, Outfit } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '../components/AuthProvider'
@@ -8,9 +7,6 @@ import { CookieBanner } from '../components/CookieBanner'
 import { AnalyticsTracker } from '../components/AnalyticsTracker'
 
 import { ThemeProvider } from '../components/ThemeProvider'
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' })
 
 export const metadata: Metadata = {
   title: 'Mundo Mágico - Admin',
@@ -24,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${inter.variable} ${outfit.variable} font-sans bg-background text-foreground`}>
+      <body className="font-sans bg-background text-foreground">
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
