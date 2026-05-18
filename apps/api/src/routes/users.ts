@@ -13,7 +13,10 @@ router.get('/', async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
     const users = await prisma.user.findMany({
-      where: { schoolId },
+      where: { 
+        schoolId,
+        role: { not: 'GUARDIAN' }
+      },
       select: {
         id: true,
         name: true,

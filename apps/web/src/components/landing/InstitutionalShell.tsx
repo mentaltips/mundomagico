@@ -32,7 +32,6 @@ export function PublicHeader() {
 
   const navLinks = [
     { name: 'Início', href: '#' },
-    { name: 'Apresentação', href: '/apresentacao' },
     { name: 'Sobre', href: '#sobre' },
     { name: 'Serviços', href: '#servicos' },
     { name: 'Planos', href: '#planos' },
