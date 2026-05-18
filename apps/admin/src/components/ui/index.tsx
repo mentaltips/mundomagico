@@ -276,6 +276,7 @@ const AVATAR_SIZES = {
 export function Avatar({ name = '?', photoUrl, size = 'md', color = 'bg-primary/10 text-primary' }: AvatarProps) {
   const cls = `${AVATAR_SIZES[size]} relative rounded-2xl overflow-hidden flex items-center justify-center font-black shrink-0 ${color} border border-border/50 shadow-sm`
   const safeUrl = getSafeUrl(photoUrl)
+  const unoptimized = safeUrl?.startsWith('/api/uploads/') ?? false
   
   if (safeUrl) {
     return (
@@ -285,6 +286,7 @@ export function Avatar({ name = '?', photoUrl, size = 'md', color = 'bg-primary/
           alt={name} 
           fill
           sizes="96px"
+          unoptimized={unoptimized}
           className="object-cover" 
           onError={(e) => {
             // Se falhar (404), esconde a imagem e mostra a inicial

@@ -20,6 +20,7 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const safeValue = getSafeUrl(value) || null
+  const unoptimized = safeValue?.startsWith('/api/uploads/') ?? false
   const [preview, setPreview] = useState<string | null>(safeValue)
 
   const dimensions = { sm: 'w-20 h-20', md: 'w-28 h-28', lg: 'w-36 h-36' }[size]
@@ -87,7 +88,7 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
           <Loader2 size={24} className="animate-spin text-primary" />
         ) : preview ? (
           <>
-            <NextImage src={preview} alt="preview" fill sizes="192px" className="object-cover" />
+            <NextImage src={preview} alt="preview" fill sizes="192px" unoptimized={unoptimized} className="object-cover" />
             {/* Hover: câmera + remover */}
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
               <Camera size={20} className="text-white" />

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import NextImage from 'next/image'
 import { ArrowLeft } from 'lucide-react'
 import { apiGet } from '@/lib/server-api'
+import { getSafeUrl } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,7 +44,14 @@ export default async function ChildDailyRoutinePage({
       <div className="card p-5 flex items-center gap-4">
         {child.photoUrl ? (
           <span className="relative block w-16 h-16 rounded-full overflow-hidden">
-            <NextImage src={child.photoUrl} className="object-cover" alt={child.fullName} fill sizes="64px" />
+            <NextImage
+              src={getSafeUrl(child.photoUrl) || child.photoUrl}
+              className="object-cover"
+              alt={child.fullName}
+              fill
+              sizes="64px"
+              unoptimized={(getSafeUrl(child.photoUrl) || '').startsWith('/api/uploads/')}
+            />
           </span>
         ) : (
           <div className="w-16 h-16 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 text-2xl font-bold">

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import NextImage from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { Baby, ArrowLeft, LogIn, LogOut, CheckCircle2 } from 'lucide-react'
+import { getSafeUrl } from '@/lib/utils'
 
 type Child = {
   id: string
@@ -80,7 +81,14 @@ export default function AttendanceListPage() {
             <div className="flex items-center gap-3">
               <div className="relative h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                 {child.photoUrl ? (
-                  <NextImage src={child.photoUrl} alt={child.fullName} fill sizes="40px" className="object-cover" />
+                  <NextImage
+                    src={getSafeUrl(child.photoUrl) || child.photoUrl}
+                    alt={child.fullName}
+                    fill
+                    sizes="40px"
+                    unoptimized={(getSafeUrl(child.photoUrl) || '').startsWith('/api/uploads/')}
+                    className="object-cover"
+                  />
                 ) : (
                   <Baby className="h-5 w-5 text-gray-400" />
                 )}

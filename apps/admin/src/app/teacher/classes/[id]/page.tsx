@@ -5,6 +5,7 @@ import NextImage from 'next/image'
 import { useParams } from 'next/navigation'
 import { Baby, ChevronRight, CheckCircle2, Circle } from 'lucide-react'
 import Link from 'next/link'
+import { getSafeUrl } from '@/lib/utils'
 
 type Child = {
   id: string
@@ -61,7 +62,14 @@ export default function TeacherClassPage() {
             <div className="flex items-center gap-4">
               <div className="relative h-12 w-12 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 overflow-hidden">
                 {child.photoUrl ? (
-                  <NextImage src={child.photoUrl} alt={child.fullName} fill sizes="48px" className="object-cover" />
+                  <NextImage
+                    src={getSafeUrl(child.photoUrl) || child.photoUrl}
+                    alt={child.fullName}
+                    fill
+                    sizes="48px"
+                    unoptimized={(getSafeUrl(child.photoUrl) || '').startsWith('/api/uploads/')}
+                    className="object-cover"
+                  />
                 ) : (
                   <Baby className="h-6 w-6" />
                 )}

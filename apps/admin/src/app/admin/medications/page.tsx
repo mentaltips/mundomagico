@@ -4,6 +4,7 @@ import { Plus, AlertTriangle, CheckCircle, Clock, Pill } from 'lucide-react'
 import { format } from 'date-fns'
 import { requireAuth } from '@/lib/auth'
 import { apiGet } from '@/lib/server-api'
+import { getSafeUrl } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -93,7 +94,14 @@ export default async function MedicationsPage() {
                 <div className="flex items-center gap-3">
                   {med.child?.photoUrl ? (
                     <span className="relative block w-10 h-10 rounded-full overflow-hidden">
-                      <NextImage src={med.child.photoUrl} className="object-cover" alt={med.child.fullName} fill sizes="40px" />
+                      <NextImage
+                        src={getSafeUrl(med.child.photoUrl) || med.child.photoUrl}
+                        className="object-cover"
+                        alt={med.child.fullName}
+                        fill
+                        sizes="40px"
+                        unoptimized={(getSafeUrl(med.child.photoUrl) || '').startsWith('/api/uploads/')}
+                      />
                     </span>
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-sm">
