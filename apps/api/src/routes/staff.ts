@@ -27,6 +27,7 @@ router.get('/payments', async (req, res) => {
             id: true,
             name: true,
             roleType: true,
+            photoUrl: true,
             pixKey: true,
             bankName: true,
             bankAgency: true,
@@ -281,7 +282,7 @@ router.post('/', async (req, res) => {
     }
     const {
       name, email, phone, whatsapp, cpf, birthDate,
-      roleType, baseSalary, paymentDay, pixKey,
+      photoUrl, roleType, baseSalary, paymentDay, pixKey,
       bankName, bankAgency, bankAccount, financialNotes, userId
     } = req.body
 
@@ -294,6 +295,7 @@ router.post('/', async (req, res) => {
         whatsapp,
         cpf,
         birthDate: birthDate ? new Date(birthDate) : null,
+        photoUrl,
         roleType: roleType || 'TEACHER',
         baseSalary: baseSalary ? parseFloat(baseSalary) : null,
         paymentDay: paymentDay ? parseInt(paymentDay) : null,
@@ -318,7 +320,7 @@ router.patch('/:id', async (req, res) => {
     const schoolId = req.user?.schoolId
     const {
       name, email, phone, whatsapp, cpf, birthDate,
-      roleType, status, baseSalary, paymentDay, pixKey,
+      photoUrl, roleType, status, baseSalary, paymentDay, pixKey,
       bankName, bankAgency, bankAccount, financialNotes, userId
     } = req.body
 
@@ -336,6 +338,7 @@ router.patch('/:id', async (req, res) => {
         whatsapp,
         cpf,
         birthDate: birthDate ? new Date(birthDate) : undefined,
+        photoUrl,
         roleType,
         status,
         baseSalary: baseSalary !== undefined ? (baseSalary ? parseFloat(baseSalary) : null) : undefined,

@@ -16,6 +16,7 @@ export type Staff = {
   whatsapp: string | null
   cpf: string | null
   birthDate: string | null
+  photoUrl: string | null
   roleType: string
   status: string
   baseSalary: number | null
@@ -62,6 +63,7 @@ export type StaffPayment = {
     id: string
     name: string
     roleType: string
+    photoUrl: string | null
     pixKey: string | null
     bankName: string | null
     bankAgency: string | null

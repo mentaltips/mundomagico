@@ -1,6 +1,7 @@
 'use client'
 
 import { UserPlus, X } from 'lucide-react'
+import { ImageUpload } from '@/components/ui/ImageUpload'
 
 export type NewStaffForm = {
   name: string
@@ -9,6 +10,7 @@ export type NewStaffForm = {
   whatsapp: string
   cpf: string
   birthDate: string
+  photoUrl: string
   roleType: string
   baseSalary: string
   paymentDay: string
@@ -44,39 +46,48 @@ export function ModalNewStaff({ form, setForm, onClose, onSubmit }: Props) {
           <div className="p-4 bg-muted/40 border border-border rounded-2xl space-y-3">
             <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Dados Pessoais & Contato</p>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="block text-xs font-bold text-foreground mb-1">Nome Completo *</label>
-                <input
-                  type="text"
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Ex: Ana Paula de Souza"
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10"
-                />
-              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-[160px_1fr] gap-4">
+              <ImageUpload
+                label="Foto do professor/monitor"
+                value={form.photoUrl}
+                onChange={(url) => setForm({ ...form, photoUrl: url })}
+                size="lg"
+              />
 
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1">E-mail Corporativo</label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="ana@escola.com.br"
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10"
-                />
-              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-foreground mb-1">Nome Completo *</label>
+                  <input
+                    type="text"
+                    required
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="Ex: Ana Paula de Souza"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1">CPF</label>
-                <input
-                  type="text"
-                  value={form.cpf}
-                  onChange={(e) => setForm({ ...form, cpf: e.target.value })}
-                  placeholder="000.000.000-00"
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10"
-                />
+                <div>
+                  <label className="block text-xs font-bold text-foreground mb-1">E-mail Corporativo</label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="ana@escola.com.br"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-foreground mb-1">CPF</label>
+                  <input
+                    type="text"
+                    value={form.cpf}
+                    onChange={(e) => setForm({ ...form, cpf: e.target.value })}
+                    placeholder="000.000.000-00"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10"
+                  />
+                </div>
               </div>
             </div>
 

@@ -7,7 +7,7 @@ import {
   Search, BookmarkCheck, UserPlus, Edit3, Trash2, Wallet, Info
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { Badge, LoadingState, StatCard } from '@/components/ui'
+import { Avatar, Badge, LoadingState, StatCard } from '@/components/ui'
 import type { BadgeVariant } from '@/components/ui'
 
 import { Staff, StaffPayment, Group, ROLE_LABELS, MONTHS } from './_components/types'
@@ -20,6 +20,7 @@ import { ModalNewStaff, type NewStaffForm } from './_components/ModalNewStaff'
 
 const EMPTY_NEW_STAFF: NewStaffForm = {
   name: '', email: '', phone: '', whatsapp: '', cpf: '', birthDate: '',
+  photoUrl: '',
   roleType: 'TEACHER', baseSalary: '', paymentDay: '5', pixKey: '',
   bankName: '', bankAgency: '', bankAccount: '', financialNotes: ''
 }
@@ -141,6 +142,7 @@ export default function StaffPaymentsPage() {
         whatsapp: data.get('whatsapp') as string || null,
         cpf: data.get('cpf') as string || null,
         birthDate: data.get('birthDate') ? new Date(data.get('birthDate') as string).toISOString() : null,
+        photoUrl: data.get('photoUrl') as string || null,
         roleType: data.get('roleType') as string,
         baseSalary: data.get('baseSalary') ? parseFloat(data.get('baseSalary') as string) : null,
         paymentDay: data.get('paymentDay') ? parseInt(data.get('paymentDay') as string) : null,
@@ -261,6 +263,7 @@ export default function StaffPaymentsPage() {
         whatsapp: newStaffForm.whatsapp || null,
         cpf: newStaffForm.cpf || null,
         birthDate: newStaffForm.birthDate ? new Date(newStaffForm.birthDate).toISOString() : null,
+        photoUrl: newStaffForm.photoUrl || null,
         baseSalary: newStaffForm.baseSalary ? parseFloat(newStaffForm.baseSalary) : null,
         paymentDay: parseInt(newStaffForm.paymentDay) || 5,
         pixKey: newStaffForm.pixKey || null,
@@ -458,7 +461,14 @@ export default function StaffPaymentsPage() {
                 <tbody>
                   {filteredPayments.map(p => (
                     <tr key={p.id} className="table-row">
-                      <td className="table-cell font-black">{p.staff.name}</td>
+                      <td className="table-cell">
+                        <div className="flex items-center gap-3">
+                          <Avatar name={p.staff.name} photoUrl={p.staff.photoUrl} size="sm" />
+                          <div className="min-w-0">
+                            <div className="font-bold truncate">{p.staff.name}</div>
+                          </div>
+                        </div>
+                      </td>
                       <td className="table-cell">
                         <span className="inline-flex rounded-md bg-accent/40 px-2.5 py-1 text-xs font-bold">
                           {ROLE_LABELS[p.staff.roleType] || p.staff.roleType}
@@ -543,8 +553,13 @@ export default function StaffPaymentsPage() {
                   {filteredStaff.map(s => (
                     <tr key={s.id} className="table-row">
                       <td className="table-cell">
-                        <div className="font-bold">{s.name}</div>
-                        {s.cpf && <div className="text-[10px] text-muted-foreground mt-0.5">CPF: {s.cpf}</div>}
+                        <div className="flex items-center gap-3">
+                          <Avatar name={s.name} photoUrl={s.photoUrl} size="sm" />
+                          <div className="min-w-0">
+                            <div className="font-bold truncate">{s.name}</div>
+                            {s.cpf && <div className="text-[10px] text-muted-foreground mt-0.5">CPF: {s.cpf}</div>}
+                          </div>
+                        </div>
                       </td>
                       <td className="table-cell">
                         <span className="inline-flex rounded-md bg-accent/40 px-2.5 py-1 text-xs font-bold">

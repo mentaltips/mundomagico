@@ -1,6 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Landmark, X } from 'lucide-react'
+import { ImageUpload } from '@/components/ui/ImageUpload'
 import { Staff } from './types'
 
 type Props = {
@@ -10,6 +12,12 @@ type Props = {
 }
 
 export function ModalSalaryConfig({ staff, onClose, onSave }: Props) {
+  const [photoUrl, setPhotoUrl] = useState(staff.photoUrl || '')
+
+  useEffect(() => {
+    setPhotoUrl(staff.photoUrl || '')
+  }, [staff.id, staff.photoUrl])
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
       <div className="w-full max-w-lg rounded-[2rem] bg-card p-6 shadow-2xl border border-border max-h-[90vh] overflow-y-auto">
@@ -30,7 +38,23 @@ export function ModalSalaryConfig({ staff, onClose, onSave }: Props) {
           <input type="hidden" name="whatsapp" value={staff.whatsapp || ''} />
           <input type="hidden" name="cpf" value={staff.cpf || ''} />
           <input type="hidden" name="birthDate" value={staff.birthDate ? staff.birthDate.split('T')[0] : ''} />
+          <input type="hidden" name="photoUrl" value={photoUrl} />
           <input type="hidden" name="roleType" value={staff.roleType} />
+
+          <div className="flex items-start gap-4 p-4 rounded-2xl border border-border bg-muted/30">
+            <ImageUpload
+              label="Foto do professor/monitor"
+              value={photoUrl}
+              onChange={setPhotoUrl}
+              size="md"
+            />
+            <div className="min-w-0 pt-1">
+              <p className="text-sm font-black text-foreground">{staff.name}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                A imagem fica disponível na lista da equipe e no perfil financeiro.
+              </p>
+            </div>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
