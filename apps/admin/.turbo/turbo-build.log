@@ -1,8 +1,151 @@
 
-> @mundo-magico/admin@1.0.0 build C:\Users\meent\Desktop\mundomagico\apps\admin
+> @mundo-magico/admin@1.1.0 build C:\Users\meent\Desktop\mundomagico\apps\admin
 > next build
 
   ▲ Next.js 14.2.5
   - Environments: .env
 
    Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Unable to snapshot resolve dependencies
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Unable to snapshot resolve dependencies
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Unable to snapshot resolve dependencies
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/48) ...
+   Generating static pages (12/48) 
+   Generating static pages (24/48) 
+   Generating static pages (36/48) 
+ ✓ Generating static pages (48/48)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                           Size     First Load JS
+┌ ○ /_not-found                                       881 B          88.2 kB
+├ ○ /admin                                            145 B          87.4 kB
+├ ƒ /admin/analytics                                  10.4 kB         261 kB
+├ ƒ /admin/announcements                              6.39 kB         154 kB
+├ ƒ /admin/calendar                                   7.4 kB          164 kB
+├ ƒ /admin/check-in-out                               6.47 kB         154 kB
+├ ○ /admin/check-in-out/relatorio                     5.94 kB         154 kB
+├ ○ /admin/child-items                                8.2 kB          165 kB
+├ ƒ /admin/children                                   9.94 kB         158 kB
+├ ƒ /admin/children/[id]                              164 B           154 kB
+├ ƒ /admin/children/[id]/authorized-pickups           6.05 kB         114 kB
+├ ƒ /admin/children/new                               164 B           154 kB
+├ ○ /admin/daily-routine                              5.42 kB         161 kB
+├ ƒ /admin/daily-routine/[childId]                    209 B           153 kB
+├ ○ /admin/dashboard                                  7.34 kB         276 kB
+├ ○ /admin/development-reports                        8.58 kB         116 kB
+├ ƒ /admin/finance                                    10.7 kB         165 kB
+├ ○ /admin/finance/billing                            9.97 kB         173 kB
+├ ƒ /admin/finance/invoice/[id]/print                 6.99 kB         105 kB
+├ ○ /admin/finance/staff-payments                     11.5 kB         104 kB
+├ ○ /admin/groups                                     6.73 kB         155 kB
+├ ○ /admin/guardians                                  9.59 kB         167 kB
+├ ○ /admin/health                                     6.9 kB          155 kB
+├ ƒ /admin/medications                                188 B          99.4 kB
+├ ○ /admin/photos                                     8.95 kB         181 kB
+├ ○ /admin/privacy-policy                             4.71 kB         148 kB
+├ ○ /admin/reports                                    13.1 kB         278 kB
+├ ○ /admin/settings                                   7.63 kB         164 kB
+├ ○ /admin/settings/institution-type                  7.47 kB         155 kB
+├ ○ /admin/students                                   7.3 kB          165 kB
+├ ○ /admin/users                                      5.35 kB        97.7 kB
+├ ○ /admin/whatsapp                                   9.3 kB          142 kB
+├ ○ /admin/whatsapp/message-builder                   3.23 kB        90.5 kB
+├ ƒ /api/[...path]                                    0 B                0 B
+├ ƒ /api/analytics                                    0 B                0 B
+├ ƒ /api/analytics/track                              0 B                0 B
+├ ƒ /api/announcements                                0 B                0 B
+├ ƒ /api/announcements/[id]                           0 B                0 B
+├ ƒ /api/auth/[...nextauth]                           0 B                0 B
+├ ƒ /api/auth/change-password                         0 B                0 B
+├ ƒ /api/calendar                                     0 B                0 B
+├ ƒ /api/calendar/[id]                                0 B                0 B
+├ ƒ /api/check-in-out                                 0 B                0 B
+├ ƒ /api/check-in-out/report                          0 B                0 B
+├ ƒ /api/check-in-out/report/monthly                  0 B                0 B
+├ ƒ /api/child-items                                  0 B                0 B
+├ ƒ /api/child-items/[id]/replenish                   0 B                0 B
+├ ƒ /api/child-items/[id]/use                         0 B                0 B
+├ ƒ /api/children                                     0 B                0 B
+├ ƒ /api/children/[id]                                0 B                0 B
+├ ƒ /api/children/[id]/authorized-pickups             0 B                0 B
+├ ƒ /api/children/[id]/authorized-pickups/[personId]  0 B                0 B
+├ ƒ /api/children/[id]/documents                      0 B                0 B
+├ ƒ /api/children/[id]/guardians                      0 B                0 B
+├ ƒ /api/daily-reports                                0 B                0 B
+├ ƒ /api/daily-routine                                0 B                0 B
+├ ƒ /api/development-reports                          0 B                0 B
+├ ƒ /api/development-reports/[id]                     0 B                0 B
+├ ƒ /api/development-reports/[id]/publish             0 B                0 B
+├ ƒ /api/documents/[id]                               0 B                0 B
+├ ƒ /api/finance/invoices                             0 B                0 B
+├ ƒ /api/finance/invoices/[id]                        0 B                0 B
+├ ƒ /api/finance/invoices/[id]/pay                    0 B                0 B
+├ ƒ /api/groups                                       0 B                0 B
+├ ƒ /api/groups/[id]                                  0 B                0 B
+├ ƒ /api/guardian/feed                                0 B                0 B
+├ ƒ /api/guardians                                    0 B                0 B
+├ ƒ /api/guardians/[id]                               0 B                0 B
+├ ƒ /api/guardians/[id]/create-user                   0 B                0 B
+├ ƒ /api/guardians/link                               0 B                0 B
+├ ƒ /api/health                                       0 B                0 B
+├ ƒ /api/health/medications                           0 B                0 B
+├ ƒ /api/health/medications/[id]                      0 B                0 B
+├ ƒ /api/health/medications/[id]/administer           0 B                0 B
+├ ƒ /api/notifications                                0 B                0 B
+├ ƒ /api/parent/dashboard                             0 B                0 B
+├ ƒ /api/parent/feed                                  0 B                0 B
+├ ƒ /api/photos                                       0 B                0 B
+├ ƒ /api/photos/[id]                                  0 B                0 B
+├ ƒ /api/reports/export                               0 B                0 B
+├ ƒ /api/settings                                     0 B                0 B
+├ ƒ /api/settings/institution-type                    0 B                0 B
+├ ƒ /api/stats                                        0 B                0 B
+├ ƒ /api/stats/pending-config                         0 B                0 B
+├ ƒ /api/students                                     0 B                0 B
+├ ƒ /api/teacher/attendance                           0 B                0 B
+├ ƒ /api/teacher/classes                              0 B                0 B
+├ ƒ /api/teacher/classes/[id]                         0 B                0 B
+├ ƒ /api/teacher/dashboard                            0 B                0 B
+├ ƒ /api/upload                                       0 B                0 B
+├ ƒ /api/upload/image                                 0 B                0 B
+├ ƒ /api/uploads/[...path]                            0 B                0 B
+├ ƒ /api/users                                        0 B                0 B
+├ ƒ /api/users/[id]                                   0 B                0 B
+├ ƒ /api/users/[id]/reset-password                    0 B                0 B
+├ ƒ /api/webhooks/mercadopago                         0 B                0 B
+├ ƒ /icon                                             0 B                0 B
+├ ○ /login                                            4.16 kB         107 kB
+├ ○ /parent                                           8.27 kB         160 kB
+├ ○ /parent/calendar                                  2.78 kB         108 kB
+├ ○ /parent/dashboard                                 145 B          87.4 kB
+├ ○ /parent/documents                                 5.05 kB         117 kB
+├ ○ /parent/history                                   3.93 kB         147 kB
+├ ○ /parent/messages                                  2 kB           89.3 kB
+├ ○ /parent/payments                                  7.54 kB         146 kB
+├ ○ /parent/photos                                    4.95 kB         112 kB
+├ ○ /parent/profile                                   5.61 kB         163 kB
+├ ○ /privacy-policy                                   3.03 kB        97.1 kB
+├ ○ /teacher                                          3.37 kB         147 kB
+├ ○ /teacher/attendance                               1.9 kB           96 kB
+├ ƒ /teacher/attendance/[id]                          2.91 kB        95.3 kB
+├ ○ /teacher/classes                                  2.14 kB        96.2 kB
+├ ƒ /teacher/classes/[id]                             2.25 kB         101 kB
+├ ○ /teacher/daily-reports                            2.2 kB         96.3 kB
+├ ○ /teacher/daily-reports/new                        3.88 kB        91.2 kB
+└ ○ /teacher/profile                                  3.39 kB        99.9 kB
++ First Load JS shared by all                         87.3 kB
+  ├ chunks/8753-94688bf4d677afdb.js                   31.7 kB
+  ├ chunks/abf17911-9797bd76157703eb.js               53.6 kB
+  └ other shared chunks (total)                       1.97 kB
+
+
+ƒ Middleware                                          50.6 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

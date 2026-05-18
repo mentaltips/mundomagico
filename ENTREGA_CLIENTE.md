@@ -21,9 +21,14 @@ Esta versão consolida o sistema Mundo Mágico com foco em segurança, estabilid
 - Ajuste de imagens para o padrão recomendado do Next.js.
 - Alinhamento da documentação com as portas reais do sistema.
 - Atualização do README com versão, módulos e comandos de validação.
+- **Página de Apresentação Interativa:** Criação de uma belíssima Landing Page comercial interativa (`/apresentacao`) com layout premium, animações e simulador interativo em tempo real.
+- **Simulador do WhatsApp:** Painel que demonstra na tela de um celular virtual o envio de check-in, check-out, diário de bordo, galeria de fotos e avisos de reposição.
+- **Painel de Agendamento de Avisos:** Simulador interativo que permite agendar comunicados por turma (ex: Berçário A) e exibe os eventos em uma linha do tempo escolar ativa.
+- **Git Cleanliness:** Ocultação da pasta de cache `.turbo` no arquivo `.gitignore`, eliminando ruídos no fluxo de trabalho com Git.
 
 ## Módulos Disponíveis
 
+- **Página Comercial e Apresentação Interativa** (`/apresentacao`)
 - Painel administrativo.
 - Portal dos responsáveis.
 - Área do professor.
