@@ -30,6 +30,7 @@ function MiniAvatar({ name, photoUrl }: { name: string; photoUrl?: string | null
             alt={name} 
             fill
             sizes="28px"
+            unoptimized={safePhotoUrl.startsWith('/api/uploads/')}
             className="object-cover" 
             onError={(e) => {
               (e.target as any).style.display = 'none'
