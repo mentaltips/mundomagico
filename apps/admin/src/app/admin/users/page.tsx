@@ -1,8 +1,34 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Plus, Trash, Edit, UserCircle, Phone, Mail, Key, Copy, Loader2, RefreshCw } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  Copy,
+  Edit,
+  Key,
+  Loader2,
+  Mail,
+  Phone,
+  Plus,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Trash,
+  UserCheck,
+  Users,
+  UserX,
+} from 'lucide-react'
 import toast from 'react-hot-toast'
+import {
+  Alert,
+  Avatar,
+  Badge,
+  EmptyState,
+  Modal,
+  PageHeader,
+  SkeletonCard,
+  StatCard,
+} from '@/components/ui'
+import type { BadgeVariant } from '@/components/ui'
 
 type User = {
   id: string
@@ -19,58 +45,73 @@ type Credentials = {
   password: string
 }
 
+type RoleFilter = 'ALL' | 'ADMIN' | 'DIRECTOR' | 'TEACHER' | 'CAREGIVER' | 'STAFF'
+
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Administrador',
   DIRECTOR: 'Diretor(a)',
   TEACHER: 'Professor(a)',
   CAREGIVER: 'Cuidador(a)',
-  STAFF: 'Equipe/Staff'
+  STAFF: 'Equipe',
 }
 
-const ROLE_COLORS: Record<string, string> = {
-  ADMIN: 'bg-red-50 text-red-700',
-  DIRECTOR: 'bg-violet-50 text-violet-700',
-  TEACHER: 'bg-blue-50 text-blue-700',
-  CAREGIVER: 'bg-emerald-50 text-emerald-700',
-  STAFF: 'bg-gray-100 text-gray-600'
+const ROLE_BADGES: Record<string, BadgeVariant> = {
+  ADMIN: 'red',
+  DIRECTOR: 'purple',
+  TEACHER: 'blue',
+  CAREGIVER: 'green',
+  STAFF: 'gray',
+}
+
+const ROLE_OPTIONS = [
+  { value: 'TEACHER', label: 'Professor(a)' },
+  { value: 'CAREGIVER', label: 'Cuidador(a) / Monitora' },
+  { value: 'STAFF', label: 'Equipe Geral' },
+  { value: 'DIRECTOR', label: 'Diretor(a)' },
+  { value: 'ADMIN', label: 'Administrador' },
+]
+
+const emptyForm = {
+  name: '',
+  email: '',
+  phone: '',
+  role: 'TEACHER',
+  active: true,
 }
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL')
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [saving, setSaving] = useState(false)
   const [generatingFor, setGeneratingFor] = useState<string | null>(null)
   const [credentials, setCredentials] = useState<Credentials | null>(null)
   const [copied, setCopied] = useState(false)
+  const [formData, setFormData] = useState(emptyForm)
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    role: 'TEACHER',
-    active: true
-  })
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/users')
+      const res = await fetch(`/api/users?t=${Date.now()}`)
       if (res.ok) {
-        const data = await res.json()
-        setUsers(data)
+        setUsers(await res.json())
+      } else {
+        toast.error('Erro ao carregar equipe.')
       }
     } catch (err) {
       console.error(err)
+      toast.error('Erro de conexão ao carregar equipe.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, [fetchUsers])
 
   const handleOpenModal = (user?: User) => {
     if (user) {
@@ -80,11 +121,11 @@ export default function UsersPage() {
         email: user.email,
         phone: user.phone || '',
         role: user.role,
-        active: user.active
+        active: user.active,
       })
     } else {
       setEditingUser(null)
-      setFormData({ name: '', email: '', phone: '', role: 'TEACHER', active: true })
+      setFormData(emptyForm)
     }
     setShowModal(true)
   }
@@ -103,31 +144,26 @@ export default function UsersPage() {
       name: formData.name,
       phone: formData.phone || undefined,
       role: formData.role,
-      active: formData.active
+      active: formData.active,
     }
 
     if (!editingUser) {
       payload.email = formData.email
-      // Sem senha no payload — o admin usará "Gerar Acesso" após cadastro
+      payload.password = Math.floor(100000 + Math.random() * 900000).toString()
     }
 
     try {
       const url = editingUser ? `/api/users/${editingUser.id}` : '/api/users'
       const method = editingUser ? 'PATCH' : 'POST'
 
-      if (!editingUser) {
-        // No cadastro novo, gera uma senha temporária aleatória que será trocada via "Gerar Acesso"
-        payload.password = Math.floor(100000 + Math.random() * 900000).toString()
-      }
-
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       })
 
       if (res.ok) {
-        toast.success(editingUser ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado! Use "Gerar Acesso" para enviar as credenciais.')
+        toast.success(editingUser ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado!')
         setShowModal(false)
         fetchUsers()
       } else {
@@ -148,9 +184,8 @@ export default function UsersPage() {
       return
     }
 
-    const isReset = user.active
-    const message = isReset
-      ? `Deseja resetar a senha de ${user.name}? Uma nova senha de 6 dígitos será gerada e a atual deixará de funcionar.`
+    const message = user.active
+      ? `Deseja resetar a senha de ${user.name}? Uma nova senha de 6 dígitos será gerada.`
       : `Deseja gerar acesso para ${user.name}?`
 
     if (!confirm(message)) return
@@ -168,7 +203,7 @@ export default function UsersPage() {
       } else {
         toast.error(data.error || 'Erro ao gerar acesso.')
       }
-    } catch (err) {
+    } catch {
       toast.error('Erro de conexão.')
     } finally {
       setGeneratingFor(null)
@@ -189,271 +224,326 @@ export default function UsersPage() {
       }
     } catch (err) {
       console.error(err)
+      toast.error('Erro ao desativar usuário.')
     }
   }
 
-  const copyCredentials = () => {
+  const copyCredentials = async () => {
     if (!credentials) return
-    const roleName = ROLE_LABELS[users.find(u => u.email === credentials.email)?.role || ''] || 'Membro da equipe'
-    const text = `Olá, ${credentials.name.split(' ')[0]}! 👋\n\nSeu acesso ao sistema foi criado.\n\n🔑 Login: ${credentials.email}\n🔒 Senha provisória: ${credentials.password}\n\nAo entrar pela primeira vez, você poderá alterar sua senha nas configurações do perfil.`
-    navigator.clipboard.writeText(text)
+
+    const text = [
+      `Olá, ${credentials.name.split(' ')[0]}!`,
+      '',
+      'Seu acesso ao sistema Mundo Mágico foi criado.',
+      '',
+      `Login: ${credentials.email}`,
+      `Senha provisória: ${credentials.password}`,
+      '',
+      'Ao entrar pela primeira vez, você poderá alterar sua senha nas configurações do perfil.',
+    ].join('\n')
+
+    await navigator.clipboard.writeText(text)
     setCopied(true)
     toast.success('Credenciais copiadas para a área de transferência!')
     setTimeout(() => setCopied(false), 3000)
   }
 
+  const filteredUsers = useMemo(() => {
+    const term = search.toLowerCase().trim()
+
+    return users.filter((user) => {
+      const matchesSearch =
+        !term ||
+        user.name.toLowerCase().includes(term) ||
+        user.email.toLowerCase().includes(term) ||
+        (user.phone || '').toLowerCase().includes(term)
+
+      const matchesRole = roleFilter === 'ALL' || user.role === roleFilter
+
+      return matchesSearch && matchesRole
+    })
+  }, [roleFilter, search, users])
+
+  const activeUsers = users.filter((user) => user.active).length
+  const inactiveUsers = users.length - activeUsers
+  const teachers = users.filter((user) => ['TEACHER', 'CAREGIVER'].includes(user.role)).length
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Equipe</h1>
-          <p className="text-gray-500">Gerencie professoras, monitoras, direção e funcionários.</p>
-        </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
-        >
-          <Plus className="h-4 w-4" />
-          Novo Usuário
-        </button>
+    <div className="page animate-in">
+      <PageHeader
+        title="Equipe"
+        subtitle="Gerencie usuários internos, cargos, status e acessos ao sistema."
+        icon={<Users size={24} />}
+        actions={
+          <button onClick={() => handleOpenModal()} className="btn-primary">
+            <Plus size={18} /> Novo Usuário
+          </button>
+        }
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard label="Total da Equipe" value={users.length} icon={<Users size={20} />} color="text-primary bg-primary/10" />
+        <StatCard label="Acessos Ativos" value={activeUsers} icon={<UserCheck size={20} />} color="text-emerald-500 bg-emerald-500/10" />
+        <StatCard label="Professoras e Cuidadores" value={teachers} icon={<ShieldCheck size={20} />} color="text-blue-500 bg-blue-500/10" />
       </div>
 
-      <div className="rounded-lg border bg-white shadow-sm">
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">Carregando...</div>
-        ) : users.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Nenhum funcionário cadastrado.</div>
-        ) : (
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-gray-50 text-gray-900">
-              <tr>
-                <th className="px-6 py-4 font-medium">Nome</th>
-                <th className="px-6 py-4 font-medium">Contato</th>
-                <th className="px-6 py-4 font-medium">Cargo</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 text-right font-medium">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {users.map(u => (
-                <tr key={u.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-100 text-violet-600">
-                        <UserCircle className="h-5 w-5" />
-                      </div>
-                      <div className="font-medium text-gray-900">{u.name}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-1">
-                      {u.phone && (
-                        <span className="flex items-center gap-1 text-gray-500">
-                          <Phone className="h-3 w-3" /> {u.phone}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1 text-gray-500">
-                        <Mail className="h-3 w-3" /> {u.email}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${ROLE_COLORS[u.role] || 'bg-gray-100 text-gray-600'}`}>
-                      {ROLE_LABELS[u.role] || u.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${u.active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                      {u.active ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => handleGenerateAccess(u)}
-                      disabled={generatingFor === u.id}
-                      className="text-gray-400 hover:text-emerald-600 mr-3 disabled:opacity-40"
-                      title={u.active ? 'Resetar senha de acesso' : 'Gerar acesso ao sistema'}
-                    >
-                      {generatingFor === u.id
-                        ? <Loader2 className="h-4 w-4 inline animate-spin" />
-                        : u.active
-                          ? <RefreshCw className="h-4 w-4 inline" />
-                          : <Key className="h-4 w-4 inline" />
-                      }
-                    </button>
-                    <button
-                      onClick={() => handleOpenModal(u)}
-                      className="text-gray-400 hover:text-violet-600 mr-3"
-                      title="Editar"
-                    >
-                      <Edit className="h-4 w-4 inline" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(u.id)}
-                      className="text-gray-400 hover:text-red-600"
-                      title="Desativar"
-                    >
-                      <Trash className="h-4 w-4 inline" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="relative group flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <input
+            type="text"
+            placeholder="Buscar por nome, e-mail ou telefone..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="input pl-12 w-full bg-accent/30 border-transparent focus:bg-accent/50 focus:border-primary/30 h-14 text-sm font-bold"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex flex-wrap gap-2">
+          {(['ALL', 'ADMIN', 'DIRECTOR', 'TEACHER', 'CAREGIVER', 'STAFF'] as RoleFilter[]).map((role) => {
+            const active = roleFilter === role
+            const count = role === 'ALL' ? users.length : users.filter((user) => user.role === role).length
+
+            return (
+              <button
+                key={role}
+                onClick={() => setRoleFilter(role)}
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
+                  active
+                    ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/10'
+                    : 'bg-accent/40 text-muted-foreground border-border/40 hover:bg-accent/60'
+                }`}
+              >
+                {role === 'ALL' ? 'Todos' : ROLE_LABELS[role]} ({count})
+              </button>
+            )
+          })}
+        </div>
+
+        {inactiveUsers > 0 && (
+          <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs font-black text-amber-600 dark:text-amber-400">
+            <UserX size={14} />
+            {inactiveUsers} inativo{inactiveUsers > 1 ? 's' : ''}
+          </div>
         )}
       </div>
 
-      {/* Modal de cadastro / edição */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-1">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h2>
-            {!editingUser && (
-              <p className="text-sm text-gray-500 mb-4">Após cadastrar, use o botão <strong>Gerar Acesso</strong> na tabela para enviar as credenciais de login.</p>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  placeholder="Ex: Ana Paula Santos"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">E-mail (Login) *</label>
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  disabled={!!editingUser}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 disabled:bg-gray-50 disabled:text-gray-400"
-                  placeholder="email@escola.com.br"
-                />
-                {editingUser && (
-                  <p className="mt-1 text-xs text-gray-400">O e-mail não pode ser alterado. Use &quot;Gerar Acesso&quot; para resetar a senha.</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Telefone / WhatsApp</label>
-                <input
-                  type="text"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cargo / Função *</label>
-                  <select
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  >
-                    <option value="TEACHER">Professor(a)</option>
-                    <option value="CAREGIVER">Cuidador(a) / Monitora</option>
-                    <option value="STAFF">Equipe Geral</option>
-                    <option value="DIRECTOR">Diretor(a)</option>
-                    <option value="ADMIN">Administrador</option>
-                  </select>
-                </div>
-
-                {editingUser && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <div className="flex items-center h-[42px]">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.active}
-                          onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                          className="rounded text-violet-600 focus:ring-violet-500"
-                        />
-                        <span className="text-sm text-gray-700">Acesso Ativo</span>
-                      </label>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <SkeletonCard lines={4} />
+          <SkeletonCard lines={4} />
+          <SkeletonCard lines={4} />
+        </div>
+      ) : filteredUsers.length === 0 ? (
+        <EmptyState
+          icon={<Users size={32} />}
+          title="Nenhum usuário encontrado"
+          description={search ? 'Tente buscar com outro termo ou limpar os filtros.' : 'Cadastre o primeiro usuário da equipe.'}
+          action={!search && roleFilter === 'ALL' && (
+            <button onClick={() => handleOpenModal()} className="btn-primary">
+              Cadastrar Usuário
+            </button>
+          )}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredUsers.map((user) => (
+            <div key={user.id} className="card-hover p-6 flex flex-col group border border-border/40 hover:border-primary/20">
+              <div className="flex items-start justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4 min-w-0">
+                  <Avatar name={user.name} size="md" color="bg-primary/10 text-primary" />
+                  <div className="min-w-0">
+                    <h3 className="font-black text-foreground leading-tight truncate text-base">{user.name}</h3>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <Badge label={ROLE_LABELS[user.role] || user.role} variant={ROLE_BADGES[user.role] || 'gray'} size="sm" />
+                      <Badge label={user.active ? 'Ativo' : 'Inativo'} variant={user.active ? 'green' : 'red'} size="sm" dot={user.active} />
                     </div>
                   </div>
-                )}
+                </div>
+
+                <div className="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => handleOpenModal(user)}
+                    className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
+                    title="Editar"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(user.id)}
+                    className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                    title="Desativar"
+                  >
+                    <Trash size={16} />
+                  </button>
+                </div>
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-4 border-t">
+              <div className="space-y-3 mb-8 bg-accent/20 p-4 rounded-2xl border border-border/20">
+                <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 shadow-sm">
+                    <Mail size={14} className="text-primary" />
+                  </div>
+                  <span className="truncate">{user.email}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 shadow-sm">
+                    <Phone size={14} className="text-primary" />
+                  </div>
+                  <span className="truncate">{user.phone || 'Telefone não informado'}</span>
+                </div>
+              </div>
+
+              <div className="mt-auto pt-6 border-t border-border/50">
                 <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  onClick={() => handleGenerateAccess(user)}
+                  disabled={generatingFor === user.id}
+                  className="w-full btn-primary py-3 text-xs font-black gap-2 shadow-lg shadow-primary/10 active:scale-95 transition-transform"
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex items-center gap-2 rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-60"
-                >
-                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Salvar
+                  {generatingFor === user.id
+                    ? <Loader2 size={14} className="animate-spin" />
+                    : user.active
+                      ? <RefreshCw size={14} />
+                      : <Key size={14} />
+                  }
+                  {user.active ? 'Resetar Senha' : 'Gerar Acesso'}
                 </button>
               </div>
-            </form>
-          </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Modal de credenciais geradas */}
-      {credentials && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                <Key className="h-6 w-6 text-emerald-600" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Acesso gerado!</h2>
-                <p className="text-sm text-gray-500">Compartilhe as credenciais abaixo com {credentials.name.split(' ')[0]}.</p>
-              </div>
+      <Modal
+        open={showModal}
+        onClose={() => !saving && setShowModal(false)}
+        title={editingUser ? 'Editar Usuário' : 'Novo Usuário'}
+        subtitle={editingUser ? 'Atualize cargo, telefone e status do acesso.' : 'Cadastre um membro da equipe e gere o acesso em seguida.'}
+      >
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {!editingUser && (
+            <Alert variant="info">
+              Após cadastrar, use o botão de acesso no card do usuário para gerar e copiar as credenciais de login.
+            </Alert>
+          )}
+
+          <div>
+            <label className="label">Nome Completo *</label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="input"
+              placeholder="Ex: Ana Paula Santos"
+            />
+          </div>
+
+          <div>
+            <label className="label">E-mail de Login *</label>
+            <input
+              type="email"
+              required
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              disabled={!!editingUser}
+              className="input disabled:cursor-not-allowed disabled:opacity-60"
+              placeholder="email@escola.com.br"
+            />
+            {editingUser && (
+              <p className="mt-2 text-[10px] text-muted-foreground font-medium italic">
+                O e-mail não pode ser alterado. Use &quot;Resetar Senha&quot; para gerar nova senha.
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Telefone / WhatsApp</label>
+              <input
+                type="text"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="input"
+                placeholder="(11) 99999-9999"
+              />
             </div>
-
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-200 mb-4">
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Login (E-mail)</p>
-                <p className="text-sm font-bold text-gray-900 mt-0.5">{credentials.email}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Senha provisória</p>
-                <p className="text-2xl font-black text-violet-600 tracking-[0.3em] mt-0.5">{credentials.password}</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-gray-400 mb-4">
-              Esta senha é temporária. A professora/monitora poderá alterá-la nas configurações do perfil após o primeiro acesso.
-            </p>
-
-            <div className="flex gap-3">
-              <button
-                onClick={copyCredentials}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all ${copied ? 'bg-emerald-600 text-white' : 'bg-gray-900 text-white hover:bg-gray-700'}`}
+            <div>
+              <label className="label">Cargo / Função *</label>
+              <select
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                className="select"
               >
-                <Copy className="h-4 w-4" />
-                {copied ? 'Copiado!' : 'Copiar mensagem de acesso'}
+                {ROLE_OPTIONS.map((role) => (
+                  <option key={role.value} value={role.value}>{role.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {editingUser && (
+            <label className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-accent/20 p-4 cursor-pointer">
+              <div>
+                <span className="block text-sm font-black text-foreground">Acesso ativo</span>
+                <span className="block text-xs font-bold text-muted-foreground mt-0.5">Usuários inativos não conseguem acessar o sistema.</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={formData.active}
+                onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                className="h-5 w-5 rounded border-border text-primary focus:ring-primary"
+              />
+            </label>
+          )}
+
+          <div className="pt-4 flex gap-3 border-t border-border">
+            <button type="button" onClick={() => setShowModal(false)} className="btn-ghost flex-1">
+              Cancelar
+            </button>
+            <button type="submit" disabled={saving} className="btn-primary flex-1 gap-2">
+              {saving ? <Loader2 size={18} className="animate-spin" /> : 'Salvar Dados'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        open={!!credentials}
+        onClose={() => setCredentials(null)}
+        title="Acesso Gerado"
+        subtitle={credentials ? `Credenciais provisórias para ${credentials.name.split(' ')[0]}.` : undefined}
+      >
+        {credentials && (
+          <div className="space-y-6">
+            <Alert variant="success">
+              O acesso foi gerado com sucesso. Copie os dados abaixo e envie pelo canal combinado com a equipe.
+            </Alert>
+
+            <div className="bg-accent/40 p-6 rounded-[2rem] border border-border/50 space-y-4 shadow-inner">
+              <div>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">E-mail de Login</p>
+                <p className="text-sm font-black text-foreground break-all">{credentials.email}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Senha Temporária</p>
+                <p className="text-3xl font-black text-primary tracking-[0.2em]">{credentials.password}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button onClick={copyCredentials} className="btn-primary flex-1 py-4 gap-3">
+                <Copy size={18} /> {copied ? 'Copiado!' : 'Copiar Mensagem'}
               </button>
-              <button
-                onClick={() => setCredentials(null)}
-                className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
+              <button onClick={() => setCredentials(null)} className="btn-ghost sm:w-32">
                 Fechar
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   )
 }
