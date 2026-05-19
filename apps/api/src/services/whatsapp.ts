@@ -200,3 +200,7 @@ export class WhatsAppService {
 }
 
 export const whatsappService = new WhatsAppService()
+
+export function createWhatsAppService(config?: { token?: string | null; phoneNumberId?: string | null }) {
+  return whatsappService
+}

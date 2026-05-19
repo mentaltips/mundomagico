@@ -6,7 +6,8 @@ import {
   MessageCircle, Send, Save, Clock, Smartphone, 
   Users, CheckCircle2, Info, AlertCircle, Hash,
   History, Settings as SettingsIcon, Activity, Check, 
-  AlertTriangle, ExternalLink, Loader2, Sparkles, Search
+  AlertTriangle, ExternalLink, Loader2, Sparkles, Search,
+  QrCode, LogOut, RefreshCw
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -35,11 +36,11 @@ export default function WhatsAppDashboardPage() {
   const [children, setChildren] = useState<Child[]>([])
   const [loading, setLoading] = useState(true)
   
-  // Settings State
-  const [whatsappToken, setWhatsappToken] = useState('')
-  const [whatsappPhone, setWhatsappPhone] = useState('')
-  const [savingSettings, setSavingSettings] = useState(false)
+  // Baileys Connection State
   const [isConnected, setIsConnected] = useState(false)
+  const [whatsappStatus, setWhatsappStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
+  const [whatsappQr, setWhatsappQr] = useState<string | null>(null)
+  const [whatsappLoading, setWhatsappLoading] = useState(true)
 
   // Broadcast Panel State
   const [targetStatus, setTargetStatus] = useState<string>('ALL')
@@ -47,26 +48,40 @@ export default function WhatsAppDashboardPage() {
   const [sendingBroadcast, setSendingBroadcast] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Fetch children and current settings
+  const fetchWhatsappStatus = async () => {
+    try {
+      const res = await fetch('/api/whatsapp/status')
+      if (res.ok) {
+        const data = await res.json()
+        setWhatsappStatus(data.status)
+        setWhatsappQr(data.qr)
+        setIsConnected(data.status === 'connected')
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setWhatsappLoading(false)
+    }
+  }
+
+  // Poll for connection status
+  useEffect(() => {
+    fetchWhatsappStatus()
+    const interval = setInterval(() => {
+      fetchWhatsappStatus()
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Fetch children
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true)
-        const [childrenRes, settingsRes] = await Promise.all([
-          fetch('/api/children'),
-          fetch('/api/settings')
-        ])
-
-        if (childrenRes.ok) {
-          const childrenData = await childrenRes.json()
+        const res = await fetch('/api/children')
+        if (res.ok) {
+          const childrenData = await res.json()
           setChildren(childrenData)
-        }
-
-        if (settingsRes.ok) {
-          const settingsData = await settingsRes.json()
-          setWhatsappToken(settingsData.school?.whatsappToken ?? '')
-          setWhatsappPhone(settingsData.school?.whatsappPhone ?? '')
-          setIsConnected(!!settingsData.school?.whatsappToken && !!settingsData.school?.whatsappPhone)
         }
       } catch (err) {
         console.error('Erro ao carregar dados:', err)
@@ -119,32 +134,7 @@ export default function WhatsAppDashboardPage() {
     }
   }, [targetStatus])
 
-  // Save Settings
-  const handleSaveSettings = async () => {
-    try {
-      setSavingSettings(true)
-      const res = await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          whatsappToken,
-          whatsappPhone
-        })
-      })
 
-      if (res.ok) {
-        toast.success('Configurações do WhatsApp salvas com sucesso!')
-        setIsConnected(!!whatsappToken && !!whatsappPhone)
-      } else {
-        toast.error('Erro ao atualizar as configurações.')
-      }
-    } catch (err) {
-      console.error(err)
-      toast.error('Erro ao conectar com o servidor.')
-    } finally {
-      setSavingSettings(false)
-    }
-  }
 
   // Format dynamic previews for individual click-to-chat links
   const getIndividualMessage = (child: Child, rawMessage: string) => {
@@ -318,19 +308,49 @@ export default function WhatsAppDashboardPage() {
                   />
                 </div>
 
-                {/* Simulated Meta API Broadcast Button */}
+                {/* Broadcast Send Button */}
                 {isConnected && (
                   <div className="pt-4 border-t border-border/50">
                     <button 
-                      onClick={() => {
-                        toast.success('Envio oficial disparado para a fila em background!')
+                      onClick={async () => {
+                        setSendingBroadcast(true)
+                        try {
+                          const res = await fetch('/api/whatsapp/broadcast', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              targetStatus,
+                              message: customMessage
+                            })
+                          })
+                          if (res.ok) {
+                            const data = await res.json()
+                            toast.success(`Transmissão enviada: ${data.success}/${data.total} contatos.`)
+                          } else {
+                            toast.error('Erro ao disparar mensagens.')
+                          }
+                        } catch (err) {
+                          toast.error('Erro de conexão com o servidor.')
+                        } finally {
+                          setSendingBroadcast(false)
+                        }
                       }}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-500 text-white rounded-2xl font-black text-base shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all"
+                      disabled={sendingBroadcast || targetChildren.length === 0}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-500 text-white rounded-2xl font-black text-base shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all disabled:opacity-50"
                     >
-                      <Send size={18} />
-                      Disparar via API Oficial ({targetChildren.length} contatos)
+                      {sendingBroadcast ? (
+                        <>
+                          <Loader2 className="animate-spin" size={18} />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          <Send size={18} />
+                          Disparar Transmissão ({targetChildren.length} contatos)
+                        </>
+                      )}
                     </button>
-                    <p className="text-[10px] text-muted-foreground mt-2 text-center">Enviar via número oficial da escola Mundo Mágico cadastrado na Meta.</p>
+                    <p className="text-[10px] text-muted-foreground mt-2 text-center">Enviar para todos os responsáveis do grupo filtrado usando o WhatsApp conectado.</p>
                   </div>
                 )}
               </div>
@@ -511,60 +531,114 @@ export default function WhatsAppDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.2 }}
-            className="bg-card p-6 md:p-8 rounded-[2.5rem] border border-border/50 shadow-sm max-w-2xl mx-auto space-y-6"
+            className="bg-card p-6 md:p-8 rounded-[2.5rem] border border-border/50 shadow-sm max-w-4xl mx-auto space-y-6"
           >
             <div>
-              <h3 className="text-lg font-black text-foreground">Credenciais da API Oficial (Meta)</h3>
-              <p className="text-xs text-muted-foreground mt-1">Configure suas chaves do Facebook Developer para habilitar disparos em massa e automações de rotina.</p>
+              <h3 className="text-lg font-black text-foreground">Conexão do Aparelho (WhatsApp Baileys)</h3>
+              <p className="text-xs text-muted-foreground mt-1">Conecte o WhatsApp da sua instituição para enviar comunicados, notificações de rotina e cobranças automaticamente.</p>
             </div>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">ID do Telefone (Phone Number ID)</label>
-                <input
-                  type="text"
-                  value={whatsappPhone}
-                  onChange={(e) => setWhatsappPhone(e.target.value)}
-                  className="w-full px-4 py-3 bg-accent/40 border border-border/50 rounded-2xl font-bold text-foreground outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-                  placeholder="Ex: 105658425256488"
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+              {/* Lado Esquerdo - Status */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <RefreshCw size={14} className={whatsappLoading ? "animate-spin text-emerald-500" : "text-muted-foreground"} />
+                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Status da Conexão</span>
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Token de Acesso Temporário ou Permanente</label>
-                <textarea
-                  value={whatsappToken}
-                  onChange={(e) => setWhatsappToken(e.target.value)}
-                  rows={4}
-                  className="w-full p-4 bg-accent/40 border border-border/50 rounded-2xl font-medium text-foreground outline-none focus:ring-2 focus:ring-emerald-500 text-xs"
-                  placeholder="EAAGb..."
-                />
-              </div>
+                <div className={`p-6 rounded-3xl border-2 text-left transition-all ${
+                  whatsappStatus === 'connected' ? 'border-emerald-500 bg-emerald-500/5 shadow-lg shadow-emerald-500/10' :
+                  whatsappStatus === 'connecting' ? 'border-amber-500 bg-amber-500/5 shadow-lg shadow-amber-500/10' :
+                  'border-red-500 bg-red-500/5 shadow-lg shadow-red-500/10'
+                }`}>
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                      whatsappStatus === 'connected' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
+                      whatsappStatus === 'connecting' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' :
+                      'bg-red-500/20 text-red-600 dark:text-red-400'
+                    }`}>
+                      {whatsappStatus === 'connected' && <CheckCircle2 size={24} />}
+                      {whatsappStatus === 'connecting' && <RefreshCw size={24} className="animate-spin" />}
+                      {whatsappStatus === 'disconnected' && <AlertCircle size={24} />}
+                    </div>
+                    
+                    <div>
+                      <p className={`font-black uppercase tracking-widest text-xs ${
+                        whatsappStatus === 'connected' ? 'text-emerald-600 dark:text-emerald-400' :
+                        whatsappStatus === 'connecting' ? 'text-amber-600 dark:text-amber-400' :
+                        'text-red-600 dark:text-red-400'
+                      }`}>
+                        {whatsappStatus === 'connected' ? 'Conectado' : whatsappStatus === 'connecting' ? 'Conectando...' : 'Desconectado'}
+                      </p>
+                      <p className="text-xs font-bold text-foreground mt-1 leading-relaxed">
+                        {whatsappStatus === 'connected' ? 'O sistema está pronto para enviar mensagens gratuitamente.' :
+                         whatsappStatus === 'connecting' ? 'Aguardando inicialização do WhatsApp...' :
+                         'Leia o QR Code ao lado usando seu WhatsApp para estabelecer a conexão.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-              <button
-                onClick={handleSaveSettings}
-                disabled={savingSettings}
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-500 text-white rounded-2xl font-black text-base hover:bg-emerald-600 transition-all disabled:opacity-50"
-              >
-                {savingSettings ? (
-                  <>
-                    <Loader2 className="animate-spin" size={18} /> Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Save size={18} /> Salvar Credenciais
-                  </>
+                {whatsappStatus === 'connected' && (
+                  <div className="p-5 bg-card border border-border rounded-3xl space-y-3">
+                    <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+                      Se você deseja trocar o aparelho conectado ou o número atual, clique no botão abaixo para deslogar a sessão atual.
+                    </p>
+                    <button 
+                      onClick={async () => {
+                        setWhatsappLoading(true)
+                        try {
+                          const res = await fetch('/api/whatsapp/logout', { method: 'POST' })
+                          if (res.ok) {
+                            toast.success('WhatsApp desconectado!')
+                          } else {
+                            toast.error('Erro ao desconectar')
+                          }
+                          await fetchWhatsappStatus()
+                        } catch (err) {
+                          toast.error('Erro de conexão')
+                        } finally {
+                          setWhatsappLoading(false)
+                        }
+                      }}
+                      disabled={whatsappLoading}
+                      className="flex items-center justify-center w-full gap-2 p-3 rounded-2xl bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 font-black uppercase tracking-widest text-[10px] transition-colors"
+                    >
+                      <LogOut size={14} />
+                      Desconectar Aparelho
+                    </button>
+                  </div>
                 )}
-              </button>
-            </div>
+              </div>
 
-            <div className="bg-accent/40 border border-border/50 p-5 rounded-2xl flex gap-4">
-              <Info className="text-primary shrink-0" size={24} />
-              <div>
-                <h4 className="text-xs font-black text-foreground">Como obter essas credenciais?</h4>
-                <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
-                  Acesse o painel do <strong>Facebook Developers</strong>, crie um aplicativo comercial, adicione o produto WhatsApp e conecte um número de telefone. Você obterá o ID do Telefone e o Token de acesso permanente nas configurações de desenvolvedor.
-                </p>
+              {/* Lado Direito - QR Code */}
+              <div className="flex flex-col items-center justify-center bg-accent/20 border border-border p-6 rounded-3xl text-center min-h-[300px]">
+                {whatsappStatus === 'connected' ? (
+                  <div className="space-y-3 py-6">
+                    <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle2 size={32} />
+                    </div>
+                    <h4 className="font-black text-sm text-foreground">Conectado com Sucesso!</h4>
+                    <p className="text-[11px] text-muted-foreground font-medium max-w-[240px] mx-auto leading-relaxed">
+                      Seu WhatsApp está autenticado e pronto para disparos.
+                    </p>
+                  </div>
+                ) : whatsappQr ? (
+                  <div className="space-y-4">
+                    <div className="bg-white p-3 rounded-2xl shadow-sm border border-border inline-block">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={whatsappQr} alt="WhatsApp QR Code" className="w-48 h-48 object-contain rounded-lg" />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground font-medium leading-relaxed max-w-[240px] mx-auto">
+                      Abra o WhatsApp no celular da escola, vá em <strong>Aparelhos conectados</strong> &gt; <strong>Conectar um aparelho</strong> e aponte para este código.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 text-muted-foreground opacity-50 grayscale py-10">
+                    <QrCode size={48} className="mx-auto" />
+                    <p className="text-[10px] font-black uppercase tracking-widest">Aguardando QR Code...</p>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
