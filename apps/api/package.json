@@ -12,6 +12,7 @@
   "dependencies": {
     "@mundo-magico/database": "workspace:*",
     "@mundo-magico/types": "workspace:*",
+    "@whiskeysockets/baileys": "^7.0.0-rc11",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.34.11",
     "cors": "^2.8.5",
@@ -25,6 +26,7 @@
     "multer": "^2.1.1",
     "pino": "^9.6.0",
     "pino-http": "^10.4.0",
+    "qrcode": "^1.5.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
