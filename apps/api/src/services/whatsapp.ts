@@ -4,7 +4,13 @@
 
 import type { DailyReportWhatsAppData } from '@mundo-magico/types'
 import { buildWhatsAppMessage } from '@mundo-magico/types'
-import makeWASocket, { useMultiFileAuthState, DisconnectReason, ConnectionState, WASocket } from '@whiskeysockets/baileys'
+import makeWASocket, {
+  useMultiFileAuthState,
+  DisconnectReason,
+  ConnectionState,
+  WASocket,
+  fetchLatestBaileysVersion
+} from '@whiskeysockets/baileys'
 import { Boom } from '@hapi/boom'
 import pino from 'pino'
 import QRCode from 'qrcode'
@@ -16,19 +22,40 @@ export class WhatsAppService {
   private qrBase64: string | null = null
   private connectionStatus: 'connecting' | 'connected' | 'disconnected' = 'connecting'
   private authFolder = path.join(process.cwd(), 'whatsapp-auth')
+  private reconnectAttempts = 0
+  private readonly MAX_RECONNECT_DELAY = 30_000 // 30s
+  private reconnectTimeout: NodeJS.Timeout | null = null
 
   constructor() {
     this.init()
   }
 
+  private scheduleReconnect() {
+    if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout)
+    // Exponential backoff: 2s, 4s, 8s, ..., max 30s
+    const delay = Math.min(2000 * Math.pow(2, this.reconnectAttempts), this.MAX_RECONNECT_DELAY)
+    this.reconnectAttempts++
+    console.log(`[WhatsApp] Reconectando em ${delay / 1000}s (tentativa ${this.reconnectAttempts})...`)
+    this.reconnectTimeout = setTimeout(() => this.init(), delay)
+  }
+
   private async init() {
+    // Garante que a pasta de auth existe
+    if (!fs.existsSync(this.authFolder)) {
+      fs.mkdirSync(this.authFolder, { recursive: true })
+    }
+
     const { state, saveCreds } = await useMultiFileAuthState(this.authFolder)
+    const { version } = await fetchLatestBaileysVersion()
 
     this.sock = makeWASocket({
+      version,
       auth: state,
-      printQRInTerminal: false,
+      printQRInTerminal: true,
       logger: pino({ level: 'silent' }) as any,
-      browser: ['Mundo Magico API', 'Chrome', '1.0.0']
+      browser: ['Mundo Magico', 'Chrome', '114.0.0'],
+      connectTimeoutMs: 60_000,
+      keepAliveIntervalMs: 30_000,
     })
 
     this.sock.ev.on('creds.update', saveCreds)
@@ -37,26 +64,38 @@ export class WhatsAppService {
       const { connection, lastDisconnect, qr } = update
 
       if (qr) {
+        console.log('[WhatsApp] QR Code gerado — acesse o painel admin para escanear.')
         this.qrBase64 = await QRCode.toDataURL(qr)
         this.connectionStatus = 'disconnected'
       }
 
       if (connection === 'close') {
-        const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut
+        const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode
+        const loggedOut = statusCode === DisconnectReason.loggedOut
         this.connectionStatus = 'disconnected'
-        this.qrBase64 = null
-        if (shouldReconnect) {
-          console.log('[WhatsApp] Reconectando...')
+
+        if (loggedOut) {
+          console.log('[WhatsApp] Sessão encerrada (Logout). Limpando credenciais...')
+          fs.rmSync(this.authFolder, { recursive: true, force: true })
+          this.reconnectAttempts = 0
+          this.qrBase64 = null
           this.init()
         } else {
-          console.log('[WhatsApp] Desconectado permanentemente (Logged Out). Limpando sessão.')
-          fs.rmSync(this.authFolder, { recursive: true, force: true })
-          this.init()
+          this.qrBase64 = null
+          this.scheduleReconnect()
         }
       } else if (connection === 'open') {
-        console.log('[WhatsApp] Conectado com sucesso!')
+        console.log('[WhatsApp] ✅ Conectado com sucesso!')
         this.connectionStatus = 'connected'
         this.qrBase64 = null
+        this.reconnectAttempts = 0
+        if (this.reconnectTimeout) {
+          clearTimeout(this.reconnectTimeout)
+          this.reconnectTimeout = null
+        }
+      } else if (connection === 'connecting') {
+        console.log('[WhatsApp] Conectando ao servidor...')
+        this.connectionStatus = 'connecting'
       }
     })
   }
@@ -69,16 +108,26 @@ export class WhatsAppService {
   }
 
   public async logout() {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout)
+      this.reconnectTimeout = null
+    }
     if (this.sock) {
-      await this.sock.logout()
+      try {
+        await this.sock.logout()
+      } catch (_) {
+        // ignora erros ao fazer logout
+      }
     }
     fs.rmSync(this.authFolder, { recursive: true, force: true })
+    this.reconnectAttempts = 0
+    this.qrBase64 = null
+    this.connectionStatus = 'disconnected'
     this.init()
   }
 
   private formatPhone(phone: string): string {
     let clean = phone.replace(/\D/g, '')
-    // Se tiver 10 ou 11 digitos, assume que é BR
     if (clean.length === 10 || clean.length === 11) {
       clean = '55' + clean
     }
@@ -128,54 +177,26 @@ export class WhatsAppService {
   async sendCheckInNotification(
     guardianPhone: string,
     childName: string,
-    schoolName: string,
-    time: string,
-    broughtBy: string
+    time: string
   ): Promise<boolean> {
-    const message = `✅ *${childName}* chegou à *${schoolName}* às *${time}* com ${broughtBy}. Bom dia!`
+    const message = [
+      `✅ *${childName}* chegou à escola!`,
+      `Horário: ${time}`,
+    ].join('\n')
     return this.sendTextMessage(guardianPhone, message)
   }
 
   async sendCheckOutNotification(
     guardianPhone: string,
     childName: string,
-    schoolName: string,
-    time: string,
-    pickedUpBy: string
-  ): Promise<boolean> {
-    const message = `👋 *${childName}* saiu da *${schoolName}* às *${time}* com ${pickedUpBy}. Até amanhã!`
-    return this.sendTextMessage(guardianPhone, message)
-  }
-
-  async sendInvoiceNotification(
-    guardianPhone: string,
-    guardianName: string,
-    amount: string,
-    dueDate: string,
-    description: string,
-    paymentLink: string
+    time: string
   ): Promise<boolean> {
     const message = [
-      `Olá, *${guardianName}*! 👋`,
-      ``,
-      `A fatura de *${description}* já está disponível.`,
-      ``,
-      `💰 *Valor:* R$ ${amount}`,
-      `📅 *Vencimento:* ${dueDate}`,
-      ``,
-      `Você pode realizar o pagamento através do link abaixo:`,
-      `🔗 ${paymentLink}`,
-      ``,
-      `Obrigado! 🙏`
+      `🏠 *${childName}* saiu da escola!`,
+      `Horário: ${time}`,
     ].join('\n')
     return this.sendTextMessage(guardianPhone, message)
   }
 }
 
-// Singleton global
 export const whatsappService = new WhatsAppService()
-
-// Factory para manter compatibilidade com o código anterior
-export function createWhatsAppService(): WhatsAppService {
-  return whatsappService
-}
