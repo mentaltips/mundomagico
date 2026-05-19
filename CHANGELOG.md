@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.2.0 - 2026-05-19
+
+### Internacionalização e Tradução (PT-BR)
+
+- Traduzidos todos os cargos e perfis de usuário do inglês para o português:
+  - `ADMIN` $\rightarrow$ `ADMIN` (Administrador Geral)
+  - `SCHOOL_ADMIN` $\rightarrow$ `ADMIN_ESCOLA` (Administrador da Escola)
+  - `DIRECTOR` $\rightarrow$ `DIRETOR` (Diretor)
+  - `COORDINATOR` $\rightarrow$ `COORDENADOR` (Coordenador)
+  - `TEACHER` $\rightarrow$ `PROFESSOR` (Professor)
+  - `MONITOR` $\rightarrow$ `MONITOR` (Monitor)
+  - `CAREGIVER` $\rightarrow$ `CUIDADOR` (Cuidador)
+  - `GUARDIAN` $\rightarrow$ `RESPONSAVEL` (Responsável)
+  - `FINANCE` $\rightarrow$ `FINANCEIRO` (Financeiro)
+  - `STAFF` $\rightarrow$ `FUNCIONARIO` (Funcionário)
+- Renomeados todos os caminhos de rotas físicas no frontend:
+  - `/parent` $\rightarrow$ `/responsavel`
+  - `/teacher` $\rightarrow$ `/professor`
+- Renomeados todos os endpoints e rotas de proxies da API Next.js:
+  - `/api/parent` $\rightarrow$ `/api/responsavel`
+  - `/api/teacher` $\rightarrow$ `/api/professor`
+- Atualizado o middleware do NextAuth para controle dinâmico dos novos caminhos traduzidos.
+- Atualizado o mapeamento de equipe e modais administrativos para exibição de cargos em português.
+
+### Banco de Dados e Migração
+
+- Criado script de migração automática `migrar-cargos.ts` para converter chaves legadas de cargos no banco de dados local/produção de forma segura.
+- Atualizado o script de sementes (`seed.ts`) com a nova role `RESPONSAVEL` e relações válidas no Prisma Client.
+
 ## v1.1.0 - 2026-05-18
 
 ### Segurança

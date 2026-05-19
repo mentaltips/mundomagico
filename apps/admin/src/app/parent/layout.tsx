@@ -28,14 +28,14 @@ const NOTIF_COLORS: Record<string, string> = {
 }
 
 const navItems = [
-  { label: 'Início',      href: '/parent',           icon: Home },
-  { label: 'Histórico',   href: '/parent/history',   icon: History },
-  { label: 'Recados',     href: '/parent/messages',  icon: MessageSquare },
-  { label: 'Agenda',      href: '/parent/calendar',  icon: Calendar },
-  { label: 'Fotos',       href: '/parent/photos',    icon: Camera },
-  { label: 'Docs',        href: '/parent/documents', icon: FileText },
-  { label: 'Pagamentos',  href: '/parent/payments',  icon: DollarSign },
-  { label: 'Perfil',      href: '/parent/profile',   icon: User },
+  { label: 'Início',      href: '/responsavel',           icon: Home },
+  { label: 'Histórico',   href: '/responsavel/history',   icon: History },
+  { label: 'Recados',     href: '/responsavel/messages',  icon: MessageSquare },
+  { label: 'Agenda',      href: '/responsavel/calendar',  icon: Calendar },
+  { label: 'Fotos',       href: '/responsavel/photos',    icon: Camera },
+  { label: 'Docs',        href: '/responsavel/documents', icon: FileText },
+  { label: 'Pagamentos',  href: '/responsavel/payments',  icon: DollarSign },
+  { label: 'Perfil',      href: '/responsavel/profile',   icon: User },
 ]
 
 // Only show 5 items in bottom nav; rest accessible via "Mais"
@@ -146,7 +146,7 @@ function NotificationBell() {
 
             {notifications.length > 0 && (
               <div className="border-t border-gray-50 px-5 py-3">
-                <Link href="/parent/messages" onClick={() => setOpen(false)} className="text-xs font-black text-sky-600 hover:text-sky-700">
+                <Link href="/responsavel/messages" onClick={() => setOpen(false)} className="text-xs font-black text-sky-600 hover:text-sky-700">
                   Ver todos os comunicados →
                 </Link>
               </div>
@@ -178,7 +178,7 @@ export default function GuardianLayout({ children }: { children: React.ReactNode
       <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-md border-b border-border shadow-sm">
         <div className="flex h-16 items-center justify-between px-4 md:px-8 max-w-2xl mx-auto w-full">
           {/* Brand */}
-          <Link href="/parent" className="flex items-center gap-2.5">
+          <Link href="/responsavel" className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-black text-sm shadow-sm">
               MM
             </div>
@@ -193,7 +193,7 @@ export default function GuardianLayout({ children }: { children: React.ReactNode
             <NotificationBell />
             <ThemeToggle />
             <Link
-              href="/parent/profile"
+              href="/responsavel/profile"
               className="ml-1 h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm hover:bg-primary/20 transition-colors"
               aria-label="Perfil"
             >
@@ -206,7 +206,7 @@ export default function GuardianLayout({ children }: { children: React.ReactNode
         <nav className="hidden md:flex items-center gap-1 px-8 pb-3 max-w-2xl mx-auto w-full overflow-x-auto no-scrollbar">
             {navItems.map((item) => {
               const Icon = item.icon
-              const isActive = pathname === item.href || (item.href !== '/parent' && pathname.startsWith(item.href))
+              const isActive = pathname === item.href || (item.href !== '/responsavel' && pathname.startsWith(item.href))
               return (
                 <Link
                   key={item.href}
@@ -239,7 +239,7 @@ export default function GuardianLayout({ children }: { children: React.ReactNode
       <nav className="fixed bottom-0 left-0 right-0 z-30 flex md:hidden h-16 items-center justify-around bg-card/90 backdrop-blur-md border-t border-border shadow-[0_-4px_24px_rgba(0,0,0,0.06)]">
         {bottomNav.map((item) => {
           const Icon = item.icon
-          const isActive = pathname === item.href || (item.href !== '/parent' && pathname.startsWith(item.href))
+          const isActive = pathname === item.href || (item.href !== '/responsavel' && pathname.startsWith(item.href))
           return (
             <Link
               key={item.href}
@@ -286,7 +286,7 @@ export default function GuardianLayout({ children }: { children: React.ReactNode
               <div className="grid grid-cols-4 gap-3">
                 {navItems.map((item) => {
                   const Icon = item.icon
-                  const isActive = pathname === item.href || (item.href !== '/parent' && pathname.startsWith(item.href))
+                  const isActive = pathname === item.href || (item.href !== '/responsavel' && pathname.startsWith(item.href))
                   return (
                     <Link
                       key={item.href}

@@ -26,7 +26,7 @@ export default function AttendanceListPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch(`/api/teacher/attendance?groupId=${id}`)
+        const res = await fetch(`/api/professor/attendance?groupId=${id}`)
         if (res.ok) {
           const data = await res.json()
           setChildren(data.children)
@@ -43,7 +43,7 @@ export default function AttendanceListPage() {
 
   const handleAttendance = async (childId: string, type: 'IN' | 'OUT') => {
     try {
-      const res = await fetch('/api/teacher/attendance', {
+      const res = await fetch('/api/professor/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ childId, type })

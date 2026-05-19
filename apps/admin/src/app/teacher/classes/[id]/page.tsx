@@ -28,7 +28,7 @@ export default function TeacherClassPage() {
   useEffect(() => {
     async function fetchGroup() {
       try {
-        const res = await fetch(`/api/teacher/classes/${id}`)
+        const res = await fetch(`/api/professor/classes/${id}`)
         if (res.ok) {
           const data = await res.json()
           setGroup(data)
@@ -56,7 +56,7 @@ export default function TeacherClassPage() {
         {group.children.map((child) => (
           <Link 
             key={child.id} 
-            href={`/teacher/daily-reports/new?childId=${child.id}`}
+            href={`/professor/daily-reports/new?childId=${child.id}`}
             className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-violet-200"
           >
             <div className="flex items-center gap-4">

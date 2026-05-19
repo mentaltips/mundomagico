@@ -8,14 +8,14 @@ export default function TeacherProfilePage() {
   const user = session?.user
 
   const roleLabel: Record<string, string> = {
-    TEACHER: 'Professor(a)',
-    CAREGIVER: 'Cuidador(a)',
+    PROFESSOR: 'Professor(a)',
+    CUIDADOR: 'Cuidador(a)',
     ADMIN: 'Administrador',
-    DIRECTOR: 'Diretor(a)',
+    DIRETOR: 'Diretor(a)',
   }
 
   const menuItems = [
-    { icon: BookOpen, label: 'Minhas turmas',   desc: 'Ver turmas atribuídas',          href: '/teacher/classes' },
+    { icon: BookOpen, label: 'Minhas turmas',   desc: 'Ver turmas atribuídas',          href: '/professor/classes' },
     { icon: Bell,     label: 'Notificações',     desc: 'Comunicados da escola',          href: '/admin/announcements' },
     { icon: Shield,   label: 'Privacidade',      desc: 'Dados e segurança da conta',     href: '/admin/settings' },
     { icon: HelpCircle, label: 'Ajuda e Suporte', desc: 'Entre em contato com a escola', href: 'mailto:contato@mundomagico.com' },

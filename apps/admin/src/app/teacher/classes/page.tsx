@@ -18,7 +18,7 @@ export default function TeacherClassesPage() {
   useEffect(() => {
     async function fetchGroups() {
       try {
-        const res = await fetch('/api/teacher/classes')
+        const res = await fetch('/api/professor/classes')
         if (res.ok) {
           const data = await res.json()
           setGroups(data)
@@ -35,7 +35,7 @@ export default function TeacherClassesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/teacher" className="text-gray-400 hover:text-gray-600 transition-colors">
+        <Link href="/professor" className="text-gray-400 hover:text-gray-600 transition-colors">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
@@ -63,7 +63,7 @@ export default function TeacherClassesPage() {
           {groups.map((group) => (
             <Link
               key={group.id}
-              href={`/teacher/classes/${group.id}`}
+              href={`/professor/classes/${group.id}`}
               className="card-interactive p-5 flex flex-col justify-between group active:scale-95 transition-all"
             >
               <div className="flex items-start justify-between">

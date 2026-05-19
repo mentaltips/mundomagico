@@ -11,9 +11,9 @@ export default function GuardianProfilePage() {
   const user = session?.user
 
   const menuItems = [
-    { icon: DollarSign, label: 'Financeiro',     desc: 'Faturas, boletos e pagamentos',  href: '/parent/payments' },
-    { icon: Bell,       label: 'Comunicados',     desc: 'Mensagens da escola',            href: '/parent/messages' },
-    { icon: Shield,     label: 'Privacidade',    desc: 'Dados e segurança',              href: '/parent/documents' },
+    { icon: DollarSign, label: 'Financeiro',     desc: 'Faturas, boletos e pagamentos',  href: '/responsavel/payments' },
+    { icon: Bell,       label: 'Comunicados',     desc: 'Mensagens da escola',            href: '/responsavel/messages' },
+    { icon: Shield,     label: 'Privacidade',    desc: 'Dados e segurança',              href: '/responsavel/documents' },
     { icon: HelpCircle, label: 'Ajuda e Suporte', desc: 'Entre em contato com a escola', href: 'mailto:contato@mundomagico.com' },
   ]
 

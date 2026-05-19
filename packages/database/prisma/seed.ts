@@ -115,6 +115,7 @@ async function main() {
     update: {},
     create: {
       id: 'resp-exemplo-1',
+      school: { connect: { id: school.id } },
       fullName: 'Ana Paula Santos',
       phone: '(11) 98888-7777',
       email: 'ana.santos@email.com',
@@ -132,7 +133,7 @@ async function main() {
       name: 'Ana Paula Santos',
       email: 'ana.santos@email.com',
       password: guardianUserPassword,
-      role: 'GUARDIAN',
+      role: 'RESPONSAVEL',
     },
   })
 

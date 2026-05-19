@@ -1,38 +1,94 @@
 import { Worker, Job } from 'bullmq'
+import { prisma } from '@mundo-magico/database'
 import { connection, QUEUE_NAMES } from '../services/queue'
 import { createWhatsAppService } from '../services/whatsapp'
 
 export interface WhatsAppNotificationPayload {
-  to: string;
-  templateName: string;
-  languageCode: string;
-  components: any[];
-  // Campos opcionais para mensagens de texto diretas (check-in, check-out, etc.)
-  textMessage?: string;
+  messageId?: string
+  to: string
+  templateName: string
+  languageCode: string
+  components: any[]
+  textMessage?: string
 }
 
 export const whatsappWorker = connection ? new Worker<WhatsAppNotificationPayload>(
   QUEUE_NAMES.WHATSAPP_NOTIFICATIONS,
   async (job: Job<WhatsAppNotificationPayload>) => {
-    const { to, templateName, languageCode, components, textMessage } = job.data
+    const { messageId, to, templateName, textMessage } = job.data
 
     console.log(`[Worker] Processando mensagem WhatsApp para: ${to} (Template: ${templateName})`)
-    
-    const whatsapp = createWhatsAppService()
-    if (whatsapp) {
-      if (textMessage) {
-        // Mensagem de texto direta (ex: check-in, check-out, reposição de itens)
-        await whatsapp.sendTextMessage(to, textMessage)
-      } else {
-        // Quando não há textMessage, loga aviso — integração de templates
-        // requer configuração do template na conta Meta Business
-        console.warn(`[Worker] Template "${templateName}" sem textMessage definido. Verifique o payload do job.`)
+
+    let trackedMessage: Awaited<ReturnType<typeof prisma.whatsAppMessage.findUnique>> = null
+
+    if (messageId) {
+      trackedMessage = await prisma.whatsAppMessage.findUnique({
+        where: { id: messageId },
+      })
+
+      if (!trackedMessage) {
+        throw new Error(`WhatsAppMessage ${messageId} nao encontrada`)
       }
-    } else {
-      console.warn(`[Worker] WhatsApp service desabilitado. Configure WHATSAPP_API_TOKEN e WHATSAPP_PHONE_NUMBER_ID.`)
+
+      if (trackedMessage.status === 'CANCELLED') {
+        return { success: false, cancelled: true }
+      }
+
+      await prisma.whatsAppMessage.update({
+        where: { id: messageId },
+        data: {
+          status: 'PROCESSING',
+          attempts: { increment: 1 },
+          error: null,
+        },
+      })
     }
 
-    return { success: true }
+    try {
+      const whatsapp = createWhatsAppService()
+      if (!whatsapp) {
+        throw new Error('WhatsApp service desabilitado')
+      }
+
+      if (!textMessage) {
+        throw new Error(`Template "${templateName}" sem textMessage definido`)
+      }
+
+      const activeSchoolId = trackedMessage?.schoolId || (job.data as any).schoolId
+      if (!activeSchoolId) {
+        throw new Error('Mensagem sem schoolId/escola definidos')
+      }
+
+      const sent = await whatsapp.sendTextMessage(activeSchoolId, to, textMessage)
+      if (!sent) {
+        throw new Error('WhatsApp nao conectado ou envio recusado pelo servico')
+      }
+
+      if (messageId) {
+        await prisma.whatsAppMessage.update({
+          where: { id: messageId },
+          data: {
+            status: 'SENT',
+            sentAt: new Date(),
+            error: null,
+          },
+        })
+      }
+
+      return { success: true }
+    } catch (error: any) {
+      if (messageId) {
+        await prisma.whatsAppMessage.update({
+          where: { id: messageId },
+          data: {
+            status: 'FAILED',
+            error: error?.message || 'Falha ao enviar WhatsApp',
+          },
+        })
+      }
+
+      throw error
+    }
   },
   {
     connection,
@@ -41,7 +97,7 @@ export const whatsappWorker = connection ? new Worker<WhatsAppNotificationPayloa
 ) : null
 
 let lastErrorTime = 0
-const ERROR_LOG_INTERVAL = 60000 // Log only once per minute
+const ERROR_LOG_INTERVAL = 60000
 
 if (whatsappWorker) {
   whatsappWorker.on('error', (err: any) => {

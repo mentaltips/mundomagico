@@ -18,7 +18,7 @@ export default function GuardianHistoryPage() {
 
   const handleDayClick = (date: Date) => {
     const isoDate = date.toISOString().split('T')[0]
-    router.push(`/parent?date=${isoDate}`)
+    router.push(`/responsavel?date=${isoDate}`)
   }
 
   return (

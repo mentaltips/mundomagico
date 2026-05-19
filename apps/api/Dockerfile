@@ -19,6 +19,8 @@ RUN pnpm install --frozen-lockfile
 # Gera o Prisma Client
 RUN pnpm --filter @mundo-magico/database exec prisma generate
 
+RUN pnpm --filter @mundo-magico/api build
+
 # Cria usuário não-root com pasta home e permissões
 RUN groupadd -r appgroup && useradd -r -m -g appgroup appuser
 RUN chown -R appuser:appgroup /app
@@ -28,4 +30,4 @@ USER appuser
 EXPOSE 3333
 
 # Usa pnpm exec para resolver os binários do workspace corretamente
-CMD ["pnpm", "--filter", "@mundo-magico/api", "exec", "tsx", "src/index.ts"]
+CMD ["pnpm", "--filter", "@mundo-magico/api", "start"]

@@ -12,10 +12,10 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname()
 
   const navItems = [
-    { label: 'Início', href: '/teacher', icon: LayoutDashboard },
-    { label: 'Diários', href: '/teacher/daily-reports', icon: ClipboardList },
-    { label: 'Chamada', href: '/teacher/attendance', icon: UserCheck },
-    { label: 'Perfil', href: '/teacher/profile', icon: Settings },
+    { label: 'Início', href: '/professor', icon: LayoutDashboard },
+    { label: 'Diários', href: '/professor/daily-reports', icon: ClipboardList },
+    { label: 'Chamada', href: '/professor/attendance', icon: UserCheck },
+    { label: 'Perfil', href: '/professor/profile', icon: Settings },
   ]
 
   return (

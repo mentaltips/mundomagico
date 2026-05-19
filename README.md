@@ -1,7 +1,7 @@
 # Mundo Mágico - Sistema de Gestão
 
-Versão atual: **v1.1.0**  
-Data da entrega: **18/05/2026**
+Versão atual: **v1.2.0**  
+Data da entrega: **19/05/2026**
 
 Sistema completo para escolas, creches, berçários, maternais, espaços infantis e instituições híbridas.
 
@@ -28,6 +28,15 @@ mundo-magico/
 │
 └── turbo.json          # Configuração Turborepo
 ```
+
+## Arquitetura Modular (Megaoperação)
+
+O sistema foi completamente reestruturado de forma totalmente modular e desacoplada:
+
+- **Separação estrita de Responsabilidades**: Os pacotes compartilhados sob o diretório `packages/` centralizam o acesso a dados (`packages/database` com Prisma Client) e regras de tipos/enums (`packages/types`), servindo como fonte única da verdade para todos os sub-aplicativos (`apps/`).
+- **Nacionalização linguística (PT-BR) de Cargos**: Todas as roles e estruturas de visualização de perfis de equipe e responsáveis foram padronizadas e traduzidas do inglês para o português de ponta a ponta (ex: `RESPONSAVEL`, `PROFESSOR`, `DIRETOR`, `FUNCIONARIO`).
+- **Rotas e API Desacopladas**: O roteamento do frontend (`/responsavel`, `/professor`) e da API (`/api/responsavel`, `/api/professor`) opera de forma independente e isolada, com middlewares de permissões e controle de acesso estrito.
+
 
 ## Início Rápido
 
@@ -131,5 +140,6 @@ pnpm.cmd build
 
 ## Histórico de Versões
 
+- **v1.2.0** - Tradução de todos os cargos e caminhos de rotas do inglês para o português (`RESPONSAVEL`, `PROFESSOR`, etc), script automatizado de migração de cargos e correção de tipos do seed.
 - **v1.1.0** - Hardening de segurança, ajustes de build/lint, correção de rotas, melhorias no portal/admin/professor e documentação de entrega.
 - **v1.0.0** - Base inicial do sistema Mundo Mágico.

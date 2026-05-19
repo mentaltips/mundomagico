@@ -18,58 +18,61 @@ datasource db {
 // ─────────────────────────────────────────
 
 model School {
-  id              String   @id @default(cuid())
-  name            String
-  cnpj            String?
-  phone           String?
-  email           String?
-  address         String?
-  city            String?
-  state           String?
-  zipCode         String?
-  logoUrl         String?
+  id                   String   @id @default(cuid())
+  name                 String
+  cnpj                 String?
+  phone                String?
+  email                String?
+  address              String?
+  city                 String?
+  state                String?
+  zipCode              String?
+  logoUrl              String?
   // Tipo da instituição: ESCOLA | CRECHE | BERCARIO | MATERNAL | ESPACO_INFANTIL | RECREACAO | CONTRATURNO | ESCOLA_CRECHE | HIBRIDO
-  institutionType String   @default("ESCOLA")
+  institutionType      String   @default("ESCOLA")
   // JSON array de ModuleKey ativos (override do padrão por tipo)
-  activeModules   String   @default("[]")
+  activeModules        String   @default("[]")
   // JSON com terminologia customizada (sobrescreve padrões do tipo)
-  terminology     String   @default("{}")
+  terminology          String   @default("{}")
   // WhatsApp
-  whatsappToken   String?
-  whatsappPhone   String?
+  whatsappToken        String?
+  whatsappPhone        String?
   // SMTP
-  smtpHost        String?
-  smtpPort        Int?
-  smtpUser        String?
-  smtpPass        String?
-  smtpFrom        String?
+  smtpHost             String?
+  smtpPort             Int?
+  smtpUser             String?
+  smtpPass             String?
+  smtpFrom             String?
   // Mercado Pago
-  mpAccessToken   String?
-  mpPublicKey     String?
+  mpAccessToken        String?
+  mpPublicKey          String?
   // Automação Financeira
-  autoGenerateInvoices   Boolean  @default(false)
-  billingGenerationDay  Int      @default(25) // Dia do mês para gerar
-  invoiceDescription    String   @default("Mensalidade {month}/{year}")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  autoGenerateInvoices Boolean  @default(false)
+  billingGenerationDay Int      @default(25) // Dia do mês para gerar
+  invoiceDescription   String   @default("Mensalidade {month}/{year}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  users           User[]
-  groups          Group[]
-  children        Child[]
-  students        Student[]
-  dailyReports    ChildDailyReport[]
-  pageVisits      PageVisit[]
-  checkInOuts     ChildCheckInOut[]
-  medications     Medication[]
-  childItems      ChildItem[]
-  childPhotos     ChildPhoto[]
-  devReports      DevelopmentReport[]
-  announcements   Announcement[]
-  calendarEvents  CalendarEvent[]
-  invoices        Invoice[]
-  guardians       Guardian[]
-  staff           Staff[]
-  staffPayments   StaffPayment[]
+  users                User[]
+  groups               Group[]
+  children             Child[]
+  students             Student[]
+  dailyReports         ChildDailyReport[]
+  pageVisits           PageVisit[]
+  checkInOuts          ChildCheckInOut[]
+  medications          Medication[]
+  childItems           ChildItem[]
+  childPhotos          ChildPhoto[]
+  devReports           DevelopmentReport[]
+  announcements        Announcement[]
+  calendarEvents       CalendarEvent[]
+  invoices             Invoice[]
+  payments             Payment[]
+  whatsappMessages     WhatsAppMessage[]
+  paymentWebhookEvents PaymentWebhookEvent[]
+  guardians            Guardian[]
+  staff                Staff[]
+  staffPayments        StaffPayment[]
 }
 
 // ─────────────────────────────────────────
@@ -90,12 +93,17 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  school       School                     @relation(fields: [schoolId], references: [id])
-  guardians    Guardian[]
-  checkIns     ChildCheckInOut[]          @relation("CheckedBy")
-  medAdmins    MedicationAdministration[] @relation("AdminBy")
-  dailyReports ChildDailyReport[]         @relation("ReportCreatedBy")
-  staff        Staff?
+  school         School                     @relation(fields: [schoolId], references: [id])
+  guardians      Guardian[]
+  checkIns       ChildCheckInOut[]          @relation("CheckedBy")
+  medAdmins      MedicationAdministration[] @relation("AdminBy")
+  dailyReports   ChildDailyReport[]         @relation("ReportCreatedBy")
+  staff          Staff?
+  privacyConsent PrivacyConsent?
+
+  @@index([schoolId])
+  @@index([schoolId, role])
+  @@index([schoolId, active])
 }
 
 // ─────────────────────────────────────────
@@ -108,8 +116,8 @@ model Group {
   name      String
   // MANHA | TARDE | INTEGRAL | NOTURNO
   shift     String   @default("MANHA")
-  minAge    Int?     // em meses
-  maxAge    Int?     // em meses
+  minAge    Int? // em meses
+  maxAge    Int? // em meses
   capacity  Int?
   room      String?
   active    Boolean  @default(true)
@@ -119,7 +127,13 @@ model Group {
   school           School                 @relation(fields: [schoolId], references: [id])
   children         Child[]
   students         Student[]
+  photos           ChildPhoto[]
+  announcements    Announcement[]
+  calendarEvents   CalendarEvent[]
   staffAssignments StaffGroupAssignment[]
+
+  @@index([schoolId])
+  @@index([schoolId, active])
 }
 
 // ─────────────────────────────────────────
@@ -127,43 +141,44 @@ model Group {
 // ─────────────────────────────────────────
 
 model Child {
-  id                 String    @id @default(cuid())
-  schoolId           String
-  groupId            String?
-  fullName           String
-  nickname           String?
-  birthDate          DateTime
-  photoUrl           String?
-  gender             String?
-  registrationNumber String?
+  id                  String    @id @default(cuid())
+  schoolId            String
+  groupId             String?
+  fullName            String
+  nickname            String?
+  birthDate           DateTime
+  photoUrl            String?
+  gender              String?
+  registrationNumber  String?
   // MANHA | TARDE | INTEGRAL | NOTURNO
-  shift              String    @default("MANHA")
-  contractedHours    String?
-  entryDate          DateTime  @default(now())
-  exitDate           DateTime?
+  shift               String    @default("MANHA")
+  contractedHours     String?
+  entryDate           DateTime  @default(now())
+  exitDate            DateTime?
   // ATIVO | INATIVO | ADAPTACAO | AGUARDANDO_VAGA | CANCELADO
-  status             String    @default("ATIVO")
+  status              String    @default("ATIVO")
   // Saúde
-  bloodType          String?
-  allergies          String?   // JSON array
-  continuousMeds     String?   // JSON array
-  dietaryRestrictions String?  // JSON array
-  healthObservations String?
+  bloodType           String?
+  allergies           String? // JSON array
+  continuousMeds      String? // JSON array
+  dietaryRestrictions String? // JSON array
+  healthObservations  String?
   // Rotina
-  usesDiapers        Boolean   @default(false)
-  usesBottle         Boolean   @default(false)
-  usesNipple         Boolean   @default(false)
-  specialSleep       String?
-  observations       String?
+  usesDiapers         Boolean   @default(false)
+  usesBottle          Boolean   @default(false)
+  usesNipple          Boolean   @default(false)
+  specialSleep        String?
+  observations        String?
   // Autorização de imagem
-  imageAuthorized    Boolean   @default(false)
-  imageAuthDate      DateTime?
-  imageAuthBy        String?
+  imageAuthorized     Boolean   @default(false)
+  imageAuthDate       DateTime?
+  imageAuthBy         String?
   // Financeiro
-  monthlyFee         Float?    // Valor da mensalidade em reais
-  dueDay             Int?      @default(10) // Dia do vencimento (1-28)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  monthlyFee          Decimal?  @db.Decimal(10, 2) // Valor da mensalidade em reais
+  dueDay              Int?      @default(10) // Dia do vencimento (1-28)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  archivedAt          DateTime?
 
   school            School                   @relation(fields: [schoolId], references: [id])
   group             Group?                   @relation(fields: [groupId], references: [id])
@@ -177,6 +192,11 @@ model Child {
   devReports        DevelopmentReport[]
   documents         ChildDocument[]
   invoices          Invoice[]
+
+  @@index([schoolId])
+  @@index([schoolId, status])
+  @@index([schoolId, groupId])
+  @@index([schoolId, registrationNumber])
 }
 
 // ─────────────────────────────────────────
@@ -196,15 +216,21 @@ model Student {
   status             String    @default("ATIVO")
   observations       String?
   // Financeiro
-  monthlyFee         Float?    // Valor da mensalidade em reais
+  monthlyFee         Decimal?  @db.Decimal(10, 2) // Valor da mensalidade em reais
   dueDay             Int?      @default(10) // Dia do vencimento (1-28)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
+  archivedAt         DateTime?
 
-  school    School           @relation(fields: [schoolId], references: [id])
-  group     Group?           @relation(fields: [groupId], references: [id])
+  school    School            @relation(fields: [schoolId], references: [id])
+  group     Group?            @relation(fields: [groupId], references: [id])
   guardians StudentGuardian[]
   invoices  Invoice[]
+
+  @@index([schoolId])
+  @@index([schoolId, status])
+  @@index([schoolId, groupId])
+  @@index([schoolId, registrationNumber])
 }
 
 // ─────────────────────────────────────────
@@ -212,7 +238,7 @@ model Student {
 // ─────────────────────────────────────────
 
 model Guardian {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   schoolId     String
   userId       String?
   fullName     String
@@ -225,14 +251,21 @@ model Guardian {
   photoUrl     String?
   address      String?
   occupation   String?
-  status       String   @default("ATIVO")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  status       String    @default("ATIVO")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  archivedAt   DateTime?
 
-  school   School           @relation(fields: [schoolId], references: [id])
-  user     User?            @relation(fields: [userId], references: [id])
+  school   School            @relation(fields: [schoolId], references: [id])
+  user     User?             @relation(fields: [userId], references: [id])
   children ChildGuardian[]
   students StudentGuardian[]
+  invoices Invoice[]
+
+  @@index([schoolId])
+  @@index([schoolId, phone])
+  @@index([schoolId, email])
+  @@index([schoolId, cpf])
 }
 
 model ChildGuardian {
@@ -266,20 +299,20 @@ model StudentGuardian {
 // ─────────────────────────────────────────
 
 model AuthorizedPickupPerson {
-  id           String   @id @default(cuid())
-  childId      String
-  fullName     String
-  cpf          String?
-  rg           String?
-  phone        String
-  relationship String
-  photoUrl     String?
+  id            String    @id @default(cuid())
+  childId       String
+  fullName      String
+  cpf           String?
+  rg            String?
+  phone         String
+  relationship  String
+  photoUrl      String?
   // SIM | NAO | TEMPORARIO
-  authorization String  @default("SIM")
-  validUntil   DateTime?
-  observations String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  authorization String    @default("SIM")
+  validUntil    DateTime?
+  observations  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   child Child @relation(fields: [childId], references: [id])
 }
@@ -293,6 +326,7 @@ model ChildDailyReport {
   schoolId           String
   childId            String
   date               DateTime
+  dateKey            String?
   isDraft            Boolean   @default(true)
   sentAt             DateTime?
   sentVia            String?
@@ -301,14 +335,14 @@ model ChildDailyReport {
   messageToParents   String?
   importantAlert     String?
   homeRecommendation String?
-  itemRequests       String?   // JSON array
+  itemRequests       String? // JSON array
   createdBy          String
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  school     School           @relation(fields: [schoolId], references: [id])
-  child      Child            @relation(fields: [childId], references: [id])
-  author     User             @relation("ReportCreatedBy", fields: [createdBy], references: [id])
+  school     School          @relation(fields: [schoolId], references: [id])
+  child      Child           @relation(fields: [childId], references: [id])
+  author     User            @relation("ReportCreatedBy", fields: [createdBy], references: [id])
   meals      DailyMeal[]
   sleep      DailySleep?
   hygiene    DailyHygiene?
@@ -316,18 +350,21 @@ model ChildDailyReport {
   moods      DailyMood[]
   activities DailyActivity[]
 
-  @@unique([childId, date])
+  @@unique([childId, dateKey])
+  @@index([schoolId, date])
+  @@index([childId, date])
+  @@index([childId, dateKey])
 }
 
 // ─── Alimentação ───
 
 model DailyMeal {
-  id          String @id @default(cuid())
+  id          String  @id @default(cuid())
   reportId    String
   // breakfast | morningSnack | lunch | afternoonSnack | dinner | bottle | water
   mealType    String
   // BEM | POUCO | RECUSOU | NAO_SE_APLICA
-  result      String @default("BEM")
+  result      String  @default("BEM")
   description String?
   observation String?
   amount      String?
@@ -392,7 +429,7 @@ model DailyHealth {
 // ─── Humor ───
 
 model DailyMood {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   reportId String
   // FELIZ | CALMO | AGITADO | CHOROSO | SONOLENTO | IRRITADO | PARTICIPATIVO | CARINHOSO
   mood     String
@@ -404,7 +441,7 @@ model DailyMood {
 // ─── Atividades ───
 
 model DailyActivity {
-  id           String @id @default(cuid())
+  id           String  @id @default(cuid())
   reportId     String
   // games | motor | sensory | music | storytelling | painting | park | outdoor | other
   activityType String
@@ -422,6 +459,7 @@ model ChildCheckInOut {
   schoolId          String
   childId           String
   date              DateTime  @default(now())
+  dateKey           String?
   checkInTime       DateTime?
   broughtBy         String?
   broughtByDoc      String?
@@ -446,7 +484,11 @@ model ChildCheckInOut {
   child     Child  @relation(fields: [childId], references: [id])
   checkedBy User?  @relation("CheckedBy", fields: [checkedById], references: [id])
 
-  @@unique([childId, date])
+  @@unique([childId, dateKey])
+  @@index([schoolId, date])
+  @@index([childId, date])
+  @@index([childId, dateKey])
+  @@index([schoolId, status])
 }
 
 // ─────────────────────────────────────────
@@ -470,9 +512,9 @@ model Medication {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  school           School                     @relation(fields: [schoolId], references: [id])
-  child            Child                      @relation(fields: [childId], references: [id])
-  administrations  MedicationAdministration[]
+  school          School                     @relation(fields: [schoolId], references: [id])
+  child           Child                      @relation(fields: [childId], references: [id])
+  administrations MedicationAdministration[]
 }
 
 model MedicationAdministration {
@@ -494,19 +536,19 @@ model MedicationAdministration {
 // ─────────────────────────────────────────
 
 model ChildItem {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   schoolId         String
   childId          String
   // FRALDA | LENCO_UMEDECIDO | POMADA | ROUPA_EXTRA | MAMADEIRA | CHUPETA | LEITE | TOALHA | COBERTOR | MOCHILA | HIGIENE | OUTRO
   itemType         String
   description      String?
-  quantityReceived Int      @default(0)
-  quantityUsed     Int      @default(0)
-  alertThreshold   Int      @default(5)
+  quantityReceived Int       @default(0)
+  quantityUsed     Int       @default(0)
+  alertThreshold   Int       @default(5)
   lastReplenished  DateTime?
   notes            String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   school       School           @relation(fields: [schoolId], references: [id])
   child        Child            @relation(fields: [childId], references: [id])
@@ -537,11 +579,16 @@ model ChildPhoto {
   caption           String?
   isPrivate         Boolean  @default(false)
   sharedWithParents Boolean  @default(false)
-  taggedChildIds    String?  // JSON array
+  taggedChildIds    String? // JSON array
   createdAt         DateTime @default(now())
 
   school School @relation(fields: [schoolId], references: [id])
-  child  Child?  @relation(fields: [childId], references: [id])
+  child  Child? @relation(fields: [childId], references: [id])
+  group  Group? @relation(fields: [groupId], references: [id])
+
+  @@index([schoolId, date])
+  @@index([schoolId, groupId])
+  @@index([childId])
 }
 
 // ─────────────────────────────────────────
@@ -549,11 +596,11 @@ model ChildPhoto {
 // ─────────────────────────────────────────
 
 model DevelopmentReport {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   schoolId              String
   childId               String
   // SEMANAL | MENSAL | BIMESTRAL | SEMESTRAL | PERSONALIZADO
-  period                String   @default("MENSAL")
+  period                String    @default("MENSAL")
   startDate             DateTime
   endDate               DateTime
   motorCoordination     String?
@@ -567,11 +614,11 @@ model DevelopmentReport {
   peerInteraction       String?
   teamObservations      String?
   parentRecommendations String?
-  isDraft               Boolean  @default(true)
+  isDraft               Boolean   @default(true)
   publishedAt           DateTime?
   createdBy             String
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   school School @relation(fields: [schoolId], references: [id])
   child  Child  @relation(fields: [childId], references: [id])
@@ -612,7 +659,13 @@ model Announcement {
   updatedAt  DateTime  @updatedAt
 
   school School @relation(fields: [schoolId], references: [id])
+  group  Group? @relation(fields: [groupId], references: [id])
+
+  @@index([schoolId])
+  @@index([schoolId, groupId])
+  @@index([schoolId, createdAt])
 }
+
 // ─────────────────────────────────────────
 // CALENDÁRIO
 // ─────────────────────────────────────────
@@ -627,13 +680,18 @@ model CalendarEvent {
   endTime     String?
   // EVENTO | REUNIAO | FERIADO | FESTIVIDADE | OUTRO
   type        String   @default("EVENTO")
-  groupId     String?  // Opcional: evento para turma específica
+  groupId     String? // Opcional: evento para turma específica
   location    String?
-  color       String?  // Cor hexadecimal para o calendário
+  color       String? // Cor hexadecimal para o calendário
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   school School @relation(fields: [schoolId], references: [id])
+  group  Group? @relation(fields: [groupId], references: [id])
+
+  @@index([schoolId])
+  @@index([schoolId, date])
+  @@index([schoolId, groupId])
 }
 
 // ─────────────────────────────────────────
@@ -641,60 +699,128 @@ model CalendarEvent {
 // ─────────────────────────────────────────
 
 model Invoice {
-  id          String   @id @default(cuid())
-  schoolId    String
+  id              String    @id @default(cuid())
+  schoolId        String
   // Vinculada a criança ou aluno
-  childId     String?
-  studentId   String?
-  guardianId  String?
+  childId         String?
+  studentId       String?
+  guardianId      String?
   // Dados da cobrança
-  description String   // Ex: "Mensalidade Maio/2025"
-  amount      Float    // Valor em reais
-  dueDate     DateTime
-  referenceMonth String? // "2025-05" — mês de referência
+  description     String // Ex: "Mensalidade Maio/2025"
+  amount          Decimal   @db.Decimal(10, 2) // Valor em reais
+  dueDate         DateTime
+  referenceMonth  String? // "2025-05" — mês de referência
   // Status: PENDENTE | PAGO | VENCIDO | CANCELADO
-  status      String   @default("PENDENTE")
+  status          String    @default("PENDENTE")
   // Mercado Pago
-  mpPreferenceId  String?  // ID da preferência MP
-  mpPaymentId     String?  // ID do pagamento MP após confirmação
-  mpPaymentStatus String?  // pending | approved | rejected | cancelled
+  mpPreferenceId  String? // ID da preferência MP
+  mpPaymentId     String? // ID do pagamento MP após confirmação
+  mpPaymentStatus String? // pending | approved | rejected | cancelled
   // Boleto
-  boletoUrl       String?  // URL do PDF do boleto
-  boletoBarcode   String?  // Linha digitável do boleto
+  boletoUrl       String? // URL do PDF do boleto
+  boletoBarcode   String? // Linha digitável do boleto
   boletoExpiry    DateTime?
   // PIX
-  pixQrCode       String?  // QR code base64
-  pixCopyPaste    String?  // Copia e cola PIX
+  pixQrCode       String? // QR code base64
+  pixCopyPaste    String? // Copia e cola PIX
   pixExpiry       DateTime?
   // Checkout Pro (cartão)
-  checkoutUrl     String?  // URL do Checkout Pro MP
+  checkoutUrl     String? // URL do Checkout Pro MP
   // Controle
   paidAt          DateTime?
-  paidAmount      Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  paidAmount      Decimal?  @db.Decimal(10, 2)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  school   School    @relation(fields: [schoolId], references: [id])
-  child    Child?    @relation(fields: [childId], references: [id])
-  student  Student?  @relation(fields: [studentId], references: [id])
-  payments Payment[]
+  school        School                @relation(fields: [schoolId], references: [id])
+  child         Child?                @relation(fields: [childId], references: [id])
+  student       Student?              @relation(fields: [studentId], references: [id])
+  guardian      Guardian?             @relation(fields: [guardianId], references: [id])
+  payments      Payment[]
+  webhookEvents PaymentWebhookEvent[]
+
+  @@index([schoolId])
+  @@index([schoolId, status])
+  @@index([schoolId, dueDate])
+  @@index([schoolId, referenceMonth])
+  @@index([childId])
+  @@index([studentId])
+  @@index([guardianId])
+  @@unique([schoolId, childId, referenceMonth])
+  @@unique([schoolId, studentId, referenceMonth])
 }
 
 model Payment {
-  id              String   @id @default(cuid())
-  invoiceId       String
+  id               String    @id @default(cuid())
+  schoolId         String
+  invoiceId        String
   // BOLETO | PIX | CARTAO | MANUAL
-  method          String
-  mpPaymentId     String?  // ID retornado pelo Mercado Pago
-  mpStatus        String?  // pending | approved | rejected
-  amount          Float
-  paidAt          DateTime?
+  method           String
+  // MERCADO_PAGO | MANUAL | ASAAS | etc.
+  gateway          String?
+  gatewayPaymentId String?
+  mpPaymentId      String? // ID retornado pelo Mercado Pago
+  mpStatus         String? // pending | approved | rejected
+  amount           Decimal   @db.Decimal(10, 2)
+  paidAt           DateTime?
   // Metadados do webhook
-  webhookData     String?  // JSON raw do webhook MP
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  webhookData      Json? // JSON raw do webhook MP
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  invoice Invoice @relation(fields: [invoiceId], references: [id])
+  school        School                @relation(fields: [schoolId], references: [id])
+  invoice       Invoice               @relation(fields: [invoiceId], references: [id])
+  webhookEvents PaymentWebhookEvent[]
+
+  @@unique([gateway, gatewayPaymentId])
+  @@index([schoolId])
+  @@index([invoiceId])
+  @@index([gateway, gatewayPaymentId])
+}
+
+model PaymentWebhookEvent {
+  id          String    @id @default(cuid())
+  schoolId    String?
+  invoiceId   String?
+  paymentId   String?
+  gateway     String    @default("MERCADO_PAGO")
+  eventType   String?
+  externalId  String?
+  rawPayload  Json
+  processedAt DateTime?
+  status      String    @default("RECEIVED") // RECEIVED | PROCESSED | FAILED | IGNORED
+  error       String?
+  createdAt   DateTime  @default(now())
+
+  school  School?  @relation(fields: [schoolId], references: [id])
+  invoice Invoice? @relation(fields: [invoiceId], references: [id])
+  payment Payment? @relation(fields: [paymentId], references: [id])
+
+  @@index([schoolId])
+  @@index([gateway, externalId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model WhatsAppMessage {
+  id            String    @id @default(cuid())
+  schoolId      String
+  to            String
+  recipientName String?
+  type          String // CHECKIN | CHECKOUT | INVOICE | ANNOUNCEMENT | DAILY_REPORT | MANUAL
+  content       String
+  status        String    @default("PENDING") // PENDING | PROCESSING | SENT | FAILED | CANCELLED
+  error         String?
+  attempts      Int       @default(0)
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId, status])
+  @@index([schoolId, createdAt])
+  @@index([to])
 }
 
 model PageVisit {
@@ -705,16 +831,18 @@ model PageVisit {
   schoolId  String?
   createdAt DateTime @default(now())
 
-  school    School?  @relation(fields: [schoolId], references: [id])
+  school School? @relation(fields: [schoolId], references: [id])
 }
 
 model PrivacyConsent {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  accepted  Boolean  @default(false)
-  ip        String?
-  version   String   @default("1.0")
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  accepted   Boolean  @default(false)
+  ip         String?
+  version    String   @default("1.0")
   acceptedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 // ─────────────────────────────────────────
@@ -723,9 +851,9 @@ model PrivacyConsent {
 // ─────────────────────────────────────────
 
 model Staff {
-  id        String   @id @default(cuid())
-  schoolId  String
-  userId    String?  @unique  // vínculo com User para login no portal
+  id       String  @id @default(cuid())
+  schoolId String
+  userId   String? @unique // vínculo com User para login no portal
 
   // Dados pessoais
   name      String
@@ -738,31 +866,36 @@ model Staff {
 
   // Perfil profissional
   // TEACHER | MONITOR | CAREGIVER | COORDINATOR | ASSISTANT
-  roleType      String   @default("TEACHER")
+  roleType      String    @default("TEACHER")
   // ACTIVE | INACTIVE | SUSPENDED
-  status        String   @default("ACTIVE")
+  status        String    @default("ACTIVE")
   admissionDate DateTime?
   notes         String?
 
   // Dados financeiros (visível apenas para ADMIN/SCHOOL_ADMIN/FINANCE)
-  baseSalary     Float?
-  paymentDay     Int?      // dia do mês para pagamento (ex: 5)
+  baseSalary     Decimal? @db.Decimal(10, 2)
+  paymentDay     Int? // dia do mês para pagamento (ex: 5)
   pixKey         String?
   bankName       String?
   bankAgency     String?
   bankAccount    String?
   financialNotes String?
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
 
-  school            School                 @relation(fields: [schoolId], references: [id])
-  user              User?                  @relation(fields: [userId], references: [id])
+  school            School                  @relation(fields: [schoolId], references: [id])
+  user              User?                   @relation(fields: [userId], references: [id])
   groupAssignments  StaffGroupAssignment[]
   payments          StaffPayment[]
   paymentBonuses    StaffPaymentBonus[]
   paymentDeductions StaffPaymentDeduction[]
+
+  @@index([schoolId])
+  @@index([schoolId, status])
+  @@index([schoolId, roleType])
 }
 
 // ─────────────────────────────────────────
@@ -770,17 +903,17 @@ model Staff {
 // ─────────────────────────────────────────
 
 model StaffGroupAssignment {
-  id       String   @id @default(cuid())
+  id       String @id @default(cuid())
   schoolId String
   staffId  String
   groupId  String
 
   // MAIN_TEACHER | ASSISTANT | MONITOR | CAREGIVER
-  assignmentType String   @default("MAIN_TEACHER")
-  startDate      DateTime @default(now())
+  assignmentType String    @default("MAIN_TEACHER")
+  startDate      DateTime  @default(now())
   endDate        DateTime?
   // ACTIVE | INACTIVE
-  status         String   @default("ACTIVE")
+  status         String    @default("ACTIVE")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -788,7 +921,10 @@ model StaffGroupAssignment {
   staff Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  @@unique([staffId, groupId])
+  @@unique([staffId, groupId, startDate])
+  @@index([schoolId, staffId])
+  @@index([schoolId, groupId])
+  @@index([staffId, groupId, status])
 }
 
 // ─────────────────────────────────────────
@@ -796,15 +932,15 @@ model StaffGroupAssignment {
 // ─────────────────────────────────────────
 
 model StaffPayment {
-  id              String    @id @default(cuid())
+  id              String  @id @default(cuid())
   schoolId        String
   staffId         String
-  referenceMonth  Int       // 1–12
-  referenceYear   Int       // ex: 2025
-  baseSalary      Float     @default(0)
-  totalBonuses    Float     @default(0)
-  totalDeductions Float     @default(0)
-  finalAmount     Float     @default(0)
+  referenceMonth  Int // 1–12
+  referenceYear   Int // ex: 2025
+  baseSalary      Decimal @default(0) @db.Decimal(10, 2)
+  totalBonuses    Decimal @default(0) @db.Decimal(10, 2)
+  totalDeductions Decimal @default(0) @db.Decimal(10, 2)
+  finalAmount     Decimal @default(0) @db.Decimal(10, 2)
 
   // DRAFT | PENDING | PAID | CANCELED
   status        String    @default("DRAFT")
@@ -812,17 +948,21 @@ model StaffPayment {
   // PIX | CASH | BANK_TRANSFER | OTHER
   paymentMethod String?
   notes         String?
-  createdBy     String    // userId de quem gerou
+  createdBy     String // userId de quem gerou
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  school     School                 @relation(fields: [schoolId], references: [id])
-  staff      Staff                  @relation(fields: [staffId], references: [id])
+  school     School                  @relation(fields: [schoolId], references: [id])
+  staff      Staff                   @relation(fields: [staffId], references: [id])
   bonuses    StaffPaymentBonus[]
   deductions StaffPaymentDeduction[]
 
   @@unique([staffId, referenceMonth, referenceYear])
+  @@index([schoolId])
+  @@index([staffId])
+  @@index([schoolId, referenceYear, referenceMonth])
+  @@index([schoolId, status])
 }
 
 // ─────────────────────────────────────────
@@ -836,7 +976,7 @@ model StaffPaymentBonus {
   staffId        String
   title          String
   description    String?
-  amount         Float
+  amount         Decimal @db.Decimal(10, 2)
 
   // BONUS | EXTRA_HOURS | PERFORMANCE | EVENT | REPLACEMENT | MANUAL | OTHER
   type      String   @default("MANUAL")
@@ -846,6 +986,10 @@ model StaffPaymentBonus {
 
   staffPayment StaffPayment @relation(fields: [staffPaymentId], references: [id], onDelete: Cascade)
   staff        Staff        @relation(fields: [staffId], references: [id])
+
+  @@index([schoolId])
+  @@index([staffId])
+  @@index([staffPaymentId])
 }
 
 // ─────────────────────────────────────────
@@ -859,7 +1003,7 @@ model StaffPaymentDeduction {
   staffId        String
   title          String
   description    String?
-  amount         Float
+  amount         Decimal @db.Decimal(10, 2)
 
   // ABSENCE | ADVANCE | DISCOUNT | OTHER
   type      String   @default("DISCOUNT")
@@ -869,6 +1013,10 @@ model StaffPaymentDeduction {
 
   staffPayment StaffPayment @relation(fields: [staffPaymentId], references: [id], onDelete: Cascade)
   staff        Staff        @relation(fields: [staffId], references: [id])
+
+  @@index([schoolId])
+  @@index([staffId])
+  @@index([staffPaymentId])
 }
 
 // -----------------------------------------
@@ -887,4 +1035,10 @@ model StaffAuditLog {
   after       String?
   performedBy String
   performedAt DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([staffId])
+  @@index([paymentId])
+  @@index([performedBy])
+  @@index([performedAt])
 }

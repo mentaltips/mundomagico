@@ -36,7 +36,7 @@ export default function GuardianDocumentsPage() {
 
   const { data: dashboard } = useQuery({
     queryKey: ['guardian-dashboard'],
-    queryFn: () => fetch('/api/parent/dashboard').then((r) => r.json()),
+    queryFn: () => fetch('/api/responsavel/dashboard').then((r) => r.json()),
     enabled: !!session,
   })
 

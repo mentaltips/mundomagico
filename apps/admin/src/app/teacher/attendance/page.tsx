@@ -18,7 +18,7 @@ export default function TeacherAttendanceGroupsPage() {
   useEffect(() => {
     async function fetchGroups() {
       try {
-        const res = await fetch('/api/teacher/classes')
+        const res = await fetch('/api/professor/classes')
         if (res.ok) {
           const data = await res.json()
           setGroups(data)
@@ -50,7 +50,7 @@ export default function TeacherAttendanceGroupsPage() {
           {groups.map((group) => (
             <Link 
               key={group.id} 
-              href={`/teacher/attendance/${group.id}`}
+              href={`/professor/attendance/${group.id}`}
               className="card-interactive p-5 flex flex-col justify-between group active:scale-95 transition-all"
             >
               <div className="flex items-center justify-between mb-4">

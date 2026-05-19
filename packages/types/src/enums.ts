@@ -134,16 +134,31 @@ export const ITEM_TYPE_EMOJIS: Record<ItemType, string> = {
   OUTRO:          '📦',
 }
 
-export const USER_ROLES = ['ADMIN', 'DIRECTOR', 'TEACHER', 'CAREGIVER', 'GUARDIAN', 'STAFF'] as const
+export const USER_ROLES = [
+  'ADMIN',
+  'ADMIN_ESCOLA',
+  'DIRETOR',
+  'COORDENADOR',
+  'PROFESSOR',
+  'MONITOR',
+  'CUIDADOR',
+  'RESPONSAVEL',
+  'FINANCEIRO',
+  'FUNCIONARIO',
+] as const
 export type UserRole = (typeof USER_ROLES)[number]
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
-  ADMIN:     'Administrador',
-  DIRECTOR:  'Diretor',
-  TEACHER:   'Professor/Educador',
-  CAREGIVER: 'Cuidador',
-  GUARDIAN:  'Responsável',
-  STAFF:     'Equipe',
+  ADMIN:        'Administrador Geral',
+  ADMIN_ESCOLA: 'Administrador da Escola',
+  DIRETOR:      'Diretor',
+  COORDENADOR:  'Coordenador',
+  PROFESSOR:    'Professor',
+  MONITOR:      'Monitor',
+  CUIDADOR:     'Cuidador',
+  RESPONSAVEL:  'Responsável',
+  FINANCEIRO:   'Financeiro',
+  FUNCIONARIO:  'Funcionário',
 }
 
 export const DEVELOPMENT_PERIODS = ['SEMANAL', 'MENSAL', 'BIMESTRAL', 'SEMESTRAL', 'PERSONALIZADO'] as const

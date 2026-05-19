@@ -66,10 +66,10 @@ const SHIFT_LABEL: Record<string, string> = {
 }
 
 const quickActions = [
-  { href: '/parent/calendar',  icon: Calendar,   label: 'Agenda',     color: 'bg-violet-500/10 text-violet-500' },
-  { href: '/parent/payments',  icon: DollarSign,  label: 'Pagamentos', color: 'bg-emerald-500/10 text-emerald-500' },
-  { href: '/parent/photos',    icon: Camera,      label: 'Fotos',      color: 'bg-amber-500/10 text-amber-500' },
-  { href: '/parent/documents', icon: FileText,    label: 'Documentos', color: 'bg-sky-500/10 text-sky-500' },
+  { href: '/responsavel/calendar',  icon: Calendar,   label: 'Agenda',     color: 'bg-violet-500/10 text-violet-500' },
+  { href: '/responsavel/payments',  icon: DollarSign,  label: 'Pagamentos', color: 'bg-emerald-500/10 text-emerald-500' },
+  { href: '/responsavel/photos',    icon: Camera,      label: 'Fotos',      color: 'bg-amber-500/10 text-amber-500' },
+  { href: '/responsavel/documents', icon: FileText,    label: 'Documentos', color: 'bg-sky-500/10 text-sky-500' },
 ]
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -83,11 +83,11 @@ function GuardianDashboard() {
 
   const { data: dashboard, isLoading: loadingDash } = useQuery<DashboardData>({
     queryKey: ['guardian-dashboard'],
-    queryFn: () => fetch('/api/parent/dashboard').then((r) => r.json()),
+    queryFn: () => fetch('/api/responsavel/dashboard').then((r) => r.json()),
     enabled: !isHistory,
   })
 
-  const feedUrl = dateParam ? `/api/parent/feed?date=${dateParam}` : '/api/parent/feed'
+  const feedUrl = dateParam ? `/api/responsavel/feed?date=${dateParam}` : '/api/responsavel/feed'
   const { data: feedData, isLoading: loadingFeed } = useQuery<FeedData>({
     queryKey: ['guardian-feed', dateParam],
     queryFn: () => fetch(feedUrl).then((r) => r.json()),
@@ -108,7 +108,7 @@ function GuardianDashboard() {
 
       {/* ── History back button ──────────────────────────────────────────── */}
       {isHistory && (
-        <Link href="/parent/history" className="inline-flex items-center gap-2 text-sm font-black text-primary hover:text-primary/80 transition-colors">
+        <Link href="/responsavel/history" className="inline-flex items-center gap-2 text-sm font-black text-primary hover:text-primary/80 transition-colors">
           <ArrowLeft className="h-4 w-4" />
           Voltar ao Histórico
         </Link>
@@ -404,7 +404,7 @@ function GuardianDashboard() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <SectionLabel>Comunicados</SectionLabel>
-            <Link href="/parent/messages" className="text-[10px] font-black text-primary flex items-center gap-1 hover:text-primary/80 transition-colors uppercase tracking-widest">
+            <Link href="/responsavel/messages" className="text-[10px] font-black text-primary flex items-center gap-1 hover:text-primary/80 transition-colors uppercase tracking-widest">
               Ver todos <ChevronRight className="h-3 w-3" />
             </Link>
           </div>

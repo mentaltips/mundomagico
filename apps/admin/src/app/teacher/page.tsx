@@ -47,7 +47,7 @@ export default function TeacherHomePage() {
   useEffect(() => {
     async function fetchDashboard() {
       try {
-        const res = await fetch('/api/teacher/dashboard')
+        const res = await fetch('/api/professor/dashboard')
         if (res.ok) {
           const json = await res.json()
           setData(json)
@@ -121,7 +121,7 @@ export default function TeacherHomePage() {
         >
           {/* Diário de Rotina */}
           <Link
-            href={firstGroup ? `/teacher/classes/${firstGroup.id}` : '/teacher/classes'}
+            href={firstGroup ? `/professor/classes/${firstGroup.id}` : '/professor/classes'}
             className="bg-primary p-8 rounded-[2rem] text-primary-foreground shadow-xl shadow-primary/10 hover:scale-105 transition-all"
           >
             <ClipboardCheck className="mb-4" size={32} />
@@ -133,7 +133,7 @@ export default function TeacherHomePage() {
 
           {/* Frequência */}
           <Link
-            href="/teacher/attendance"
+            href="/professor/attendance"
             className="bg-card p-8 rounded-[2rem] border border-border shadow-sm hover:shadow-md transition-all"
           >
             <UserCheck className="mb-4 text-emerald-500" size={32} />
@@ -143,7 +143,7 @@ export default function TeacherHomePage() {
 
           {/* Minhas Turmas */}
           <Link
-            href="/teacher/classes"
+            href="/professor/classes"
             className="bg-card p-8 rounded-[2rem] border border-border shadow-sm hover:shadow-md transition-all"
           >
             <BookOpen className="mb-4 text-violet-500" size={32} />
@@ -180,7 +180,7 @@ export default function TeacherHomePage() {
           ) : data && data.pendingReports > 0 ? (
             <div className="space-y-3">
               <Link
-                href={firstGroup ? `/teacher/classes/${firstGroup.id}` : '/teacher/classes'}
+                href={firstGroup ? `/professor/classes/${firstGroup.id}` : '/professor/classes'}
                 className="flex items-center justify-between p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20 hover:border-amber-500/40 transition-all"
               >
                 <div className="flex gap-4 items-center">
@@ -260,14 +260,14 @@ export default function TeacherHomePage() {
                 <Users className="text-primary" size={24} />
                 Minhas Turmas
               </h2>
-              <Link href="/teacher/classes" className="text-sm font-bold text-primary">Ver todas</Link>
+              <Link href="/professor/classes" className="text-sm font-bold text-primary">Ver todas</Link>
             </div>
 
             <div className="space-y-3">
               {data.groups.map((group) => (
                 <Link
                   key={group.id}
-                  href={`/teacher/classes/${group.id}`}
+                  href={`/professor/classes/${group.id}`}
                   className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border hover:border-primary/20 hover:bg-primary/5 transition-all"
                 >
                   <div className="flex items-center gap-3">
@@ -291,7 +291,7 @@ export default function TeacherHomePage() {
 
       {/* FAB - Novo diário */}
       <Link
-        href={firstGroup ? `/teacher/classes/${firstGroup.id}` : '/teacher/classes'}
+        href={firstGroup ? `/professor/classes/${firstGroup.id}` : '/professor/classes'}
         className="fixed bottom-8 right-8 w-16 h-16 bg-primary text-primary-foreground rounded-full shadow-2xl shadow-primary/10 flex items-center justify-center hover:scale-110 transition-all z-40"
         title="Novo diário"
       >

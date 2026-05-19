@@ -45,37 +45,50 @@ type Credentials = {
   password: string
 }
 
-type RoleFilter = 'ALL' | 'ADMIN' | 'DIRECTOR' | 'TEACHER' | 'CAREGIVER' | 'STAFF'
+type RoleFilter = 'ALL' | 'ADMIN' | 'ADMIN_ESCOLA' | 'DIRETOR' | 'COORDENADOR' | 'PROFESSOR' | 'MONITOR' | 'CUIDADOR' | 'RESPONSAVEL' | 'FINANCEIRO' | 'FUNCIONARIO'
 
 const ROLE_LABELS: Record<string, string> = {
-  ADMIN: 'Administrador',
-  DIRECTOR: 'Diretor(a)',
-  TEACHER: 'Professor(a)',
-  CAREGIVER: 'Cuidador(a)',
-  STAFF: 'Equipe',
+  ADMIN: 'Administrador Geral',
+  ADMIN_ESCOLA: 'Administrador da Escola',
+  DIRETOR: 'Diretor(a)',
+  COORDENADOR: 'Coordenador(a)',
+  PROFESSOR: 'Professor(a)',
+  MONITOR: 'Monitor(a)',
+  CUIDADOR: 'Cuidador(a)',
+  RESPONSAVEL: 'Responsável',
+  FINANCEIRO: 'Financeiro',
+  FUNCIONARIO: 'Funcionário(a)',
 }
 
 const ROLE_BADGES: Record<string, BadgeVariant> = {
   ADMIN: 'red',
-  DIRECTOR: 'purple',
-  TEACHER: 'blue',
-  CAREGIVER: 'green',
-  STAFF: 'gray',
+  ADMIN_ESCOLA: 'red',
+  DIRETOR: 'purple',
+  COORDENADOR: 'amber',
+  PROFESSOR: 'blue',
+  MONITOR: 'sky',
+  CUIDADOR: 'green',
+  RESPONSAVEL: 'sky',
+  FINANCEIRO: 'purple',
+  FUNCIONARIO: 'gray',
 }
 
 const ROLE_OPTIONS = [
-  { value: 'TEACHER', label: 'Professor(a)' },
-  { value: 'CAREGIVER', label: 'Cuidador(a) / Monitora' },
-  { value: 'STAFF', label: 'Equipe Geral' },
-  { value: 'DIRECTOR', label: 'Diretor(a)' },
-  { value: 'ADMIN', label: 'Administrador' },
+  { value: 'PROFESSOR', label: 'Professor(a)' },
+  { value: 'CUIDADOR', label: 'Cuidador(a)' },
+  { value: 'MONITOR', label: 'Monitor(a)' },
+  { value: 'FUNCIONARIO', label: 'Equipe Geral / Funcionário' },
+  { value: 'COORDENADOR', label: 'Coordenador(a)' },
+  { value: 'DIRETOR', label: 'Diretor(a)' },
+  { value: 'ADMIN_ESCOLA', label: 'Administrador da Escola' },
+  { value: 'FINANCEIRO', label: 'Financeiro' },
 ]
 
 const emptyForm = {
   name: '',
   email: '',
   phone: '',
-  role: 'TEACHER',
+  role: 'PROFESSOR',
   active: true,
 }
 
@@ -266,7 +279,7 @@ export default function UsersPage() {
 
   const activeUsers = users.filter((user) => user.active).length
   const inactiveUsers = users.length - activeUsers
-  const teachers = users.filter((user) => ['TEACHER', 'CAREGIVER'].includes(user.role)).length
+  const teachers = users.filter((user) => ['TEACHER', 'CAREGIVER', 'PROFESSOR', 'CUIDADOR', 'MONITOR'].includes(user.role)).length
 
   return (
     <div className="page animate-in">
@@ -302,7 +315,7 @@ export default function UsersPage() {
 
       <div className="flex flex-wrap gap-2 items-center justify-between">
         <div className="flex flex-wrap gap-2">
-          {(['ALL', 'ADMIN', 'DIRECTOR', 'TEACHER', 'CAREGIVER', 'STAFF'] as RoleFilter[]).map((role) => {
+          {(['ALL', 'ADMIN', 'ADMIN_ESCOLA', 'DIRETOR', 'COORDENADOR', 'PROFESSOR', 'MONITOR', 'CUIDADOR', 'FINANCEIRO', 'FUNCIONARIO'] as RoleFilter[]).map((role) => {
             const active = roleFilter === role
             const count = role === 'ALL' ? users.length : users.filter((user) => user.role === role).length
 

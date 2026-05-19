@@ -82,18 +82,22 @@ export type Group = {
 // ─── Constantes ───
 
 export const ROLE_LABELS: Record<string, string> = {
+  PROFESSOR: 'Professor(a)',
   TEACHER: 'Professor(a)',
-  MONITOR: 'Monitora',
-  CAREGIVER: 'Cuidadora',
-  COORDINATOR: 'Coordenadora',
+  MONITOR: 'Monitor(a)',
+  CUIDADOR: 'Cuidador(a)',
+  CAREGIVER: 'Cuidador(a)',
+  COORDENADOR: 'Coordenador(a)',
+  COORDINATOR: 'Coordenador(a)',
   ASSISTANT: 'Auxiliar',
 }
 
 export const ASSIGNMENT_LABELS: Record<string, string> = {
   MAIN_TEACHER: 'Prof. Principal',
   ASSISTANT: 'Auxiliar',
-  MONITOR: 'Monitora',
-  CAREGIVER: 'Cuidadora',
+  MONITOR: 'Monitor(a)',
+  CUIDADOR: 'Cuidador(a)',
+  CAREGIVER: 'Cuidador(a)',
 }
 
 export const MONTHS = [

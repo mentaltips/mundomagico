@@ -9,26 +9,34 @@ export default withAuth(
     if (token) {
       const role = token.role as string
 
-      // Admin & Director -> /admin
-      if (path.startsWith('/admin') && !['ADMIN', 'DIRECTOR'].includes(role)) {
-        return NextResponse.redirect(new URL(role === 'GUARDIAN' ? '/parent' : '/teacher', req.url))
+      // Admin, Admin Escola & Diretor -> /admin
+      if (path.startsWith('/admin') && !['ADMIN', 'ADMIN_ESCOLA', 'DIRETOR'].includes(role)) {
+        return NextResponse.redirect(new URL(role === 'RESPONSAVEL' ? '/responsavel' : '/professor', req.url))
       }
 
-      // Teacher & Caregiver -> /teacher
-      if (path.startsWith('/teacher') && !['TEACHER', 'CAREGIVER'].includes(role)) {
-        return NextResponse.redirect(new URL(['ADMIN', 'DIRECTOR'].includes(role) ? '/admin' : '/parent', req.url))
+      // Professor, Monitor & Cuidador -> /professor
+      if (path.startsWith('/professor') && !['PROFESSOR', 'MONITOR', 'CUIDADOR'].includes(role)) {
+        return NextResponse.redirect(new URL(['ADMIN', 'ADMIN_ESCOLA', 'DIRETOR'].includes(role) ? '/admin' : '/responsavel', req.url))
       }
 
-      // Parent (Guardian) -> /parent
-      if (path.startsWith('/parent') && role !== 'GUARDIAN') {
-        return NextResponse.redirect(new URL(['ADMIN', 'DIRECTOR'].includes(role) ? '/admin' : '/teacher', req.url))
+      // Responsável -> /responsavel
+      if (path.startsWith('/responsavel') && role !== 'RESPONSAVEL') {
+        return NextResponse.redirect(new URL(['ADMIN', 'ADMIN_ESCOLA', 'DIRETOR'].includes(role) ? '/admin' : '/professor', req.url))
+      }
+
+      // Impedir acesso direto ao legado /parent e /teacher redirigindo adequadamente
+      if (path.startsWith('/parent')) {
+        return NextResponse.redirect(new URL('/responsavel', req.url))
+      }
+      if (path.startsWith('/teacher')) {
+        return NextResponse.redirect(new URL('/professor', req.url))
       }
 
       // Root redirect based on role
       if (path === '/') {
-        if (['ADMIN', 'DIRECTOR'].includes(role)) return NextResponse.redirect(new URL('/admin', req.url))
-        if (['TEACHER', 'CAREGIVER'].includes(role)) return NextResponse.redirect(new URL('/teacher', req.url))
-        if (role === 'GUARDIAN') return NextResponse.redirect(new URL('/parent', req.url))
+        if (['ADMIN', 'ADMIN_ESCOLA', 'DIRETOR'].includes(role)) return NextResponse.redirect(new URL('/admin', req.url))
+        if (['PROFESSOR', 'MONITOR', 'CUIDADOR'].includes(role)) return NextResponse.redirect(new URL('/professor', req.url))
+        if (role === 'RESPONSAVEL') return NextResponse.redirect(new URL('/responsavel', req.url))
       }
     }
   },
