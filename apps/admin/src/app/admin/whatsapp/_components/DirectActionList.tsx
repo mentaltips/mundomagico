@@ -24,14 +24,14 @@ interface Child {
 }
 
 interface DirectActionListProps {
-  children: Child[]
+  items: Child[]
   targetStatus: string
   customMessage: string
   triggerDirectLink: (child: Child) => void
 }
 
 export function DirectActionList({ 
-  children, 
+  items, 
   targetStatus, 
   customMessage, 
   triggerDirectLink 
@@ -39,7 +39,7 @@ export function DirectActionList({
   const [searchQuery, setSearchQuery] = useState('')
 
   // Filtered list of targets for direct broadcast
-  const targetChildren = children.filter((child) => {
+  const targetChildren = items.filter((child) => {
     const statusMatch = targetStatus === 'ALL' || child.status === targetStatus
     if (!statusMatch) return false
     

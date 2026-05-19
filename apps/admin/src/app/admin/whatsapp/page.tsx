@@ -186,7 +186,7 @@ export default function WhatsAppDashboardPage() {
             {/* Editor Column */}
             <div className="lg:col-span-7 space-y-6">
               <BroadcastPanel 
-                children={children}
+                items={children}
                 isConnected={isConnected}
                 targetStatus={targetStatus}
                 setTargetStatus={setTargetStatus}
@@ -228,7 +228,7 @@ export default function WhatsAppDashboardPage() {
 
               {/* Direct Actions List */}
               <DirectActionList 
-                children={children}
+                items={children}
                 targetStatus={targetStatus}
                 customMessage={customMessage}
                 triggerDirectLink={triggerDirectLink}

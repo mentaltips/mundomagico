@@ -24,12 +24,14 @@ export default withAuth(
         return NextResponse.redirect(new URL(['ADMIN', 'ADMIN_ESCOLA', 'DIRETOR'].includes(role) ? '/admin' : '/professor', req.url))
       }
 
-      // Impedir acesso direto ao legado /parent e /teacher redirigindo adequadamente
+      // Impedir acesso direto ao legado /parent e /teacher redirigindo adequadamente preservando o subcaminho
       if (path.startsWith('/parent')) {
-        return NextResponse.redirect(new URL('/responsavel', req.url))
+        const newPath = path.replace('/parent', '/responsavel')
+        return NextResponse.redirect(new URL(newPath, req.url))
       }
       if (path.startsWith('/teacher')) {
-        return NextResponse.redirect(new URL('/professor', req.url))
+        const newPath = path.replace('/teacher', '/professor')
+        return NextResponse.redirect(new URL(newPath, req.url))
       }
 
       // Root redirect based on role

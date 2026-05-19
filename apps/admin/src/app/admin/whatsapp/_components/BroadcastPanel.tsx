@@ -26,7 +26,7 @@ interface Child {
 }
 
 interface BroadcastPanelProps {
-  children: Child[]
+  items: Child[]
   isConnected: boolean
   targetStatus: string
   setTargetStatus: (status: string) => void
@@ -35,7 +35,7 @@ interface BroadcastPanelProps {
 }
 
 export function BroadcastPanel({
-  children,
+  items,
   isConnected,
   targetStatus,
   setTargetStatus,
@@ -70,7 +70,7 @@ export function BroadcastPanel({
   }, [targetStatus, setCustomMessage])
 
   // Count target children in this filter
-  const targetCount = children.filter((child) => {
+  const targetCount = items.filter((child) => {
     return targetStatus === 'ALL' || child.status === targetStatus
   }).length
 
@@ -110,12 +110,12 @@ export function BroadcastPanel({
           onChange={(e) => setTargetStatus(e.target.value)}
           className="w-full px-4 py-3.5 bg-accent/40 border border-border/50 rounded-2xl font-bold text-foreground outline-none focus:ring-2 focus:ring-emerald-500"
         >
-          <option value="ALL">Todos os Responsáveis ({children.length})</option>
-          <option value="ATIVO">Responsáveis - Alunos Ativos ({children.filter(c => c.status === 'ATIVO').length})</option>
-          <option value="ADAPTACAO">Responsáveis - Em Adaptação ({children.filter(c => c.status === 'ADAPTACAO').length})</option>
-          <option value="AGUARDANDO_VAGA">Responsáveis - Aguardando Vaga ({children.filter(c => c.status === 'AGUARDANDO_VAGA').length})</option>
-          <option value="PENDENTE_PAGAMENTO">Responsáveis - Pendente de Pagamento ({children.filter(c => c.status === 'PENDENTE_PAGAMENTO').length})</option>
-          <option value="INATIVO">Responsáveis - Inativos/Cancelados ({children.filter(c => c.status === 'INATIVO' || c.status === 'CANCELADO').length})</option>
+          <option value="ALL">Todos os Responsáveis ({items.length})</option>
+          <option value="ATIVO">Responsáveis - Alunos Ativos ({items.filter(c => c.status === 'ATIVO').length})</option>
+          <option value="ADAPTACAO">Responsáveis - Em Adaptação ({items.filter(c => c.status === 'ADAPTACAO').length})</option>
+          <option value="AGUARDANDO_VAGA">Responsáveis - Aguardando Vaga ({items.filter(c => c.status === 'AGUARDANDO_VAGA').length})</option>
+          <option value="PENDENTE_PAGAMENTO">Responsáveis - Pendente de Pagamento ({items.filter(c => c.status === 'PENDENTE_PAGAMENTO').length})</option>
+          <option value="INATIVO">Responsáveis - Inativos/Cancelados ({items.filter(c => c.status === 'INATIVO' || c.status === 'CANCELADO').length})</option>
         </select>
       </div>
 
