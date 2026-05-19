@@ -65,6 +65,7 @@ services:
       - "3333:3333"
     volumes:
       - ./uploads:/app/uploads
+      - ./whatsapp-auth:/app/whatsapp-auth
 
   # ─── Nginx Reverse Proxy ──────────────────────────────────────
   nginx:

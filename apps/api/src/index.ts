@@ -42,6 +42,7 @@ import reportsRoutes from './routes/reports'
 import uploadRoutes from './routes/upload'
 import analyticsRoutes from './routes/analytics'
 import staffRoutes from './routes/staff'
+import whatsappConfigRoutes from './routes/whatsapp-config'
 
 const app = express()
 
@@ -148,6 +149,7 @@ app.use('/api/billing', requireApiAuth, billingRoutes)
 app.use('/api/reports', requireApiAuth, reportsRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/staff', requireApiAuth, requireRole('ADMIN', 'DIRECTOR'), staffRoutes)
+app.use('/api/whatsapp', requireApiAuth, whatsappConfigRoutes)
 
 const PORT = process.env.PORT || 3333
 app.listen(PORT, () => {
