@@ -22,8 +22,11 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
   const safeValue = getSafeUrl(value) || null
   const unoptimized = safeValue?.startsWith('/api/uploads/') ?? false
   const [preview, setPreview] = useState<string | null>(safeValue)
+  const [imgError, setImgError] = useState(false)
 
   const dimensions = { sm: 'w-20 h-20', md: 'w-28 h-28', lg: 'w-36 h-36' }[size]
+
+  const displayPreview = imgError ? null : preview
 
   const handleFile = async (file: File) => {
     if (!file) return
@@ -34,6 +37,7 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
 
     const localUrl = URL.createObjectURL(file)
     setPreview(localUrl)
+    setImgError(false)
     setUploading(true)
 
     try {
@@ -69,6 +73,7 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
 
   const handleClear = () => {
     setPreview(null)
+    setImgError(false)
     onChange('')
     if (inputRef.current) inputRef.current.value = ''
   }
@@ -86,9 +91,9 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
       >
         {uploading ? (
           <Loader2 size={24} className="animate-spin text-primary" />
-        ) : preview ? (
+        ) : displayPreview ? (
           <>
-            <NextImage src={preview} alt="preview" fill sizes="192px" unoptimized={unoptimized} className="object-cover" />
+            <NextImage src={displayPreview} alt="preview" fill sizes="192px" unoptimized={unoptimized} className="object-cover" onError={() => setImgError(true)} />
             {/* Hover: câmera + remover */}
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
               <Camera size={20} className="text-white" />
