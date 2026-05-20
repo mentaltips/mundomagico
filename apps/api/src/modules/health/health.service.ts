@@ -11,7 +11,7 @@ export async function listMedications(schoolId: string, childId?: string, active
 }
 
 export async function createMedication(schoolId: string, input: any) {
-  const { childId, startDate, endDate, guardianAuthDate, ...rest } = input
+  const { childId, startDate, endDate, guardianAuthDate, notes, ...rest } = input
 
   const child = await healthRepository.verifyChild(childId, schoolId)
   if (!child) {
@@ -22,9 +22,10 @@ export async function createMedication(schoolId: string, input: any) {
     ...rest,
     schoolId,
     childId,
-    startDate: new Date(startDate),
-    ...(endDate && { endDate: new Date(endDate) }),
-    ...(guardianAuthDate && { guardianAuthDate: new Date(guardianAuthDate) }),
+    ...(notes !== undefined && { notes }),
+    startDate: new Date(startDate as string),
+    ...(endDate && { endDate: new Date(endDate as string) }),
+    ...(guardianAuthDate && { guardianAuthDate: new Date(guardianAuthDate as string) }),
   })
 }
 

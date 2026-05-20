@@ -6,27 +6,36 @@ export const listMedicationsSchema = z.object({
 })
 
 const flexibleDate = z.string().transform((val) => {
+  if (!val || val === '') return undefined
   const d = new Date(val)
   if (isNaN(d.getTime())) throw new Error('Data invalida')
   return d.toISOString()
-})
+}).optional().nullable()
 
-export const createMedicationSchema = z.object({
+const medicationBaseSchema = z.object({
   childId: z.string(),
   name: z.string().trim().min(1).max(255),
   dosage: z.string().trim().min(1).max(255),
-  frequency: z.string().trim().min(1).max(255),
+  frequency: z.string().trim().min(1).max(255).optional().nullable(),
   instructions: z.string().trim().optional().nullable(),
   startDate: flexibleDate,
-  endDate: flexibleDate.optional().nullable(),
-  guardianAuthDate: flexibleDate.optional().nullable(),
+  endDate: flexibleDate,
+  guardianAuthDate: flexibleDate,
   active: z.boolean().optional(),
 })
 
-export const updateMedicationSchema = createMedicationSchema.partial()
+export const createMedicationSchema = medicationBaseSchema.transform((data) => ({
+  ...data,
+  notes: data.instructions,
+}))
+
+export const updateMedicationSchema = medicationBaseSchema.partial().transform((data) => ({
+  ...data,
+  ...(data.instructions !== undefined && { notes: data.instructions }),
+}))
 
 export const administerMedicationSchema = z.object({
-  administeredAt: flexibleDate.optional(),
+  administeredAt: z.string().optional(),
   dosage: z.string().trim().optional(),
   notes: z.string().trim().optional().nullable(),
 })

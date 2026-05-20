@@ -1,11 +1,11 @@
 import { z } from 'zod'
 
-const flexibleDate = z.string().transform((val) => {
-  if (!val) return null
+const flexibleDate = z.string().optional().nullable().transform((val) => {
+  if (!val || val === '') return null
   const d = new Date(val)
-  if (isNaN(d.getTime())) throw new Error('Data invalida')
+  if (isNaN(d.getTime())) return null
   return d.toISOString()
-}).nullable()
+})
 
 export const createStaffSchema = z.object({
   name: z.string().trim().min(1).max(255),

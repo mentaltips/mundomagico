@@ -37,7 +37,7 @@ import documentsRoutes from './modules/documents/documents.routes'
 import billingRoutes from './modules/billing/billing.routes'
 import reportsRoutes from './modules/reports/reports.routes'
 import uploadRoutes from './modules/upload/upload.routes'
-import analyticsRoutes from './modules/analytics/analytics.routes'
+import analyticsRoutes, { trackPageVisit } from './modules/analytics/analytics.routes'
 import staffRoutes from './modules/staff/staff.routes'
 import whatsappRoutes from './modules/whatsapp/whatsapp.routes'
 
@@ -160,6 +160,7 @@ app.use('/api/daily-reports', requireApiAuth, requireTenant, dailyReportsRoutes)
 app.use('/api/documents', requireApiAuth, requireTenant, documentsRoutes)
 app.use('/api/billing', requireApiAuth, requireTenant, billingRoutes)
 app.use('/api/reports', requireApiAuth, requireTenant, reportsRoutes)
+app.post('/api/analytics/track', trackPageVisit)
 app.use('/api/analytics', requireApiAuth, requireTenant, analyticsRoutes)
 app.use('/api/staff', requireApiAuth, requireTenant, requireRole('ADMIN', 'ADMIN_ESCOLA', 'DIRETOR'), staffRoutes)
 app.use('/api/whatsapp', requireApiAuth, requireTenant, whatsappRoutes)

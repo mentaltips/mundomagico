@@ -1,11 +1,11 @@
-import { Router } from 'express'
+import { Router, Request, Response } from 'express'
 import { prisma } from '@mundo-magico/database'
 import { requireRole } from '../../middleware/requireRole'
 
 const router = Router()
 
-// POST /track - Record a page visit from frontend
-router.post('/track', async (req, res) => {
+// POST /track - Record a page visit from frontend (public, no auth required)
+export async function trackPageVisit(req: Request, res: Response) {
   try {
     const { path } = req.body
     const schoolId = req.user?.schoolId
@@ -24,7 +24,9 @@ router.post('/track', async (req, res) => {
   } catch (e) {
     res.status(200).end() // Falha silenciosa
   }
-})
+}
+
+router.post('/track', trackPageVisit)
 
 // GET / - Get analytics summary
 router.get('/', requireRole('ADMIN', 'ADMIN_ESCOLA', 'DIRETOR'), async (req, res) => {
