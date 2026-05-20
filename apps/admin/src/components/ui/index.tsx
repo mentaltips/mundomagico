@@ -277,32 +277,25 @@ export function Avatar({ name = '?', photoUrl, size = 'md', color = 'bg-primary/
   const cls = `${AVATAR_SIZES[size]} relative rounded-2xl overflow-hidden flex items-center justify-center font-black shrink-0 ${color} border border-border/50 shadow-sm`
   const safeUrl = getSafeUrl(photoUrl)
   const unoptimized = safeUrl?.startsWith('/api/uploads/') ?? false
+  const [imgError, setImgError] = useState(false)
   
-  if (safeUrl) {
-    return (
-      <div className={cls}>
-        <NextImage
-          src={safeUrl} 
-          alt={name} 
-          fill
-          sizes="96px"
-          unoptimized={unoptimized}
-          className="object-cover" 
-          onError={(e) => {
-            // Se falhar (404), esconde a imagem e mostra a inicial
-            (e.target as any).style.display = 'none'
-            const parent = (e.target as any).parentElement
-            if (parent) {
-              const span = document.createElement('span')
-              span.innerText = name.charAt(0).toUpperCase()
-              parent.appendChild(span)
-            }
-          }}
-        />
-      </div>
-    )
+  if (!safeUrl || imgError) {
+    return <div className={cls}>{name.charAt(0).toUpperCase()}</div>
   }
-  return <div className={cls}>{name.charAt(0).toUpperCase()}</div>
+
+  return (
+    <div className={cls}>
+      <NextImage
+        src={safeUrl} 
+        alt={name} 
+        fill
+        sizes="96px"
+        unoptimized={unoptimized}
+        className="object-cover" 
+        onError={() => setImgError(true)}
+      />
+    </div>
+  )
 }
 
 // ── Section Label ─────────────────────────────────────────────────────────────
