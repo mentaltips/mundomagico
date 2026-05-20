@@ -28,6 +28,15 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'www.mundomagicocajamar.com.br',
       },
+      {
+        protocol: 'https',
+        hostname: 'admin.mundomagicocajamar.com.br',
+        pathname: '/api/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
     ],
   },
 

@@ -5,22 +5,28 @@ export const listMedicationsSchema = z.object({
   active: z.string().optional(),
 })
 
+const flexibleDate = z.string().transform((val) => {
+  const d = new Date(val)
+  if (isNaN(d.getTime())) throw new Error('Data invalida')
+  return d.toISOString()
+})
+
 export const createMedicationSchema = z.object({
   childId: z.string(),
   name: z.string().trim().min(1).max(255),
   dosage: z.string().trim().min(1).max(255),
   frequency: z.string().trim().min(1).max(255),
   instructions: z.string().trim().optional().nullable(),
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime().optional().nullable(),
-  guardianAuthDate: z.string().datetime().optional().nullable(),
+  startDate: flexibleDate,
+  endDate: flexibleDate.optional().nullable(),
+  guardianAuthDate: flexibleDate.optional().nullable(),
   active: z.boolean().optional(),
 })
 
 export const updateMedicationSchema = createMedicationSchema.partial()
 
 export const administerMedicationSchema = z.object({
-  administeredAt: z.string().datetime().optional(),
+  administeredAt: flexibleDate.optional(),
   dosage: z.string().trim().optional(),
   notes: z.string().trim().optional().nullable(),
 })
