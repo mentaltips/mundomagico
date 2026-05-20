@@ -224,13 +224,19 @@ export default function ApresentacaoPage() {
         <section className="relative pt-16 pb-24 md:py-32 overflow-hidden">
           {/* Institutional Banner Background Image */}
           <div className="absolute inset-0 -z-20 pointer-events-none">
-            <img
+            <Image
               src="/images/banermundomagico.png"
+              fill
+              priority
+              sizes="100vw"
               alt="Mundo Mágico Banner"
               className="absolute inset-0 w-full h-full object-cover object-center hidden md:block opacity-35 dark:opacity-20 select-none pointer-events-none"
             />
-            <img
+            <Image
               src="/images/banne%20rmobile.png"
+              fill
+              priority
+              sizes="100vw"
               alt="Mundo Mágico Banner Mobile"
               className="absolute inset-0 w-full h-full object-cover md:hidden opacity-35 dark:opacity-20 select-none pointer-events-none"
               style={{ objectPosition: 'center 15%' }}
