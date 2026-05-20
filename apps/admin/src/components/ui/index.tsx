@@ -276,7 +276,7 @@ const AVATAR_SIZES = {
 export function Avatar({ name = '?', photoUrl, size = 'md', color = 'bg-primary/10 text-primary' }: AvatarProps) {
   const cls = `${AVATAR_SIZES[size]} relative rounded-2xl overflow-hidden flex items-center justify-center font-black shrink-0 ${color} border border-border/50 shadow-sm`
   const safeUrl = getSafeUrl(photoUrl)
-  const unoptimized = safeUrl?.startsWith('/api/uploads/') ?? false
+  const unoptimized = safeUrl?.includes('api.mundomagicocajamar.com.br') ?? false
   const [imgError, setImgError] = useState(false)
   
   if (!safeUrl || imgError) {

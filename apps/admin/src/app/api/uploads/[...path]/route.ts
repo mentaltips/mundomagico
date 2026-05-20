@@ -1,12 +1,34 @@
-import { proxyRequest } from '@/lib/api-proxy'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest, { params }: { params: { path: string[] } }) {
-  // O path vem como um array (ex: ['123.jpg']). Juntamos de volta.
-  const filePath = params.path.join('/')
-  
-  // Repassamos para o backend no caminho real /uploads/... (sem o /api)
-  return proxyRequest(req, `/uploads/${filePath}`)
+  const fileName = params.path?.join('/') || ''
+  if (!fileName) {
+    return new NextResponse('Not Found', { status: 404 })
+  }
+
+  const apiUrl = process.env.API_URL || 'https://api.mundomagicocajamar.com.br'
+  const url = `${apiUrl}/uploads/${fileName}`
+
+  try {
+    const response = await fetch(url)
+
+    if (!response.ok) {
+      return new NextResponse('Not Found', { status: 404 })
+    }
+
+    const buffer = await response.arrayBuffer()
+    const contentType = response.headers.get('content-type') || 'image/png'
+
+    return new NextResponse(buffer, {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    })
+  } catch {
+    return new NextResponse('Not Found', { status: 404 })
+  }
 }
