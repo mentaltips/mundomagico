@@ -40,6 +40,8 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
       const fd = new FormData()
       fd.append('file', file)
 
+      const token = session?.accessToken as string | undefined
+
       const res = await fetch('/api/upload/image', { 
         method: 'POST', 
         body: fd,
