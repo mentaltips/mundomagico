@@ -23,7 +23,7 @@ import { ModalNewStaff, type NewStaffForm } from './_components/ModalNewStaff'
 const EMPTY_NEW_STAFF: NewStaffForm = {
   name: '', email: '', phone: '', whatsapp: '', cpf: '', birthDate: '',
   photoUrl: '',
-  roleType: 'TEACHER', baseSalary: '', paymentDay: '5', pixKey: '',
+  roleType: 'PROFESSOR', baseSalary: '', paymentDay: '5', pixKey: '',
   bankName: '', bankAgency: '', bankAccount: '', financialNotes: ''
 }
 
@@ -57,7 +57,7 @@ export default function StaffPaymentsPage() {
 
   // Modal: Group assignment
   const [showAssignmentModal, setShowAssignmentModal] = useState(false)
-  const [newAssignment, setNewAssignment] = useState({ groupId: '', assignmentType: 'MAIN_TEACHER' })
+  const [newAssignment, setNewAssignment] = useState({ groupId: '', assignmentType: 'PROFESSOR_PRINCIPAL' })
 
   // Modal: Payment status
   const [showPaymentStatusModal, setShowPaymentStatusModal] = useState(false)
@@ -178,7 +178,7 @@ export default function StaffPaymentsPage() {
       })
       if (res.ok) {
         toast.success('Vínculo com turma adicionado!')
-        setNewAssignment({ groupId: '', assignmentType: 'MAIN_TEACHER' })
+        setNewAssignment({ groupId: '', assignmentType: 'PROFESSOR_PRINCIPAL' })
         const updated = await fetch('/api/staff')
         if (updated.ok) {
           const list = await updated.json()

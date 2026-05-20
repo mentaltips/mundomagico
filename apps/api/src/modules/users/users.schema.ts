@@ -7,22 +7,14 @@ export const userIdParamsSchema = z.object({
 export const userRoleSchema = z.enum([
   'ADMIN',
   'ADMIN_ESCOLA',
-  'SCHOOL_ADMIN',
   'DIRETOR',
-  'DIRECTOR',
   'COORDENADOR',
-  'COORDINATOR',
   'PROFESSOR',
-  'TEACHER',
   'MONITOR',
   'CUIDADOR',
-  'CAREGIVER',
   'RESPONSAVEL',
-  'GUARDIAN',
   'FINANCEIRO',
-  'FINANCE',
   'FUNCIONARIO',
-  'STAFF',
 ])
 
 export const createUserSchema = z.object({

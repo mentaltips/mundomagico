@@ -9,8 +9,8 @@ export default withAuth(
     if (token) {
       const role = String(token.role || '').toUpperCase()
 
-      const isAdmin = ['ADMIN', 'ADMIN_ESCOLA', 'DIRETOR', 'DIRECTOR'].includes(role)
-      const isProf = ['PROFESSOR', 'MONITOR', 'CUIDADOR', 'TEACHER'].includes(role)
+      const isAdmin = ['ADMIN', 'ADMIN_ESCOLA', 'DIRETOR'].includes(role)
+      const isProf = ['PROFESSOR', 'MONITOR', 'CUIDADOR'].includes(role)
       const isResp = role === 'RESPONSAVEL'
 
       // Admin, Admin Escola & Diretor -> /admin

@@ -4,7 +4,7 @@ import { toDateKey } from '../../shared/utils/date-key'
 import * as teacherRepository from './teacher.repository'
 import type { RegisterAttendanceInput } from './teacher.schema'
 
-const adminRoles = ['ADMIN', 'ADMIN_ESCOLA', 'SCHOOL_ADMIN', 'DIRETOR', 'DIRECTOR']
+const adminRoles = ['ADMIN', 'ADMIN_ESCOLA', 'DIRETOR']
 
 function isUserAdmin(role?: string) {
   return adminRoles.includes(role || '')

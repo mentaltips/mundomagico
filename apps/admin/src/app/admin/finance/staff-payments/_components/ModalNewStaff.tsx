@@ -126,11 +126,11 @@ export function ModalNewStaff({ form, setForm, onClose, onSubmit }: Props) {
                   onChange={(e) => setForm({ ...form, roleType: e.target.value })}
                   className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-bold outline-none"
                 >
-                  <option value="TEACHER">Professor(a)</option>
+                  <option value="PROFESSOR">Professor(a)</option>
                   <option value="MONITOR">Monitor(a)</option>
-                  <option value="CAREGIVER">Cuidador(a)</option>
-                  <option value="COORDINATOR">Coordenador(a)</option>
-                  <option value="ASSISTANT">Auxiliar</option>
+                  <option value="CUIDADOR">Cuidador(a)</option>
+                  <option value="COORDENADOR">Coordenador(a)</option>
+                  <option value="AUXILIAR">Auxiliar</option>
                 </select>
               </div>
 

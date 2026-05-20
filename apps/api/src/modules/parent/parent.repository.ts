@@ -80,7 +80,6 @@ export function findGuardianAnnouncements(schoolId: string) {
       schoolId,
       OR: [
         { isPinned: true },
-        { targetRole: 'GUARDIAN' },
         { targetRole: 'RESPONSAVEL' },
       ],
     },
@@ -119,7 +118,6 @@ export function findAnnouncementsForFeed(schoolId: string, limit: number) {
     where: {
       schoolId,
       OR: [
-        { targetRole: 'GUARDIAN' },
         { targetRole: 'RESPONSAVEL' },
         { targetRole: null },
       ],

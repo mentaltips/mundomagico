@@ -55,9 +55,7 @@ export function findTeacherAnnouncements(schoolId: string) {
     where: {
       schoolId,
       OR: [
-        { targetRole: 'TEACHER' },
         { targetRole: 'PROFESSOR' },
-        { targetRole: 'CAREGIVER' },
         { targetRole: 'CUIDADOR' },
         { targetRole: null },
       ],

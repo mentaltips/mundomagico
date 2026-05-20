@@ -81,8 +81,8 @@ model User {
   name      String
   email     String   @unique
   password  String
-  // ADMIN | SCHOOL_ADMIN | DIRECTOR | COORDINATOR | TEACHER | MONITOR | CAREGIVER | GUARDIAN | FINANCE | STAFF
-  role      String   @default("STAFF")
+  // ADMIN | ADMIN_ESCOLA | DIRETOR | COORDENADOR | PROFESSOR | MONITOR | CUIDADOR | RESPONSAVEL | FINANCEIRO | FUNCIONARIO
+  role      String   @default("FUNCIONARIO")
   phone     String?
   avatarUrl String?
   active    Boolean  @default(true)
@@ -883,14 +883,14 @@ model Staff {
   photoUrl  String?
 
   // Perfil profissional
-  // TEACHER | MONITOR | CAREGIVER | COORDINATOR | ASSISTANT
-  roleType      String    @default("TEACHER")
+  // PROFESSOR | MONITOR | CUIDADOR | COORDENADOR | AUXILIAR
+  roleType      String    @default("PROFESSOR")
   // ACTIVE | INACTIVE | SUSPENDED
   status        String    @default("ACTIVE")
   admissionDate DateTime?
   notes         String?
 
-  // Dados financeiros (visível apenas para ADMIN/SCHOOL_ADMIN/FINANCE)
+  // Dados financeiros (visível apenas para ADMIN/ADMIN_ESCOLA/FINANCEIRO)
   baseSalary     Decimal? @db.Decimal(10, 2)
   paymentDay     Int? // dia do mês para pagamento (ex: 5)
   pixKey         String?
@@ -926,8 +926,8 @@ model StaffGroupAssignment {
   staffId  String
   groupId  String
 
-  // MAIN_TEACHER | ASSISTANT | MONITOR | CAREGIVER
-  assignmentType String    @default("MAIN_TEACHER")
+  // PROFESSOR_PRINCIPAL | AUXILIAR | MONITOR | CUIDADOR
+  assignmentType String    @default("PROFESSOR_PRINCIPAL")
   startDate      DateTime  @default(now())
   endDate        DateTime?
   // ACTIVE | INACTIVE

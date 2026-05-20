@@ -17,7 +17,7 @@ export function listUsers(schoolId: string) {
   return prisma.user.findMany({
     where: {
       schoolId,
-      role: { notIn: ['GUARDIAN', 'RESPONSAVEL'] },
+      role: { notIn: ['RESPONSAVEL'] },
     },
     select: userSelect,
     orderBy: { name: 'asc' },

@@ -92,7 +92,7 @@ export async function assignToGroup(staffId: string, schoolId: string, input: As
   const existingAssignment = await staffRepository.findAssignment(schoolId, staffId, input.groupId)
   if (existingAssignment) {
     await staffRepository.updateAssignment(existingAssignment.id, schoolId, {
-      assignmentType: input.assignmentType || 'MAIN_TEACHER',
+      assignmentType: input.assignmentType || 'PROFESSOR_PRINCIPAL',
       status: 'ACTIVE',
     })
     return staffRepository.findAssignment(schoolId, staffId, input.groupId)
@@ -102,7 +102,7 @@ export async function assignToGroup(staffId: string, schoolId: string, input: As
     schoolId,
     staffId,
     groupId: input.groupId,
-    assignmentType: input.assignmentType || 'MAIN_TEACHER',
+    assignmentType: input.assignmentType || 'PROFESSOR_PRINCIPAL',
     status: 'ACTIVE',
   })
 }

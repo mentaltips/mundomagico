@@ -281,7 +281,7 @@ export default function UsersPage() {
 
   const activeUsers = users.filter((user) => user.active).length
   const inactiveUsers = users.length - activeUsers
-  const teachers = users.filter((user) => ['TEACHER', 'CAREGIVER', 'PROFESSOR', 'CUIDADOR', 'MONITOR'].includes(user.role)).length
+  const teachers = users.filter((user) => ['PROFESSOR', 'CUIDADOR', 'MONITOR'].includes(user.role)).length
 
   return (
     <div className="page animate-in">

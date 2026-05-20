@@ -42,12 +42,12 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3001'
         
         // Redirect based on role
-        if (role === 'admin' || role === 'director') {
+        if (role === 'admin' || role === 'diretor') {
           window.location.href = `${adminUrl}/admin`
-        } else if (role === 'teacher') {
-          window.location.href = `${adminUrl}/teacher`
-        } else if (role === 'guardian' || role === 'parent') {
-          window.location.href = `${adminUrl}/parent`
+        } else if (role === 'professor' || role === 'monitor' || role === 'cuidador') {
+          window.location.href = `${adminUrl}/professor`
+        } else if (role === 'responsavel') {
+          window.location.href = `${adminUrl}/responsavel`
         } else {
           // Default fallback
           window.location.href = `${adminUrl}/dashboard`

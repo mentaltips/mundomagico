@@ -93,10 +93,10 @@ export function ModalGroupAssignment({
                 onChange={(e) => setNewAssignment({ ...newAssignment, assignmentType: e.target.value })}
                 className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-bold outline-none"
               >
-                <option value="MAIN_TEACHER">Regente principal</option>
-                <option value="ASSISTANT">Auxiliar de sala</option>
+                <option value="PROFESSOR_PRINCIPAL">Regente principal</option>
+                <option value="AUXILIAR">Auxiliar de sala</option>
                 <option value="MONITOR">Monitor(a)</option>
-                <option value="CAREGIVER">Cuidador(a)</option>
+                <option value="CUIDADOR">Cuidador(a)</option>
               </select>
             </div>
           </div>

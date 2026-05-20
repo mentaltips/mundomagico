@@ -8,7 +8,7 @@ export const createStaffSchema = z.object({
   cpf: z.string().trim().optional().nullable(),
   birthDate: z.string().datetime().optional().nullable(),
   photoUrl: z.string().trim().optional().nullable(),
-  roleType: z.enum(['ADMIN', 'TEACHER', 'SUPPORT', 'OTHER']).optional(),
+  roleType: z.enum(['ADMIN', 'PROFESSOR', 'APOIO', 'OUTRO']).optional(),
   baseSalary: z.coerce.number().nonnegative().optional().nullable(),
   paymentDay: z.coerce.number().int().min(1).max(31).optional().nullable(),
   pixKey: z.string().trim().optional().nullable(),

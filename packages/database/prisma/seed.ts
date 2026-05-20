@@ -57,7 +57,7 @@ async function main() {
       name: 'Professora Fernanda',
       email: 'profa.fernanda@mundomagico.com.br',
       password: teacherPassword,
-      role: 'TEACHER',
+      role: 'PROFESSOR',
     },
   })
   console.log('✅ Professora Fernanda criada')
@@ -174,9 +174,9 @@ async function main() {
   console.log('\n📋 Credenciais de Acesso:')
   console.log('   --- DIRETORIA (ADMIN) ---')
   console.log('   Email: diretoria@mundomagico.com.br / Senha: magia2024')
-  console.log('   --- EQUIPE (TEACHER) ---')
+  console.log('   --- EQUIPE (PROFESSOR) ---')
   console.log('   Email: profa.fernanda@mundomagico.com.br / Senha: equipe123')
-  console.log('   --- FAMÍLIA (GUARDIAN) ---')
+  console.log('   --- FAMÍLIA (RESPONSAVEL) ---')
   console.log('   Email: ana.santos@email.com / Senha: familia123')
 }
 

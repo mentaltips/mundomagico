@@ -87,7 +87,7 @@ async function ensureSeedData() {
         name: 'Professora Fernanda',
         email: 'profa.fernanda@mundomagico.com.br',
         password: teacherPassword,
-        role: 'TEACHER',
+        role: 'PROFESSOR',
       },
     })
 
