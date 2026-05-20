@@ -6,6 +6,17 @@
 # ============================================================
 set -e
 
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env.prod"
+
+if [ ! -f .env.prod ]; then
+  echo "❌ .env.prod não encontrado em $ROOT"
+  echo "   Copie .env.prod.example para .env.prod e preencha os valores."
+  exit 1
+fi
+
 echo "🚀 Iniciando atualização..."
 
 echo ""
@@ -17,13 +28,39 @@ echo "📚 Instalando dependências..."
 pnpm install --frozen-lockfile 2>&1 | tail -5
 
 echo ""
+echo "🔧 Gerando Prisma Client (necessário antes do build)..."
+pnpm --filter @mundo-magico/database exec prisma generate
+
+echo ""
 echo "🔨 Fazendo build da API..."
-cd apps/api && pnpm build 2>&1 | tail -10
-cd ../..
+pnpm --filter @mundo-magico/api build 2>&1 | tail -15
+
+echo ""
+echo "🗄️ Garantindo postgres/redis..."
+$COMPOSE up -d postgres redis
+
+echo ""
+echo "⏳ Aguardando postgres ficar healthy..."
+for i in $(seq 1 30); do
+  if $COMPOSE ps postgres 2>/dev/null | grep -q '(healthy)'; then
+    echo "   postgres healthy"
+    break
+  fi
+  if [ "$i" -eq 30 ]; then
+    echo "❌ postgres não ficou healthy em 60s"
+    echo "   Diagnóstico: $COMPOSE logs --tail=50 postgres"
+    exit 1
+  fi
+  sleep 2
+done
+
+echo ""
+echo "📦 Aplicando migrações..."
+$COMPOSE run --rm --no-deps api pnpm --filter @mundo-magico/database exec prisma migrate deploy
 
 echo ""
 echo "🔄 Reiniciando serviços Docker..."
-docker compose -f docker-compose.prod.yml up -d --build api
+$COMPOSE up -d --build api worker
 
 echo ""
 echo "🏥 Testando health da API..."
@@ -33,4 +70,4 @@ curl -s http://localhost:3333/health || echo "API ainda iniciando..."
 
 echo ""
 echo "✅ Atualização concluída!"
-echo "   Logs: docker compose -f docker-compose.prod.yml logs -f api"
+echo "   Logs: $COMPOSE logs -f api"

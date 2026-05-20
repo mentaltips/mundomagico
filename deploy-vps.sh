@@ -56,12 +56,22 @@ echo "📚 Instalando dependências..."
 $SSH "cd /opt/mundomagico && pnpm install --frozen-lockfile 2>&1 | tail -5"
 
 echo ""
+echo "🔧 Gerando Prisma Client..."
+$SSH "cd /opt/mundomagico && pnpm --filter @mundo-magico/database exec prisma generate"
+
+echo ""
 echo "🔨 Fazendo build da API..."
-$SSH "cd /opt/mundomagico/apps/api && pnpm build 2>&1 | tail -10"
+$SSH "cd /opt/mundomagico && pnpm --filter @mundo-magico/api build 2>&1 | tail -15"
+
+echo ""
+echo "🗄️ Garantindo postgres/redis e migrações..."
+$SSH "cd /opt/mundomagico && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d postgres redis"
+$SSH "cd /opt/mundomagico && for i in \$(seq 1 30); do docker compose -f docker-compose.prod.yml --env-file .env.prod ps postgres 2>/dev/null | grep -q '(healthy)' && break; sleep 2; done"
+$SSH "cd /opt/mundomagico && docker compose -f docker-compose.prod.yml --env-file .env.prod run --rm --no-deps api pnpm --filter @mundo-magico/database exec prisma migrate deploy"
 
 echo ""
 echo "🔄 Reiniciando containers Docker..."
-$SSH "cd /opt/mundomagico && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build api 2>&1 | tail -10"
+$SSH "cd /opt/mundomagico && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build api worker 2>&1 | tail -15"
 
 echo ""
 echo "⏳ Aguardando API inicializar..."
