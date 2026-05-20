@@ -316,7 +316,7 @@ importers:
         specifier: ^2.4.6
         version: 2.4.6
       '@types/node':
-        specifier: ^20.14.11
+        specifier: ^20.19.40
         version: 20.19.40
       prisma:
         specifier: ^5.16.1
