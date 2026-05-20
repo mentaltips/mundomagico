@@ -53,6 +53,8 @@ const authLimiter = rateLimit({
 
 export const app = express()
 
+app.set('trust proxy', 1) // Fundamental para o rate-limit funcionar atrás do Nginx/Cloudflare
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }))
