@@ -2,10 +2,13 @@
   "name": "@mundo-magico/types",
   "version": "1.1.0",
   "private": true,
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
   "exports": {
-    ".": "./src/index.ts",
-    "./terminology": "./src/terminology.ts"
+    ".": "./dist/index.js",
+    "./terminology": "./dist/terminology.js"
   },
   "devDependencies": {
     "typescript": "^5.5.3"

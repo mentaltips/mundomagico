@@ -57,6 +57,9 @@ RUN pnpm --filter @mundo-magico/database exec prisma generate
 # Compila pacote compartilhado primeiro (API depende do dist/)
 RUN pnpm --filter @mundo-magico/database build
 
+# Compila types
+RUN pnpm --filter @mundo-magico/types build
+
 # Compila API
 RUN pnpm --filter @mundo-magico/api build
 
@@ -78,8 +81,9 @@ COPY --from=build /app/packages/database/dist ./packages/database/dist
 COPY --from=build /app/packages/database/prisma ./packages/database/prisma
 COPY --from=build /app/packages/database/node_modules ./packages/database/node_modules
 
-# Types (pode estar só com fontes ts; copiamos tudo por segurança)
-COPY --from=build /app/packages/types ./packages/types
+# Types
+COPY --from=build /app/packages/types/package.json ./packages/types/package.json
+COPY --from=build /app/packages/types/dist ./packages/types/dist
 
 # API compilada
 COPY --from=build /app/apps/api/package.json ./apps/api/package.json
