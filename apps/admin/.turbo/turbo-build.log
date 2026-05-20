@@ -6,54 +6,52 @@
   - Environments: .env
 
    Creating an optimized production build ...
-<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Unable to snapshot resolve dependencies
-<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Unable to snapshot resolve dependencies
-<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Unable to snapshot resolve dependencies
  ✓ Compiled successfully
    Linting and checking validity of types ...
    Collecting page data ...
- ⚠ Using edge runtime on a page currently disables static generation for that page
-   Generating static pages (0/48) ...
-   Generating static pages (12/48) 
-   Generating static pages (24/48) 
-   Generating static pages (36/48) 
- ✓ Generating static pages (48/48)
+   Generating static pages (0/51) ...
+   Generating static pages (12/51) 
+   Generating static pages (25/51) 
+   Generating static pages (38/51) 
+ ✓ Generating static pages (51/51)
    Finalizing page optimization ...
    Collecting build traces ...
 
 Route (app)                                           Size     First Load JS
-┌ ○ /_not-found                                       881 B          88.2 kB
-├ ○ /admin                                            145 B          87.4 kB
-├ ƒ /admin/analytics                                  10.4 kB         261 kB
-├ ƒ /admin/announcements                              6.39 kB         154 kB
-├ ƒ /admin/calendar                                   7.4 kB          164 kB
-├ ƒ /admin/check-in-out                               6.47 kB         154 kB
-├ ○ /admin/check-in-out/relatorio                     5.94 kB         154 kB
-├ ○ /admin/child-items                                8.2 kB          165 kB
-├ ƒ /admin/children                                   9.94 kB         158 kB
+┌ ƒ /                                                 150 B          87.4 kB
+├ ○ /_not-found                                       881 B          88.2 kB
+├ ○ /admin                                            150 B          87.4 kB
+├ ƒ /admin/analytics                                  7.93 kB         262 kB
+├ ƒ /admin/announcements                              4.04 kB         155 kB
+├ ƒ /admin/calendar                                   4.98 kB         165 kB
+├ ƒ /admin/check-in-out                               4.05 kB         155 kB
+├ ○ /admin/check-in-out/relatorio                     3.46 kB         154 kB
+├ ○ /admin/child-items                                5.75 kB         166 kB
+├ ƒ /admin/children                                   7.6 kB          159 kB
 ├ ƒ /admin/children/[id]                              164 B           154 kB
 ├ ƒ /admin/children/[id]/authorized-pickups           6.05 kB         114 kB
 ├ ƒ /admin/children/new                               164 B           154 kB
-├ ○ /admin/daily-routine                              5.42 kB         161 kB
+├ ○ /admin/daily-routine                              3.01 kB         162 kB
 ├ ƒ /admin/daily-routine/[childId]                    209 B           153 kB
-├ ○ /admin/dashboard                                  7.34 kB         276 kB
+├ ○ /admin/dashboard                                  5 kB            277 kB
 ├ ○ /admin/development-reports                        8.58 kB         116 kB
-├ ƒ /admin/finance                                    10.7 kB         165 kB
-├ ○ /admin/finance/billing                            9.97 kB         173 kB
-├ ƒ /admin/finance/invoice/[id]/print                 6.99 kB         105 kB
-├ ○ /admin/finance/staff-payments                     11.5 kB         104 kB
-├ ○ /admin/groups                                     6.73 kB         155 kB
-├ ○ /admin/guardians                                  9.59 kB         167 kB
-├ ○ /admin/health                                     6.9 kB          155 kB
+├ ƒ /admin/finance                                    8.34 kB         165 kB
+├ ○ /admin/finance/billing                            7.5 kB          174 kB
+├ ƒ /admin/finance/invoice/[id]/print                 6.85 kB         105 kB
+├ ○ /admin/finance/staff-payments                     12.3 kB         173 kB
+├ ○ /admin/groups                                     4.53 kB         156 kB
+├ ○ /admin/guardians                                  7.34 kB         168 kB
+├ ○ /admin/health                                     4.54 kB         156 kB
 ├ ƒ /admin/medications                                188 B          99.4 kB
-├ ○ /admin/photos                                     8.95 kB         181 kB
-├ ○ /admin/privacy-policy                             4.71 kB         148 kB
-├ ○ /admin/reports                                    13.1 kB         278 kB
-├ ○ /admin/settings                                   7.63 kB         164 kB
-├ ○ /admin/settings/institution-type                  7.47 kB         155 kB
-├ ○ /admin/students                                   7.3 kB          165 kB
-├ ○ /admin/users                                      5.35 kB        97.7 kB
-├ ○ /admin/whatsapp                                   9.3 kB          142 kB
+├ ○ /admin/photos                                     6.61 kB         182 kB
+├ ○ /admin/privacy-policy                             2.17 kB         148 kB
+├ ○ /admin/reports                                    10.7 kB         278 kB
+├ ○ /admin/settings                                   6.6 kB          167 kB
+├ ○ /admin/settings/institution-type                  4.98 kB         156 kB
+├ ○ /admin/settings/whatsapp                          2.58 kB         154 kB
+├ ○ /admin/students                                   4.83 kB         166 kB
+├ ○ /admin/users                                      6.06 kB         157 kB
+├ ○ /admin/whatsapp                                   11.5 kB         156 kB
 ├ ○ /admin/whatsapp/message-builder                   3.23 kB        90.5 kB
 ├ ƒ /api/[...path]                                    0 B                0 B
 ├ ƒ /api/analytics                                    0 B                0 B
@@ -101,7 +99,12 @@ Route (app)                                           Size     First Load JS
 ├ ƒ /api/parent/feed                                  0 B                0 B
 ├ ƒ /api/photos                                       0 B                0 B
 ├ ƒ /api/photos/[id]                                  0 B                0 B
+├ ƒ /api/professor/attendance                         0 B                0 B
+├ ƒ /api/professor/classes                            0 B                0 B
+├ ƒ /api/professor/dashboard                          0 B                0 B
 ├ ƒ /api/reports/export                               0 B                0 B
+├ ƒ /api/responsavel/dashboard                        0 B                0 B
+├ ƒ /api/responsavel/feed                             0 B                0 B
 ├ ƒ /api/settings                                     0 B                0 B
 ├ ƒ /api/settings/institution-type                    0 B                0 B
 ├ ƒ /api/stats                                        0 B                0 B
@@ -118,26 +121,26 @@ Route (app)                                           Size     First Load JS
 ├ ƒ /api/users/[id]                                   0 B                0 B
 ├ ƒ /api/users/[id]/reset-password                    0 B                0 B
 ├ ƒ /api/webhooks/mercadopago                         0 B                0 B
-├ ƒ /icon                                             0 B                0 B
-├ ○ /login                                            4.16 kB         107 kB
-├ ○ /parent                                           8.27 kB         160 kB
-├ ○ /parent/calendar                                  2.78 kB         108 kB
-├ ○ /parent/dashboard                                 145 B          87.4 kB
-├ ○ /parent/documents                                 5.05 kB         117 kB
-├ ○ /parent/history                                   3.93 kB         147 kB
-├ ○ /parent/messages                                  2 kB           89.3 kB
-├ ○ /parent/payments                                  7.54 kB         146 kB
-├ ○ /parent/photos                                    4.95 kB         112 kB
-├ ○ /parent/profile                                   5.61 kB         163 kB
+├ ○ /icon.svg                                         0 B                0 B
+├ ○ /login                                            4 kB            107 kB
 ├ ○ /privacy-policy                                   3.03 kB        97.1 kB
-├ ○ /teacher                                          3.37 kB         147 kB
-├ ○ /teacher/attendance                               1.9 kB           96 kB
-├ ƒ /teacher/attendance/[id]                          2.91 kB        95.3 kB
-├ ○ /teacher/classes                                  2.14 kB        96.2 kB
-├ ƒ /teacher/classes/[id]                             2.25 kB         101 kB
-├ ○ /teacher/daily-reports                            2.2 kB         96.3 kB
-├ ○ /teacher/daily-reports/new                        3.88 kB        91.2 kB
-└ ○ /teacher/profile                                  3.39 kB        99.9 kB
+├ ○ /professor                                        3.38 kB         147 kB
+├ ○ /professor/attendance                             1.9 kB           96 kB
+├ ƒ /professor/attendance/[id]                        3.39 kB        95.7 kB
+├ ○ /professor/classes                                2.14 kB        96.2 kB
+├ ƒ /professor/classes/[id]                           2.72 kB         102 kB
+├ ○ /professor/daily-reports                          2.2 kB         96.3 kB
+├ ○ /professor/daily-reports/new                      3.88 kB        91.2 kB
+├ ○ /professor/profile                                3.23 kB        99.7 kB
+├ ○ /responsavel                                      5.9 kB          161 kB
+├ ○ /responsavel/calendar                             2.78 kB         108 kB
+├ ○ /responsavel/dashboard                            150 B          87.4 kB
+├ ○ /responsavel/documents                            4.9 kB          116 kB
+├ ○ /responsavel/history                              1.3 kB          147 kB
+├ ○ /responsavel/messages                             2 kB           89.3 kB
+├ ○ /responsavel/payments                             5.59 kB         146 kB
+├ ○ /responsavel/photos                               5.23 kB         113 kB
+└ ○ /responsavel/profile                              3.1 kB          163 kB
 + First Load JS shared by all                         87.3 kB
   ├ chunks/8753-94688bf4d677afdb.js                   31.7 kB
   ├ chunks/abf17911-9797bd76157703eb.js               53.6 kB
