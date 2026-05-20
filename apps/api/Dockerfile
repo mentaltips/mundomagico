@@ -19,6 +19,9 @@ RUN pnpm install --frozen-lockfile
 # Gera o Prisma Client
 RUN pnpm --filter @mundo-magico/database exec prisma generate
 
+# Compila o pacote compartilhado antes da API consumir o export em dist/
+RUN pnpm --filter @mundo-magico/database build
+
 RUN pnpm --filter @mundo-magico/api build
 
 # Cria usuário não-root com pasta home e permissões

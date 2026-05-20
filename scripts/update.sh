@@ -32,6 +32,10 @@ echo "🔧 Gerando Prisma Client (necessário antes do build)..."
 pnpm --filter @mundo-magico/database exec prisma generate
 
 echo ""
+echo "🧱 Compilando pacote de banco..."
+pnpm --filter @mundo-magico/database build
+
+echo ""
 echo "🔨 Fazendo build da API..."
 pnpm --filter @mundo-magico/api build
 

@@ -60,6 +60,10 @@ echo "🔧 Gerando Prisma Client..."
 $SSH "cd /opt/mundomagico && pnpm --filter @mundo-magico/database exec prisma generate"
 
 echo ""
+echo "🧱 Compilando pacote de banco..."
+$SSH "cd /opt/mundomagico && pnpm --filter @mundo-magico/database build"
+
+echo ""
 echo "🔨 Fazendo build da API..."
 $SSH "cd /opt/mundomagico && pnpm --filter @mundo-magico/api build"
 
