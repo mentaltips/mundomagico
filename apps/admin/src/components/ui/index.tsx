@@ -277,7 +277,7 @@ export function Avatar({ name = '?', photoUrl, size = 'md', color = 'bg-primary/
   const [imgError, setImgError] = useState(false)
   const cls = `${AVATAR_SIZES[size]} relative rounded-2xl overflow-hidden flex items-center justify-center font-black shrink-0 ${color} border border-border/50 shadow-sm`
   const safeUrl = getSafeUrl(photoUrl)
-  const unoptimized = safeUrl?.includes('api.mundomagicocajamar.com.br') || safeUrl?.startsWith('/api/uploads/') ?? false
+  const unoptimized = (safeUrl?.includes('api.mundomagicocajamar.com.br') ?? false) || (safeUrl?.startsWith('/api/uploads/') ?? false)
   
   if (!safeUrl || imgError) {
     return <div className={cls}>{name.charAt(0).toUpperCase()}</div>
