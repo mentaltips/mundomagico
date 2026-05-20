@@ -1,5 +1,4 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "target": "ES2022",
     "module": "NodeNext",
@@ -10,11 +9,10 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "noEmit": false,
-    "composite": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "isolatedModules": false,
     "incremental": false,
-    "jsx": "react-jsx",
-    "paths": {},
     "types": ["node"]
   },
   "include": ["src/**/*"],
