@@ -14,15 +14,6 @@ const nextConfig = {
     return config
   },
 
-  async rewrites() {
-    return [
-      {
-        source: '/api/uploads/:path*',
-        destination: 'https://api.mundomagicocajamar.com.br/uploads/:path*',
-      },
-    ]
-  },
-
   images: {
     remotePatterns: [
       {
@@ -47,6 +38,7 @@ const nextConfig = {
         hostname: 'localhost',
       },
     ],
+    unoptimized: false,
   },
 
 }
