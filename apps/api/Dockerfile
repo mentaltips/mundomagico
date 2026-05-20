@@ -31,10 +31,10 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 
 # Manifests de cada workspace
+# (packages/ui não tem package.json, é só uma pasta src/ não usada pela API)
 COPY apps/api/package.json ./apps/api/
 COPY packages/database/package.json ./packages/database/
 COPY packages/types/package.json ./packages/types/
-COPY packages/ui/package.json ./packages/ui/
 
 RUN pnpm install --frozen-lockfile
 
