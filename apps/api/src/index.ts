@@ -202,7 +202,15 @@ async function ensureSeedData() {
 
 app.listen(PORT, async () => {
   console.log(`API running on port ${PORT}`)
-  await synchronizeDatabase()
-  await ensureSeedData()
+
+  // Em produção NUNCA rodar prisma db push (perda de dados silenciosa)
+  // nem seed automático (cria usuários com senha conhecida).
+  // Use migrations explícitas via CI/CD: pnpm prisma migrate deploy
+  if (process.env.NODE_ENV !== 'production') {
+    await synchronizeDatabase()
+    await ensureSeedData()
+  } else {
+    console.log('🔒 Production mode: skipping auto db push & seed. Run migrations manually.')
+  }
 })
 

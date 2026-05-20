@@ -14,7 +14,8 @@
     "isolatedModules": false,
     "incremental": false,
     "jsx": "react-jsx",
-    "paths": {}
+    "paths": {},
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

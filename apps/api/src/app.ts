@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import pino from 'pino-http'
+import rateLimit from 'express-rate-limit'
 import path from 'path'
 
 import { isRedisHealthy } from './services/queue'
@@ -39,6 +40,16 @@ import uploadRoutes from './modules/upload/upload.routes'
 import analyticsRoutes from './modules/analytics/analytics.routes'
 import staffRoutes from './modules/staff/staff.routes'
 import whatsappRoutes from './modules/whatsapp/whatsapp.routes'
+
+// Rate limit para endpoints sensíveis de autenticação.
+// Brute-force em /api/auth/login: 10 tentativas / 15 min / IP.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { code: 'TOO_MANY_REQUESTS', message: 'Muitas tentativas de login. Tente novamente em alguns minutos.' } },
+})
 
 export const app = express()
 
@@ -123,7 +134,7 @@ app.use('/api/webhooks', webhooksRoutes)
 app.use('/api/students', requireApiAuth, requireTenant, studentRoutes)
 app.use('/api/groups', requireApiAuth, requireTenant, groupRoutes)
 app.use('/api/stats', requireApiAuth, requireTenant, statsRoutes)
-app.use('/api/auth', authRoutes)
+app.use('/api/auth', authLimiter, authRoutes)
 app.use('/api/children', requireApiAuth, requireTenant, childrenRoutes)
 app.use('/api/announcements', requireApiAuth, requireTenant, announcementsRoutes)
 app.use('/api/calendar', requireApiAuth, requireTenant, calendarRoutes)
