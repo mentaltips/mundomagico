@@ -5,6 +5,12 @@ export const invoiceIdParamsSchema = z.object({
   id: z.string().trim().min(1).max(128),
 })
 
+const flexibleDate = z.string().transform((val) => {
+  const d = new Date(val)
+  if (isNaN(d.getTime())) throw new Error('Data invalida')
+  return d.toISOString()
+})
+
 export const listInvoicesQuerySchema = z.object({
   status: z.string().trim().max(32).optional(),
   childId: z.string().trim().max(128).optional(),
@@ -13,16 +19,16 @@ export const listInvoicesQuerySchema = z.object({
 })
 
 export const invoiceDateFieldsSchema = z.object({
-  dueDate: z.string().datetime().or(z.string().date()).optional(),
-  boletoExpiry: z.string().datetime().or(z.string().date()).optional(),
-  pixExpiry: z.string().datetime().or(z.string().date()).optional(),
-  paidAt: z.string().datetime().or(z.string().date()).optional(),
+  dueDate: flexibleDate.optional(),
+  boletoExpiry: flexibleDate.optional(),
+  pixExpiry: flexibleDate.optional(),
+  paidAt: flexibleDate.optional(),
   childId: z.string().trim().min(1).max(128).optional().nullable(),
   studentId: z.string().trim().min(1).max(128).optional().nullable(),
 })
 
 export const createInvoiceSchema = invoiceDateFieldsSchema.extend({
-  dueDate: z.string().datetime().or(z.string().date()),
+  dueDate: flexibleDate,
 }).and(invoiceWriteSchema.extend({
   description: z.string().trim().min(1).max(255),
   amount: moneySchema,

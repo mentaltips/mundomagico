@@ -40,9 +40,7 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
       const fd = new FormData()
       fd.append('file', file)
 
-      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '/api').replace(/\/$/, '')
-      const token = (session as any)?.accessToken
-      const res = await fetch(`${apiUrl}/upload/image`, { 
+      const res = await fetch('/api/upload/image', { 
         method: 'POST', 
         body: fd,
         headers: token ? { Authorization: `Bearer ${token}` } : {}

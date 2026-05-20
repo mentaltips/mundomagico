@@ -1,14 +1,21 @@
 import { z } from 'zod'
 
+const flexibleDate = z.string().transform((val) => {
+  if (!val) return null
+  const d = new Date(val)
+  if (isNaN(d.getTime())) throw new Error('Data invalida')
+  return d.toISOString()
+}).nullable()
+
 export const createStaffSchema = z.object({
   name: z.string().trim().min(1).max(255),
   email: z.string().trim().email().optional().nullable(),
   phone: z.string().trim().optional().nullable(),
   whatsapp: z.string().trim().optional().nullable(),
   cpf: z.string().trim().optional().nullable(),
-  birthDate: z.string().datetime().optional().nullable(),
+  birthDate: flexibleDate,
   photoUrl: z.string().trim().optional().nullable(),
-  roleType: z.enum(['ADMIN', 'PROFESSOR', 'APOIO', 'OUTRO']).optional(),
+  roleType: z.enum(['ADMIN', 'PROFESSOR', 'MONITOR', 'CUIDADOR', 'COORDENADOR', 'AUXILIAR', 'APOIO', 'OUTRO']).optional(),
   baseSalary: z.coerce.number().nonnegative().optional().nullable(),
   paymentDay: z.coerce.number().int().min(1).max(31).optional().nullable(),
   pixKey: z.string().trim().optional().nullable(),
@@ -31,7 +38,7 @@ export const generatePaymentsSchema = z.object({
 
 export const updatePaymentSchema = z.object({
   status: z.enum(['DRAFT', 'APPROVED', 'PAID', 'CANCELLED']).optional(),
-  paymentDate: z.string().datetime().optional().nullable(),
+  paymentDate: flexibleDate,
   paymentMethod: z.string().trim().optional().nullable(),
   notes: z.string().trim().optional().nullable(),
 })
