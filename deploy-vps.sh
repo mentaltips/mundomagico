@@ -13,7 +13,7 @@
 #     ssh-keygen -t ed25519 -f ~/.ssh/id_mundomagico -C "deploy-mundomagico"
 #     ssh-copy-id -i ~/.ssh/id_mundomagico.pub $VPS_USER@$VPS_IP
 # ============================================================
-set -e
+set -euo pipefail
 
 # ── Carrega configuração local (nunca versionada) ──────────────
 ENV_FILE="${HOME}/.deploy-vps.env"
@@ -61,7 +61,7 @@ $SSH "cd /opt/mundomagico && pnpm --filter @mundo-magico/database exec prisma ge
 
 echo ""
 echo "🔨 Fazendo build da API..."
-$SSH "cd /opt/mundomagico && pnpm --filter @mundo-magico/api build 2>&1 | tail -15"
+$SSH "cd /opt/mundomagico && pnpm --filter @mundo-magico/api build"
 
 echo ""
 echo "🗄️ Garantindo postgres/redis e migrações..."
@@ -71,7 +71,8 @@ $SSH "cd /opt/mundomagico && docker compose -f docker-compose.prod.yml --env-fil
 
 echo ""
 echo "🔄 Reiniciando containers Docker..."
-$SSH "cd /opt/mundomagico && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build api worker 2>&1 | tail -15"
+$SSH "cd /opt/mundomagico && docker compose -f docker-compose.prod.yml --env-file .env.prod build --no-cache api worker"
+$SSH "cd /opt/mundomagico && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d api worker"
 
 echo ""
 echo "⏳ Aguardando API inicializar..."

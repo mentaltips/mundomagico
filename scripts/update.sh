@@ -4,7 +4,7 @@
 # Execute este script DENTRO da VPS:
 #   cd /opt/mundomagico && bash scripts/update.sh
 # ============================================================
-set -e
+set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -33,7 +33,7 @@ pnpm --filter @mundo-magico/database exec prisma generate
 
 echo ""
 echo "🔨 Fazendo build da API..."
-pnpm --filter @mundo-magico/api build 2>&1 | tail -15
+pnpm --filter @mundo-magico/api build
 
 echo ""
 echo "🗄️ Garantindo postgres/redis..."
@@ -60,7 +60,8 @@ $COMPOSE run --rm --no-deps api pnpm --filter @mundo-magico/database exec prisma
 
 echo ""
 echo "🔄 Reiniciando serviços Docker..."
-$COMPOSE up -d --build api worker
+$COMPOSE build --no-cache api worker
+$COMPOSE up -d api worker
 
 echo ""
 echo "🏥 Testando health da API..."

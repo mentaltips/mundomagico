@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   PublicHeader,
   PublicFooter
@@ -261,14 +261,12 @@ function FeatureCarousel({ cards }: { cards: any[] }) {
 
 export default function InstitutionalHomePage() {
   const targetRef = useRef(null)
-  const { scrollYProgress } = useScroll({
-    offset: ["start start", "end start"]
-  })
 
   // Banner rotation state
   const [bannerIndex, setBannerIndex] = useState(0)
   const [isMounted, setIsMounted] = useState(false)
-  
+  const [heroIntroDone, setHeroIntroDone] = useState(false)
+
   useEffect(() => {
     setIsMounted(true)
     // 15 seconds for main banner (enough for all 5 subtitles to animate), 8 seconds for app banner
@@ -279,29 +277,14 @@ export default function InstitutionalHomePage() {
     return () => clearTimeout(t)
   }, [bannerIndex])
 
-  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0])
-  const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.98])
-
-  // Animation variants for text
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.5
-      }
+  useEffect(() => {
+    if (bannerIndex !== 0) {
+      setHeroIntroDone(true)
     }
-  }
+  }, [bannerIndex])
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8, ease: "easeOut" as const }
-    }
-  }
+  const heroSlidePosition =
+    'absolute left-0 right-0 bottom-20 md:bottom-auto md:top-1/2 md:-translate-y-1/2 z-10'
 
   return (
     <div className="relative min-h-screen bg-white dark:bg-slate-950 selection:bg-lime-100 selection:text-lime-900 font-sans overflow-x-hidden">
@@ -318,21 +301,20 @@ export default function InstitutionalHomePage() {
           </div>
 
           <div className="container mx-auto px-4 md:px-6 relative z-20 h-full">
-            <div className="relative w-full h-full flex items-end md:items-center pb-20 md:pb-0 md:pt-40">
-              <AnimatePresence>
+            <div className="relative w-full min-h-[400px] sm:min-h-[440px] md:min-h-[560px] pb-20 md:pb-0 md:pt-40">
+              <AnimatePresence mode="wait" initial={false}>
                 {bannerIndex === 0 ? (
                   /* ── MAIN SLIDE CONTENT (Institutional) ── */
                   <motion.div 
                     key="main-slide" 
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={heroIntroDone ? { opacity: 0 } : { opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.8, ease: 'easeInOut' }}
-                    className="absolute md:relative flex flex-col items-start text-left bg-white/65 backdrop-blur-xl md:bg-transparent md:backdrop-blur-none p-5 md:p-0 rounded-[2rem] md:rounded-none border border-white/40 md:border-none shadow-2xl shadow-black/10 md:shadow-none w-full sm:w-auto max-w-3xl"
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: heroIntroDone ? 0.45 : 0.8, ease: 'easeInOut' }}
+                    className={`${heroSlidePosition} flex flex-col items-start text-left bg-white/65 backdrop-blur-xl md:bg-transparent md:backdrop-blur-none p-5 md:p-0 rounded-[2rem] md:rounded-none border border-white/40 md:border-none shadow-2xl shadow-black/10 md:shadow-none w-full sm:w-auto max-w-3xl`}
                   >
                     {/* LOGO-STYLE ANIMATED TITLE */}
                     <motion.h1
-                      variants={itemVariants}
                       className="font-fredoka text-3xl sm:text-5xl md:text-8xl font-black mb-3 md:mb-6 tracking-tight flex flex-wrap gap-x-3 md:gap-x-8 items-center"
                       style={{
                         textShadow: `-2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0px 4px 12px rgba(0,0,0,0.12)`
@@ -348,10 +330,10 @@ export default function InstitutionalHomePage() {
                         ].map((item, i) => (
                           <motion.span
                             key={i}
-                            initial={{ opacity: 0, y: 40, rotate: -8 }}
+                            initial={heroIntroDone ? false : { opacity: 0, y: 40, rotate: -8 }}
                             animate={{ opacity: 1, y: 0, rotate: 0 }}
                             whileHover={{ y: -4, scale: 1.15 }}
-                            transition={{ delay: i * 0.07 + 0.4, type: 'spring', stiffness: 300 }}
+                            transition={heroIntroDone ? { duration: 0.2 } : { delay: i * 0.07 + 0.4, type: 'spring', stiffness: 300 }}
                             className="inline-block relative cursor-default"
                             style={{ color: item.c }}
                           >
@@ -373,10 +355,10 @@ export default function InstitutionalHomePage() {
                         ].map((item, i) => (
                           <motion.span
                             key={i}
-                            initial={{ opacity: 0, y: 40, rotate: 8 }}
+                            initial={heroIntroDone ? false : { opacity: 0, y: 40, rotate: 8 }}
                             animate={{ opacity: 1, y: 0, rotate: 0 }}
                             whileHover={{ y: -4, scale: 1.15 }}
-                            transition={{ delay: (i + 5) * 0.07 + 0.4, type: 'spring', stiffness: 300 }}
+                            transition={heroIntroDone ? { duration: 0.2 } : { delay: (i + 5) * 0.07 + 0.4, type: 'spring', stiffness: 300 }}
                             className="inline-block relative cursor-default"
                             style={{ color: item.c }}
                           >
@@ -398,12 +380,14 @@ export default function InstitutionalHomePage() {
                       </div>
                     </motion.h1>
 
-                    <motion.div variants={itemVariants}>
+                    <div className="mb-4 md:mb-8">
                       <CyclingSubtitle />
-                    </motion.div>
+                    </div>
 
                     <motion.div
-                      variants={itemVariants}
+                      initial={heroIntroDone ? false : { opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={heroIntroDone ? { duration: 0.2 } : { duration: 0.8, ease: 'easeOut' }}
                       className="flex items-center gap-3 mb-5 md:mb-10 max-w-lg"
                     >
                       <div className="relative shrink-0">
@@ -436,9 +420,9 @@ export default function InstitutionalHomePage() {
                         ].map((item, i) => (
                           <motion.span
                             key={i}
-                            initial={{ opacity: 0, y: 12 }}
+                            initial={heroIntroDone ? false : { opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 1.6 + i * 0.1, duration: 0.4, ease: 'easeOut' }}
+                            transition={heroIntroDone ? { duration: 0.2 } : { delay: 1.6 + i * 0.1, duration: 0.4, ease: 'easeOut' }}
                             style={item.color ? { color: item.color } : undefined}
                           >
                             {item.word}
@@ -448,7 +432,9 @@ export default function InstitutionalHomePage() {
                     </motion.div>
 
                     <motion.div
-                      variants={itemVariants}
+                      initial={heroIntroDone ? false : { opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={heroIntroDone ? { duration: 0.2 } : { duration: 0.8, ease: 'easeOut' }}
                       className="flex flex-col sm:flex-row gap-4 mb-5 md:mb-12 w-full sm:w-auto"
                     >
                       <MotionLink
@@ -509,11 +495,11 @@ export default function InstitutionalHomePage() {
                   /* ── APP BANNER SLIDE CONTENT ── */
                   <motion.div
                     key="app-slide"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.8, ease: 'easeInOut' }}
-                    className="absolute md:relative flex flex-col items-start text-left bg-white/65 backdrop-blur-xl md:bg-transparent md:backdrop-blur-none p-5 md:p-0 rounded-[2rem] md:rounded-none border border-white/40 md:border-none shadow-2xl shadow-black/10 md:shadow-none w-full sm:w-auto max-w-2xl md:max-w-4xl md:pl-8 pt-10 pb-10"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.45, ease: 'easeInOut' }}
+                    className={`${heroSlidePosition} flex flex-col items-start text-left bg-white/65 backdrop-blur-xl md:bg-transparent md:backdrop-blur-none p-5 md:p-0 rounded-[2rem] md:rounded-none border border-white/40 md:border-none shadow-2xl shadow-black/10 md:shadow-none w-full sm:w-auto max-w-2xl md:max-w-4xl md:pl-8 pt-10 pb-10`}
                   >
                     {/* Mundo Mágico Logo */}
                     <motion.div 
@@ -530,9 +516,9 @@ export default function InstitutionalHomePage() {
                          ].map((item, i) => (
                            <motion.span 
                              key={i} 
-                             initial={{ opacity: 0, y: 20, rotate: -5 }}
+                             initial={heroIntroDone ? false : { opacity: 0, y: 20, rotate: -5 }}
                              animate={{ opacity: 1, y: 0, rotate: 0 }}
-                             transition={{ delay: i * 0.05 + 0.1, type: 'spring', stiffness: 300 }}
+                             transition={heroIntroDone ? { duration: 0.2 } : { delay: i * 0.05 + 0.1, type: 'spring', stiffness: 300 }}
                              className="inline-block relative cursor-default" 
                              style={{ color: item.c }}
                            >
@@ -552,9 +538,9 @@ export default function InstitutionalHomePage() {
                          ].map((item, i) => (
                            <motion.span 
                              key={i} 
-                             initial={{ opacity: 0, y: 20, rotate: 5 }}
+                             initial={heroIntroDone ? false : { opacity: 0, y: 20, rotate: 5 }}
                              animate={{ opacity: 1, y: 0, rotate: 0 }}
-                             transition={{ delay: (i + 5) * 0.05 + 0.1, type: 'spring', stiffness: 300 }}
+                             transition={heroIntroDone ? { duration: 0.2 } : { delay: (i + 5) * 0.05 + 0.1, type: 'spring', stiffness: 300 }}
                              className="inline-block relative cursor-default" 
                              style={{ color: item.c }}
                            >
