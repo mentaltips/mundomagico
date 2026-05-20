@@ -14,27 +14,31 @@ export const settingsSelect = {
   institutionType: true,
   activeModules: true,
   terminology: true,
-  whatsappToken: true,
   whatsappPhone: true,
   smtpHost: true,
   smtpPort: true,
   smtpUser: true,
-  smtpPass: true,
   smtpFrom: true,
-  mpAccessToken: true,
-  mpPublicKey: true,
   autoGenerateInvoices: true,
   billingGenerationDay: true,
   invoiceDescription: true,
   createdAt: true,
   updatedAt: true,
-} satisfies Prisma.SchoolSelect
+  integrationSecret: {
+    select: {
+      whatsappToken: true,
+      smtpPass: true,
+      mpAccessToken: true,
+      mpPublicKey: true,
+    }
+  }
+} as any
 
 export const institutionTypeSelect = {
   institutionType: true,
   activeModules: true,
   terminology: true,
-} satisfies Prisma.SchoolSelect
+} as any
 
 export function findSettings(schoolId: string) {
   return prisma.school.findUnique({

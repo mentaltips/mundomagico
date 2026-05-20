@@ -58,8 +58,8 @@ export function createInvoice(schoolId: string, input: CreateInvoiceInput) {
 export async function updateInvoice(schoolId: string, id: string, input: UpdateInvoiceInput) {
   const { dueDate, boletoExpiry, pixExpiry, paidAt, childId, studentId, ...invoiceData } = input
 
-  await prisma.invoice.update({
-    where: { id },
+  const result = await prisma.invoice.updateMany({
+    where: { id, schoolId },
     data: {
       ...invoiceData,
       ...(childId !== undefined && { childId }),
@@ -71,11 +71,18 @@ export async function updateInvoice(schoolId: string, id: string, input: UpdateI
     },
   })
 
+  if (result.count === 0) return null
+
   return findInvoiceById(schoolId, id)
 }
 
-export function deleteInvoice(id: string) {
-  return prisma.invoice.delete({ where: { id } })
+export async function cancelInvoice(schoolId: string, id: string) {
+  const result = await prisma.invoice.updateMany({
+    where: { id, schoolId, status: { not: 'PAGO' } },
+    data: { status: 'CANCELADO' },
+  })
+
+  return result.count > 0
 }
 
 export function findChildById(schoolId: string, childId: string) {

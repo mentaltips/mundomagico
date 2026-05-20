@@ -2,7 +2,7 @@
 # ============================================================
 # update.sh — Atualiza e reinicia a API direto na VPS
 # Execute este script DENTRO da VPS:
-#   cd /root/mundomagico && bash scripts/update.sh
+#   cd /opt/mundomagico && bash scripts/update.sh
 # ============================================================
 set -e
 

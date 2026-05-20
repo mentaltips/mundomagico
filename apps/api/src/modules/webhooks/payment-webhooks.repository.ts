@@ -13,8 +13,11 @@ export function findProcessedEvent(gateway: string, externalId: string) {
 export function createWebhookEvent(input: {
   gateway: string
   eventType?: string
-  externalId: string
+  externalId?: string | null
   rawPayload: unknown
+  status?: string
+  error?: string | null
+  processedAt?: Date
 }) {
   return prisma.paymentWebhookEvent.create({
     data: {
@@ -22,6 +25,9 @@ export function createWebhookEvent(input: {
       eventType: input.eventType,
       externalId: input.externalId,
       rawPayload: input.rawPayload as any,
+      status: input.status,
+      error: input.error,
+      processedAt: input.processedAt,
     },
   })
 }
@@ -54,8 +60,12 @@ export function findInvoiceForMercadoPagoPayment(externalId: string) {
     },
     include: {
       school: {
-        select: {
-          mpAccessToken: true,
+        include: {
+          integrationSecret: {
+            select: {
+              mpAccessToken: true,
+            },
+          },
         },
       },
     },
@@ -65,6 +75,17 @@ export function findInvoiceForMercadoPagoPayment(externalId: string) {
 export function updateInvoiceMercadoPagoStatus(invoiceId: string, mpPaymentStatus?: string | null) {
   return prisma.invoice.update({
     where: { id: invoiceId },
+    data: { mpPaymentStatus },
+  })
+}
+
+export function updateInvoiceMercadoPagoStatusForSchool(
+  invoiceId: string,
+  schoolId: string,
+  mpPaymentStatus?: string | null,
+) {
+  return prisma.invoice.updateMany({
+    where: { id: invoiceId, schoolId },
     data: { mpPaymentStatus },
   })
 }
@@ -95,8 +116,8 @@ export function applyApprovedMercadoPagoPayment(input: {
   const paidAt = new Date()
 
   return prisma.$transaction(async (tx) => {
-    await tx.invoice.update({
-      where: { id: input.invoice.id },
+    await tx.invoice.updateMany({
+      where: { id: input.invoice.id, schoolId: input.invoice.schoolId },
       data: {
         status: 'PAGO',
         mpPaymentId: input.externalId,
@@ -149,4 +170,3 @@ export function applyApprovedMercadoPagoPayment(input: {
     })
   })
 }
-

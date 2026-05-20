@@ -45,8 +45,9 @@ export async function updateGroup(schoolId: string, id: string, data: Prisma.Gro
 }
 
 export async function deleteGroup(schoolId: string, id: string) {
-  const result = await prisma.group.deleteMany({
+  const result = await prisma.group.updateMany({
     where: { id, schoolId },
+    data: { active: false },
   })
 
   return result.count > 0

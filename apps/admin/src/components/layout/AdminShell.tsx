@@ -89,16 +89,12 @@ export function AdminSidebar() {
             <Heart size={22} className="fill-current" />
           </div>
           {(!collapsed || isOpen) && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-xl font-black text-foreground tracking-tight"
-            >
+            <span className="text-xl font-black text-foreground tracking-tight">
               Mundo<span className="text-primary">Mágico</span>
-            </motion.span>
+            </span>
           )}
         </Link>
-        {isOpen && (
+        {isOpen && mounted && (
           <button onClick={() => setIsOpen(false)} className="ml-auto lg:hidden p-2 text-muted-foreground hover:text-foreground">
             <X size={24} />
           </button>
@@ -144,19 +140,20 @@ export function AdminSidebar() {
   return (
     <>
       {/* Desktop Sidebar (Stable structure for hydration) */}
-      <motion.aside
-        initial={false}
-        animate={{ width: collapsed ? 84 : 280 }}
+      <aside
         className="hidden lg:flex flex-col h-screen sticky top-0 bg-card border-r border-border transition-all duration-300 z-50 overflow-visible shadow-sm shrink-0"
+        style={{ width: collapsed ? 84 : 280 }}
       >
         <SidebarContent />
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-24 h-6 w-6 bg-card border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-primary shadow-sm z-50 transition-all hover:scale-110"
-        >
-          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-        </button>
-      </motion.aside>
+        {mounted && (
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="absolute -right-3 top-24 h-6 w-6 bg-card border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-primary shadow-sm z-50 transition-all hover:scale-110"
+          >
+            {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          </button>
+        )}
+      </aside>
 
       {/* Mobile Parts (Rendered only after mount to avoid hydration mismatch) */}
       {mounted && (

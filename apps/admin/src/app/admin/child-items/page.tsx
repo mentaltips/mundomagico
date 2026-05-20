@@ -6,6 +6,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ITEM_TYPE_LABELS, ITEM_TYPE_EMOJIS, ITEM_TYPES } from '@mundo-magico/types'
 import { PageHeader, EmptyState, Modal, Alert, LoadingState, Avatar } from '@/components/ui'
 import toast from 'react-hot-toast'
+import { getErrorMessage } from '@/lib/utils'
+
 
 type ChildItem = {
   id: string
@@ -88,7 +90,7 @@ export default function ChildItemsPage() {
         queryClient.invalidateQueries({ queryKey: ['child-items'] })
       } else { 
         const errData = await res.json().catch(() => ({}))
-        toast.error(errData.error || 'Erro ao cadastrar item') 
+        toast.error(getErrorMessage(errData, 'Erro ao cadastrar item')) 
       }
     } catch (err: any) { 
       toast.error('Erro de conexão com o servidor') 
@@ -110,7 +112,7 @@ export default function ChildItemsPage() {
         queryClient.invalidateQueries({ queryKey: ['child-items'] })
       } else {
         const err = await res.json()
-        toast.error(err.error ?? 'Erro ao registrar uso')
+        toast.error(getErrorMessage(err, 'Erro ao registrar uso'))
       }
     } catch { toast.error('Erro') }
     finally { setSaving(false) }

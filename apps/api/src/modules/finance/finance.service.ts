@@ -67,7 +67,10 @@ export async function deleteInvoice(schoolId: string, id: string) {
     throw new AppError('Nao e possivel excluir uma fatura paga', 400, ERROR_CODES.VALIDATION_ERROR)
   }
 
-  await financeRepository.deleteInvoice(invoice.id)
+  const cancelled = await financeRepository.cancelInvoice(schoolId, invoice.id)
+  if (!cancelled) {
+    throw new AppError('Nao foi possivel cancelar a fatura', 400, ERROR_CODES.VALIDATION_ERROR)
+  }
 }
 
 export async function getInvoiceDetails(schoolId: string, id: string) {
@@ -108,4 +111,3 @@ export async function payInvoiceManually(schoolId: string, id: string, input: Ma
 
   return updated
 }
-

@@ -5,6 +5,8 @@ import { Plus, Trash, Edit, Phone, Mail, Key, Copy, CheckCircle2, Loader2, Users
 import { PageHeader, EmptyState, SkeletonCard, Badge, Modal, Alert, Avatar } from '@/components/ui'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import toast from 'react-hot-toast'
+import { getErrorMessage } from '@/lib/utils'
+
 
 type Guardian = {
   id: string
@@ -223,7 +225,7 @@ export default function GuardiansPage() {
         toast.success('Acesso gerado com sucesso!')
         fetchGuardians()
       } else {
-        toast.error(data.error || 'Erro ao gerar acesso')
+        toast.error(getErrorMessage(data, 'Erro ao gerar acesso'))
       }
     } catch (err) {
       toast.error('Erro de conexão')

@@ -18,7 +18,15 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'api.mundomagicocajamar.com.br',
+      },
+      {
+        protocol: 'https',
+        hostname: 'mundomagicocajamar.com.br',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.mundomagicocajamar.com.br',
       },
     ],
   },

@@ -31,21 +31,16 @@ model School {
   // Tipo da instituição: ESCOLA | CRECHE | BERCARIO | MATERNAL | ESPACO_INFANTIL | RECREACAO | CONTRATURNO | ESCOLA_CRECHE | HIBRIDO
   institutionType      String   @default("ESCOLA")
   // JSON array de ModuleKey ativos (override do padrão por tipo)
-  activeModules        String   @default("[]")
+  activeModules        Json     @default("[]")
   // JSON com terminologia customizada (sobrescreve padrões do tipo)
-  terminology          String   @default("{}")
+  terminology          Json     @default("{}")
   // WhatsApp
-  whatsappToken        String?
   whatsappPhone        String?
   // SMTP
   smtpHost             String?
   smtpPort             Int?
   smtpUser             String?
-  smtpPass             String?
   smtpFrom             String?
-  // Mercado Pago
-  mpAccessToken        String?
-  mpPublicKey          String?
   // Automação Financeira
   autoGenerateInvoices Boolean  @default(false)
   billingGenerationDay Int      @default(25) // Dia do mês para gerar
@@ -53,6 +48,7 @@ model School {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
+  integrationSecret    SchoolIntegrationSecret?
   users                User[]
   groups               Group[]
   children             Child[]
@@ -100,10 +96,30 @@ model User {
   dailyReports   ChildDailyReport[]         @relation("ReportCreatedBy")
   staff          Staff?
   privacyConsent PrivacyConsent?
+  refreshTokens  RefreshToken[]
 
   @@index([schoolId])
   @@index([schoolId, role])
   @@index([schoolId, active])
+}
+
+model RefreshToken {
+  id                String    @id @default(cuid())
+  userId            String
+  tokenHash         String    @unique
+  familyId          String
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  replacedByTokenId String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@index([revokedAt])
 }
 
 // ─────────────────────────────────────────
@@ -159,9 +175,9 @@ model Child {
   status              String    @default("ATIVO")
   // Saúde
   bloodType           String?
-  allergies           String? // JSON array
-  continuousMeds      String? // JSON array
-  dietaryRestrictions String? // JSON array
+  allergies           Json? // JSON array
+  continuousMeds      Json? // JSON array
+  dietaryRestrictions Json? // JSON array
   healthObservations  String?
   // Rotina
   usesDiapers         Boolean   @default(false)
@@ -335,7 +351,7 @@ model ChildDailyReport {
   messageToParents   String?
   importantAlert     String?
   homeRecommendation String?
-  itemRequests       String? // JSON array
+  itemRequests       Json? // JSON array
   createdBy          String
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -547,6 +563,7 @@ model ChildItem {
   alertThreshold   Int       @default(5)
   lastReplenished  DateTime?
   notes            String?
+  active           Boolean   @default(true)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -579,7 +596,7 @@ model ChildPhoto {
   caption           String?
   isPrivate         Boolean  @default(false)
   sharedWithParents Boolean  @default(false)
-  taggedChildIds    String? // JSON array
+  taggedChildIds    Json? // JSON array
   createdAt         DateTime @default(now())
 
   school School @relation(fields: [schoolId], references: [id])
@@ -655,6 +672,7 @@ model Announcement {
   sentVia    String?
   sentAt     DateTime?
   isPinned   Boolean   @default(false)
+  active     Boolean   @default(true)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
@@ -1041,4 +1059,21 @@ model StaffAuditLog {
   @@index([paymentId])
   @@index([performedBy])
   @@index([performedAt])
+}
+
+// ─────────────────────────────────────────
+// SEGREDOS DE INTEGRAÇÃO DA ESCOLA
+// ─────────────────────────────────────────
+
+model SchoolIntegrationSecret {
+  id            String   @id @default(cuid())
+  schoolId      String   @unique
+  whatsappToken String?  // Encrypted
+  smtpPass      String?  // Encrypted
+  mpAccessToken String?  // Encrypted
+  mpPublicKey   String?  // Encrypted
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  school        School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 }

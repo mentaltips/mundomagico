@@ -7,7 +7,6 @@ import path from 'path'
 import { isRedisHealthy } from './services/queue'
 import { requireApiAuth } from './middleware/auth'
 import { requireRole } from './middleware/requireRole'
-import { analyticsMiddleware } from './middlewares/analytics'
 import { errorMiddleware } from './shared/middlewares/error.middleware'
 import { requireTenant } from './shared/middlewares/tenant.middleware'
 
@@ -21,7 +20,7 @@ import announcementsRoutes from './modules/announcements/announcements.routes'
 import calendarRoutes from './modules/calendar/calendar.routes'
 import checkInOutRoutes from './modules/check-in-out/check-in-out.routes'
 import childItemsRoutes from './modules/child-items/child-items.routes'
-import dailyRoutineRoutes from './modules/daily-routine/daily-routine.routes'
+import dailyRoutineRoutes from './modules/development-reports/daily-routine/daily-routine.routes'
 import developmentReportsRoutes from './modules/development-reports/development-reports.routes'
 import financeRoutes from './modules/finance/finance.routes'
 import guardiansRoutes from './modules/guardians/guardians.routes'
@@ -63,7 +62,7 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true)
-    if (allowedOrigins.some((allowedOrigin) => origin.startsWith(allowedOrigin))) {
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true)
     }
     callback(new Error(`CORS: origin ${origin} not allowed`))
@@ -71,16 +70,15 @@ app.use(cors({
   credentials: true,
 }))
 
-app.use(express.json())
-app.use(pino())
+app.use(express.json({ limit: '1mb' }))
+app.use(pino({
+  redact: {
+    paths: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
+    remove: true,
+  },
+}))
 
 app.use((req, _res, next) => {
-  if (req.query.path && typeof req.query.path === 'string') {
-    const newPath = req.query.path.startsWith('/') ? req.query.path : `/${req.query.path}`
-    req.url = newPath
-    delete req.query.path
-  }
-
   if (
     !req.url.startsWith('/api') &&
     !req.url.startsWith('/uploads') &&
@@ -93,10 +91,20 @@ app.use((req, _res, next) => {
   next()
 })
 
-app.use(analyticsMiddleware)
-
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads')
-app.use('/uploads', express.static(UPLOAD_DIR))
+const uploadsArePublic = process.env.PUBLIC_UPLOADS_ENABLED === 'true'
+const uploadStaticMiddleware = express.static(UPLOAD_DIR, {
+  dotfiles: 'deny',
+  fallthrough: false,
+  index: false,
+  maxAge: uploadsArePublic ? '30d' : 0,
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('Cache-Control', uploadsArePublic ? 'public, max-age=2592000' : 'private, no-store')
+  },
+})
+
+app.use('/uploads', uploadsArePublic ? uploadStaticMiddleware : [requireApiAuth, requireTenant, uploadStaticMiddleware])
 
 app.get('/health', (_req, res) => {
   const redis = isRedisHealthy()
@@ -139,7 +147,7 @@ app.use('/api/daily-reports', requireApiAuth, requireTenant, dailyReportsRoutes)
 app.use('/api/documents', requireApiAuth, requireTenant, documentsRoutes)
 app.use('/api/billing', requireApiAuth, requireTenant, billingRoutes)
 app.use('/api/reports', requireApiAuth, requireTenant, reportsRoutes)
-app.use('/api/analytics', analyticsRoutes)
+app.use('/api/analytics', requireApiAuth, requireTenant, analyticsRoutes)
 app.use('/api/staff', requireApiAuth, requireTenant, requireRole('ADMIN', 'ADMIN_ESCOLA', 'SCHOOL_ADMIN', 'DIRETOR', 'DIRECTOR'), staffRoutes)
 app.use('/api/whatsapp', requireApiAuth, requireTenant, whatsappRoutes)
 

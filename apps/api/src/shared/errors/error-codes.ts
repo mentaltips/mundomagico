@@ -5,6 +5,7 @@ export const ERROR_CODES = {
   NOT_FOUND: 'NOT_FOUND',
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   TENANT_REQUIRED: 'TENANT_REQUIRED',
+  RATE_LIMITED: 'RATE_LIMITED',
 } as const
 
 export type ErrorCode = keyof typeof ERROR_CODES | (typeof ERROR_CODES)[keyof typeof ERROR_CODES]

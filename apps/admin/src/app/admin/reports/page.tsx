@@ -171,7 +171,7 @@ export default function ReportsPage() {
           </div>
           <div className="h-[240px]">
             {statusData.length > 0 ? (
-              <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
+              <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie
                     data={statusData}
@@ -207,7 +207,7 @@ export default function ReportsPage() {
           </div>
           <div className="h-[240px]">
             {shiftData.length > 0 ? (
-              <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
+              <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={shiftData} barSize={40}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: 'hsl(var(--muted-foreground))' }} />
@@ -239,7 +239,7 @@ export default function ReportsPage() {
           </div>
           <div className="h-[240px]">
             {invoiceStatusData.length > 0 ? (
-              <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
+              <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie
                     data={invoiceStatusData}

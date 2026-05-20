@@ -1,8 +1,11 @@
 import { Router } from 'express'
 import { prisma } from '@mundo-magico/database'
 import { normalizeUtcDate, toDateKey } from '../../shared/utils/date-key'
+import { requirePermission } from '../../shared/middlewares/permissions.middleware'
 
 const router = Router()
+
+router.use(requirePermission('canManageStudents'))
 
 // GET / - List daily reports (simplified view, without nested relations)
 router.get('/', async (req, res) => {
@@ -79,6 +82,15 @@ router.post('/', async (req, res) => {
 
     const reportDate = normalizeUtcDate(date)
     const dateKey = toDateKey(reportDate)
+
+    const child = await prisma.child.findFirst({
+      where: { id: childId, schoolId },
+      select: { id: true }
+    })
+
+    if (!child) {
+      return res.status(404).json({ error: 'Child not found' })
+    }
 
     const report = await prisma.childDailyReport.upsert({
       where: { childId_dateKey: { childId, dateKey } },

@@ -38,3 +38,54 @@ export function updatePassword(id: string, password: string) {
     data: { password },
   })
 }
+
+export function createRefreshToken(input: {
+  userId: string
+  tokenHash: string
+  familyId: string
+  expiresAt: Date
+}) {
+  return prisma.refreshToken.create({
+    data: input,
+  })
+}
+
+export function findRefreshTokenByHash(tokenHash: string) {
+  return prisma.refreshToken.findUnique({
+    where: { tokenHash },
+  })
+}
+
+export function revokeRefreshToken(id: string, replacedByTokenId?: string) {
+  return prisma.refreshToken.update({
+    where: { id },
+    data: {
+      revokedAt: new Date(),
+      replacedByTokenId,
+    },
+  })
+}
+
+export function revokeRefreshTokenFamily(familyId: string) {
+  return prisma.refreshToken.updateMany({
+    where: {
+      familyId,
+      revokedAt: null,
+    },
+    data: {
+      revokedAt: new Date(),
+    },
+  })
+}
+
+export function revokeUserRefreshTokens(userId: string) {
+  return prisma.refreshToken.updateMany({
+    where: {
+      userId,
+      revokedAt: null,
+    },
+    data: {
+      revokedAt: new Date(),
+    },
+  })
+}

@@ -57,10 +57,10 @@ export const config = {
     /*
      * Protege todas as rotas EXCETO:
      * - /login (página de login)
-     * - /api/auth/* (rotas internas do NextAuth - NUNCA proteger)
+     * - /api/* (rotas internas/proxy validam auth no handler/backend)
      * - /_next/* (arquivos estáticos do Next.js)
      * - /favicon, imagens, etc.
      */
-    '/((?!login|privacy-policy|api/auth|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg).*)',
+    '/((?!login|privacy-policy|api|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg).*)',
   ],
 }

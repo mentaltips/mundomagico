@@ -4,6 +4,36 @@ import { cookies } from 'next/headers'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { redirect } from 'next/navigation'
 
+function getApiBaseUrl() {
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
+  return apiUrl.replace(/\/$/, '').replace(/\/api$/, '')
+}
+
+async function refreshAccessToken(token: any) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken: token.refreshToken }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const data = await res.json()
+    if (!res.ok || !data.token) {
+      return { ...token, error: 'RefreshAccessTokenError' }
+    }
+
+    return {
+      ...token,
+      accessToken: data.token,
+      refreshToken: data.refreshToken || token.refreshToken,
+      accessTokenExpires: Date.now() + (data.expiresIn || 900) * 1000,
+      error: undefined,
+    }
+  } catch {
+    return { ...token, error: 'RefreshAccessTokenError' }
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -17,8 +47,7 @@ export const authOptions: NextAuthOptions = {
 
         try {
           // API_URL é server-only (sem NEXT_PUBLIC_) — preferido em produção
-          const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
-          const res = await fetch(`${apiUrl}/api/auth/login`, {
+          const res = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
             method: 'POST',
             body: JSON.stringify({
               email: credentials.email,
@@ -33,6 +62,8 @@ export const authOptions: NextAuthOptions = {
             return {
               ...data.user,
               accessToken: data.token,
+              refreshToken: data.refreshToken,
+              accessTokenExpires: Date.now() + (data.expiresIn || 900) * 1000,
             }
           }
 
@@ -50,8 +81,19 @@ export const authOptions: NextAuthOptions = {
         token.role = (user as any).role
         token.schoolId = (user as any).schoolId
         token.accessToken = (user as any).accessToken
+        token.refreshToken = (user as any).refreshToken
+        token.accessTokenExpires = (user as any).accessTokenExpires
       }
-      return token
+
+      if (token.accessToken && token.accessTokenExpires && Date.now() < (token.accessTokenExpires as number) - 60_000) {
+        return token
+      }
+
+      if (token.refreshToken) {
+        return refreshAccessToken(token)
+      }
+
+      return { ...token, error: 'RefreshAccessTokenError' }
     },
     async session({ session, token }) {
       if (token && session.user) {
@@ -59,6 +101,7 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string
         session.user.schoolId = token.schoolId as string
         ;(session as any).accessToken = token.accessToken
+        ;(session as any).error = token.error
       }
       return session
     },
@@ -102,20 +145,6 @@ export async function getApiAuth(req?: any) {
         }
       }
 
-      // Se não veio o decodificado, tentar o RAW string
-      const rawToken = await getToken({ 
-        req, 
-        secret: process.env.NEXTAUTH_SECRET,
-        raw: true
-      })
-      
-      if (rawToken) {
-        // Se conseguirmos o rawToken, retornamos ele (o backend sabe validar)
-        return {
-          user: {} as any, // Dados do usuário virão da decodificação no backend
-          token: rawToken,
-        }
-      }
     } catch (err) {
       console.error('[Auth] getToken error:', err)
     }

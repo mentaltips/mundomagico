@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { prisma } from '@mundo-magico/database'
+import { hasPermission } from '../../shared/middlewares/permissions.middleware'
 
 const router = Router()
 
@@ -10,24 +11,25 @@ router.get('/', async (req, res) => {
     const role = req.user?.role
     const notifications: any[] = []
 
-    // Low stock child items
-    const allItems = await prisma.childItem.findMany({ where: { schoolId } })
-    const lowStockItems = allItems.filter((i: any) => (i.quantityReceived - i.quantityUsed) <= i.alertThreshold)
-    lowStockItems.forEach((item: any) => {
-      notifications.push({
-        id: `low-stock-${item.id}`,
-        type: 'alert',
-        priority: 'NORMAL',
-        title: 'Estoque Baixo',
-        body: `Item "${item.itemType}" está com estoque baixo`,
-        time: item.updatedAt,
-        createdAt: item.updatedAt,
-        href: '/admin/child-items'
-      })
-    })
+    if (hasPermission(role, 'canManageStudents')) {
+      const allItems = await prisma.childItem.findMany({ where: { schoolId } })
+      const lowStockItems = allItems.filter((i: any) => (i.quantityReceived - i.quantityUsed) <= i.alertThreshold)
 
-    // Overdue invoices (admin/director only)
-    if (role === 'ADMIN' || role === 'DIRECTOR') {
+      lowStockItems.forEach((item: any) => {
+        notifications.push({
+          id: `low-stock-${item.id}`,
+          type: 'alert',
+          priority: 'NORMAL',
+          title: 'Estoque Baixo',
+          body: `Item "${item.itemType}" esta com estoque baixo`,
+          time: item.updatedAt,
+          createdAt: item.updatedAt,
+          href: '/admin/child-items'
+        })
+      })
+    }
+
+    if (hasPermission(role, 'canViewFinance')) {
       const overdueInvoices = await prisma.invoice.findMany({
         where: {
           schoolId,
@@ -40,6 +42,7 @@ router.get('/', async (req, res) => {
         },
         take: 10
       })
+
       overdueInvoices.forEach((inv: any) => {
         notifications.push({
           id: `overdue-${inv.id}`,
@@ -54,17 +57,22 @@ router.get('/', async (req, res) => {
       })
     }
 
-    // Recent announcements (pinned or last 3 days)
     const recentDate = new Date()
     recentDate.setDate(recentDate.getDate() - 3)
+
     const recentAnnouncements = await prisma.announcement.findMany({
       where: {
         schoolId,
-        OR: [{ isPinned: true }, { createdAt: { gte: recentDate } }]
+        OR: [
+          { isPinned: true },
+          { createdAt: { gte: recentDate }, targetRole: null },
+          { createdAt: { gte: recentDate }, targetRole: role },
+        ]
       },
       orderBy: { createdAt: 'desc' },
       take: 10
     })
+
     recentAnnouncements.forEach((ann: any) => {
       notifications.push({
         id: `ann-${ann.id}`,
@@ -78,7 +86,6 @@ router.get('/', async (req, res) => {
       })
     })
 
-    // Sort by date desc
     notifications.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
     res.json(notifications.slice(0, 20))
   } catch (error) {

@@ -7,19 +7,8 @@ import * as paymentWebhookRepository from './payment-webhooks.repository'
 const MERCADO_PAGO_GATEWAY = 'MERCADO_PAGO'
 
 export async function processMercadoPagoWebhook(payload: MercadoPagoWebhookPayload, queryPaymentId?: unknown) {
-  if (payload.type !== 'payment') return
-
   const paymentId = payload.data?.id || queryPaymentId
-  if (!paymentId) return
-
-  const externalId = String(paymentId)
-  console.log(`[Webhook MP] Evento de pagamento recebido: ${externalId}`)
-
-  const existingEvent = await paymentWebhookRepository.findProcessedEvent(MERCADO_PAGO_GATEWAY, externalId)
-  if (existingEvent) {
-    console.log(`[Webhook MP] Evento ${externalId} ja processado anteriormente. Pulando redundancia (Idempotencia).`)
-    return
-  }
+  const externalId = paymentId ? String(paymentId) : null
 
   const webhookEvent = await paymentWebhookRepository.createWebhookEvent({
     gateway: MERCADO_PAGO_GATEWAY,
@@ -27,6 +16,40 @@ export async function processMercadoPagoWebhook(payload: MercadoPagoWebhookPaylo
     externalId,
     rawPayload: payload,
   })
+
+  if (payload.type !== 'payment') {
+    await paymentWebhookRepository.updateWebhookEvent(webhookEvent.id, {
+      status: 'IGNORED',
+      error: 'Unsupported Mercado Pago event type',
+      processedAt: new Date(),
+    })
+    return
+  }
+
+  if (!externalId) {
+    await paymentWebhookRepository.updateWebhookEvent(webhookEvent.id, {
+      status: 'FAILED',
+      error: 'Missing Mercado Pago payment id',
+      processedAt: new Date(),
+    })
+    return
+  }
+
+  console.log(`[Webhook MP] Evento de pagamento recebido: ${externalId}`)
+
+  const existingEvent = await paymentWebhookRepository.findProcessedEvent(MERCADO_PAGO_GATEWAY, externalId)
+  if (existingEvent) {
+    console.log(`[Webhook MP] Evento ${externalId} ja processado anteriormente. Pulando redundancia (Idempotencia).`)
+    await paymentWebhookRepository.updateWebhookEvent(webhookEvent.id, {
+      schoolId: existingEvent.schoolId,
+      invoiceId: existingEvent.invoiceId,
+      paymentId: existingEvent.paymentId,
+      status: 'IGNORED',
+      error: 'Duplicate processed webhook event',
+      processedAt: new Date(),
+    })
+    return
+  }
 
   const invoice = await paymentWebhookRepository.findInvoiceForMercadoPagoPayment(externalId)
   if (!invoice) {
@@ -39,7 +62,8 @@ export async function processMercadoPagoWebhook(payload: MercadoPagoWebhookPaylo
     return
   }
 
-  const accessToken = invoice.school.mpAccessToken ? decrypt(invoice.school.mpAccessToken) : process.env.MP_ACCESS_TOKEN
+  const encryptedAccessToken = invoice.school.integrationSecret?.mpAccessToken
+  const accessToken = encryptedAccessToken ? decrypt(encryptedAccessToken) : process.env.MP_ACCESS_TOKEN
   if (!accessToken) {
     await paymentWebhookRepository.updateWebhookEvent(webhookEvent.id, {
       schoolId: invoice.schoolId,
@@ -59,7 +83,7 @@ export async function processMercadoPagoWebhook(payload: MercadoPagoWebhookPaylo
   console.log(`[Webhook MP] Status consultado no MP para ${externalId}: ${mpStatus}`)
 
   if (mpStatus !== 'approved') {
-    await paymentWebhookRepository.updateInvoiceMercadoPagoStatus(invoice.id, mpStatus)
+    await paymentWebhookRepository.updateInvoiceMercadoPagoStatusForSchool(invoice.id, invoice.schoolId, mpStatus)
     await paymentWebhookRepository.updateWebhookEvent(webhookEvent.id, {
       schoolId: invoice.schoolId,
       invoiceId: invoice.id,
@@ -109,4 +133,3 @@ export async function processMercadoPagoWebhook(payload: MercadoPagoWebhookPaylo
 
   console.log(`[Webhook MP] Fatura ${invoice.id} marcada como PAGA apos consulta ao MP.`)
 }
-

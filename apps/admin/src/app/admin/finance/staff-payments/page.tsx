@@ -7,7 +7,9 @@ import {
   Search, BookmarkCheck, UserPlus, Edit3, Trash2, Wallet, Info
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { getErrorMessage } from '@/lib/utils'
 import { Avatar, Badge, LoadingState, StatCard } from '@/components/ui'
+
 import type { BadgeVariant } from '@/components/ui'
 
 import { Staff, StaffPayment, Group, ROLE_LABELS, MONTHS } from './_components/types'
@@ -124,7 +126,7 @@ export default function StaffPaymentsPage() {
         fetchPayments()
       } else {
         const err = await res.json()
-        toast.error(err.error || 'Erro ao gerar folha.')
+        toast.error(getErrorMessage(err, 'Erro ao gerar folha.'))
       }
     } catch { toast.error('Erro de conexão.') } finally { setGenerating(false) }
   }
@@ -162,7 +164,7 @@ export default function StaffPaymentsPage() {
         if (activeTab === 'folha') fetchPayments()
       } else {
         const err = await res.json()
-        toast.error(err.error || 'Erro ao atualizar dados.')
+        toast.error(getErrorMessage(err, 'Erro ao atualizar dados.'))
       }
     } catch { toast.error('Erro de conexão.') }
   }
@@ -248,7 +250,7 @@ export default function StaffPaymentsPage() {
         fetchPayments()
       } else {
         const err = await res.json()
-        toast.error(err.error || 'Erro ao registrar ajuste.')
+        toast.error(getErrorMessage(err, 'Erro ao registrar ajuste.'))
       }
     } catch { toast.error('Erro de conexão.') }
   }
@@ -282,7 +284,7 @@ export default function StaffPaymentsPage() {
         fetchStaff()
       } else {
         const err = await res.json()
-        toast.error(err.error || 'Erro ao criar perfil.')
+        toast.error(getErrorMessage(err, 'Erro ao criar perfil.'))
       }
     } catch { toast.error('Erro de conexão.') }
   }

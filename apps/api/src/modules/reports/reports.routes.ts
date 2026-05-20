@@ -1,7 +1,10 @@
 import { Router } from 'express'
 import { prisma } from '@mundo-magico/database'
+import { hasPermission, requirePermission } from '../../shared/middlewares/permissions.middleware'
 
 const router = Router()
+
+router.use(requirePermission('canViewReports'))
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -32,6 +35,20 @@ function fmtBRL(v: unknown): string {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(toNumber(v))
 }
 
+function fmtJsonList(value: unknown): string {
+  if (!value) return ''
+  if (Array.isArray(value)) return value.map(String).join('; ')
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value)
+      return Array.isArray(parsed) ? parsed.map(String).join('; ') : value
+    } catch {
+      return value
+    }
+  }
+  return String(value)
+}
+
 // ─── GET /reports/export?type=children ───────────────────────────────────────
 // Tipos: children | attendance | financial | development
 router.get('/export', async (req, res) => {
@@ -58,7 +75,7 @@ router.get('/export', async (req, res) => {
         c.shift,
         c.status,
         c.monthlyFee ? fmtBRL(c.monthlyFee) : '',
-        c.allergies ? JSON.parse(c.allergies).join('; ') : '',
+        fmtJsonList(c.allergies),
         c.usesDiapers ? 'Sim' : 'Não',
         fmtDate(c.entryDate),
       ])
@@ -112,6 +129,10 @@ router.get('/export', async (req, res) => {
 
     // ── 3. Relatório Financeiro ──────────────────────────────────────────────
     if (type === 'financial') {
+      if (!hasPermission(req.user?.role, 'canViewFinance')) {
+        return res.status(403).json({ error: 'Acesso negado' })
+      }
+
       const where: any = { schoolId }
       if (month) where.referenceMonth = month
 

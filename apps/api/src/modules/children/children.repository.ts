@@ -16,7 +16,26 @@ const childDetailsInclude = {
 
 export function listChildren(schoolId: string) {
   return prisma.child.findMany({
-    where: { schoolId },
+    where: { schoolId, archivedAt: null },
+    include: childListInclude,
+    orderBy: { fullName: 'asc' },
+  })
+}
+
+export function listChildrenForGuardianUser(schoolId: string, userId: string) {
+  return prisma.child.findMany({
+    where: {
+      schoolId,
+      archivedAt: null,
+      guardians: {
+        some: {
+          guardian: {
+            schoolId,
+            userId,
+          },
+        },
+      },
+    },
     include: childListInclude,
     orderBy: { fullName: 'asc' },
   })
@@ -24,14 +43,51 @@ export function listChildren(schoolId: string) {
 
 export function findChildById(schoolId: string, id: string) {
   return prisma.child.findFirst({
-    where: { id, schoolId },
+    where: { id, schoolId, archivedAt: null },
+    include: childDetailsInclude,
+  })
+}
+
+export function findChildByIdForGuardianUser(schoolId: string, id: string, userId: string) {
+  return prisma.child.findFirst({
+    where: {
+      id,
+      schoolId,
+      archivedAt: null,
+      guardians: {
+        some: {
+          guardian: {
+            schoolId,
+            userId,
+          },
+        },
+      },
+    },
     include: childDetailsInclude,
   })
 }
 
 export function findChildRecord(schoolId: string, id: string) {
   return prisma.child.findFirst({
-    where: { id, schoolId },
+    where: { id, schoolId, archivedAt: null },
+  })
+}
+
+export function findChildRecordForGuardianUser(schoolId: string, id: string, userId: string) {
+  return prisma.child.findFirst({
+    where: {
+      id,
+      schoolId,
+      archivedAt: null,
+      guardians: {
+        some: {
+          guardian: {
+            schoolId,
+            userId,
+          },
+        },
+      },
+    },
   })
 }
 
@@ -59,26 +115,16 @@ export async function updateChild(schoolId: string, id: string, data: Prisma.Chi
   })
 }
 
-export function deleteChildWithHistory(childId: string) {
-  return prisma.$transaction([
-    prisma.childGuardian.deleteMany({ where: { childId } }),
-    prisma.authorizedPickupPerson.deleteMany({ where: { childId } }),
-    prisma.childDailyReport.deleteMany({ where: { childId } }),
-    prisma.childCheckInOut.deleteMany({ where: { childId } }),
-    prisma.medicationAdministration.deleteMany({
-      where: { medication: { childId } },
-    }),
-    prisma.medication.deleteMany({ where: { childId } }),
-    prisma.childItemUsage.deleteMany({
-      where: { item: { childId } },
-    }),
-    prisma.childItem.deleteMany({ where: { childId } }),
-    prisma.childPhoto.deleteMany({ where: { childId } }),
-    prisma.developmentReport.deleteMany({ where: { childId } }),
-    prisma.childDocument.deleteMany({ where: { childId } }),
-    prisma.invoice.deleteMany({ where: { childId } }),
-    prisma.child.delete({ where: { id: childId } }),
-  ])
+export async function archiveChild(schoolId: string, childId: string) {
+  const result = await prisma.child.updateMany({
+    where: { id: childId, schoolId },
+    data: {
+      status: 'INATIVO',
+      archivedAt: new Date(),
+    },
+  })
+
+  return result.count > 0
 }
 
 export function listGuardians(childId: string) {

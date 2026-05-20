@@ -1,1 +1,1 @@
-export { default } from '../modules/daily-routine/daily-routine.routes'
+export { default } from '../modules/development-reports/daily-routine/daily-routine.routes'

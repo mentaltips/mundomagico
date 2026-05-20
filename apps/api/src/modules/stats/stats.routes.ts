@@ -1,7 +1,10 @@
 import { Router } from 'express'
 import { prisma } from '@mundo-magico/database'
+import { requirePermission } from '../../shared/middlewares/permissions.middleware'
 
 const router = Router()
+
+router.use(requirePermission('canViewReports'))
 
 // GET /pending-config - Alunos sem mensalidade ou responsável principal
 router.get('/pending-config', async (req, res) => {

@@ -49,19 +49,19 @@ $SSH "echo '✅ Conectado com sucesso!'"
 
 echo ""
 echo "📦 Atualizando código do repositório..."
-$SSH "cd /root/mundomagico && git pull origin main 2>&1 || git pull origin master 2>&1"
+$SSH "cd /opt/mundomagico && git pull origin main 2>&1 || git pull origin master 2>&1"
 
 echo ""
 echo "📚 Instalando dependências..."
-$SSH "cd /root/mundomagico && pnpm install --frozen-lockfile 2>&1 | tail -5"
+$SSH "cd /opt/mundomagico && pnpm install --frozen-lockfile 2>&1 | tail -5"
 
 echo ""
 echo "🔨 Fazendo build da API..."
-$SSH "cd /root/mundomagico/apps/api && pnpm build 2>&1 | tail -10"
+$SSH "cd /opt/mundomagico/apps/api && pnpm build 2>&1 | tail -10"
 
 echo ""
 echo "🔄 Reiniciando containers Docker..."
-$SSH "cd /root/mundomagico && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build api 2>&1 | tail -10"
+$SSH "cd /opt/mundomagico && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build api 2>&1 | tail -10"
 
 echo ""
 echo "⏳ Aguardando API inicializar..."

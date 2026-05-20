@@ -18,7 +18,9 @@ import {
   UserX,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { getErrorMessage } from '@/lib/utils'
 import {
+
   Alert,
   Avatar,
   Badge,
@@ -181,7 +183,7 @@ export default function UsersPage() {
         fetchUsers()
       } else {
         const error = await res.json()
-        toast.error(error.error || 'Erro ao salvar usuário.')
+        toast.error(getErrorMessage(error, 'Erro ao salvar usuário.'))
       }
     } catch (err) {
       console.error(err)
@@ -214,7 +216,7 @@ export default function UsersPage() {
         toast.success('Acesso gerado com sucesso!')
         fetchUsers()
       } else {
-        toast.error(data.error || 'Erro ao gerar acesso.')
+        toast.error(getErrorMessage(data, 'Erro ao gerar acesso.'))
       }
     } catch {
       toast.error('Erro de conexão.')
@@ -233,7 +235,7 @@ export default function UsersPage() {
         fetchUsers()
       } else {
         const error = await res.json()
-        toast.error(error.error || 'Erro ao desativar.')
+        toast.error(getErrorMessage(error, 'Erro ao desativar.'))
       }
     } catch (err) {
       console.error(err)

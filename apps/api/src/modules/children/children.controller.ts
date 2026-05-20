@@ -18,9 +18,16 @@ function getSchoolId(req: Request) {
   return schoolId
 }
 
+function getChildAccess(req: Request) {
+  return {
+    userId: req.user?.sub,
+    role: req.user?.role,
+  }
+}
+
 export async function listChildren(req: Request, res: Response, next: NextFunction) {
   try {
-    res.json(await childrenService.listChildren(getSchoolId(req)))
+    res.json(await childrenService.listChildren(getSchoolId(req), getChildAccess(req)))
   } catch (error) {
     next(error)
   }
@@ -38,7 +45,7 @@ export async function createChild(req: Request, res: Response, next: NextFunctio
 export async function getChild(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = childIdParamsSchema.parse(req.params)
-    res.json(await childrenService.getChild(getSchoolId(req), id))
+    res.json(await childrenService.getChild(getSchoolId(req), id, getChildAccess(req)))
   } catch (error) {
     next(error)
   }
@@ -66,7 +73,7 @@ export async function deleteChild(req: Request, res: Response, next: NextFunctio
 export async function listGuardians(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = childIdParamsSchema.parse(req.params)
-    res.json(await childrenService.listGuardians(getSchoolId(req), id))
+    res.json(await childrenService.listGuardians(getSchoolId(req), id, getChildAccess(req)))
   } catch (error) {
     next(error)
   }
@@ -75,7 +82,7 @@ export async function listGuardians(req: Request, res: Response, next: NextFunct
 export async function listAuthorizedPickups(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = childIdParamsSchema.parse(req.params)
-    res.json(await childrenService.listAuthorizedPickups(getSchoolId(req), id))
+    res.json(await childrenService.listAuthorizedPickups(getSchoolId(req), id, getChildAccess(req)))
   } catch (error) {
     next(error)
   }
@@ -103,7 +110,7 @@ export async function deleteAuthorizedPickup(req: Request, res: Response, next: 
 export async function listDocuments(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = childIdParamsSchema.parse(req.params)
-    res.json(await childrenService.listDocuments(getSchoolId(req), id))
+    res.json(await childrenService.listDocuments(getSchoolId(req), id, getChildAccess(req)))
   } catch (error) {
     next(error)
   }

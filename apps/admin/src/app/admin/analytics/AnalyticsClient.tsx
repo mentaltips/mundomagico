@@ -66,7 +66,7 @@ export default function AnalyticsClient() {
             </h4>
           </div>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
+            <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={data?.chartData}>
                 <defs>
                   <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">

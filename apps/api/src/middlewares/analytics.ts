@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
 import { prisma } from '@mundo-magico/database'
-import jwt from 'jsonwebtoken'
 
 export const analyticsMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const ignoredPaths = ['/favicon.ico', '/static', '/_next', '/api/stats', '/api/notifications']
@@ -8,22 +7,9 @@ export const analyticsMiddleware = async (req: Request, res: Response, next: Nex
 
   if (!isIgnored && req.method === 'GET') {
     try {
-      let schoolId = (req as any).user?.schoolId
+      const schoolId = (req as any).user?.schoolId
 
       // Se o user não estiver populado, tenta pegar do token manualmente
-      if (!schoolId) {
-        const authHeader = req.headers.authorization
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-          const token = authHeader.split(' ')[1]
-          try {
-            const decoded = jwt.decode(token) as any
-            schoolId = decoded?.schoolId
-          } catch {
-            // Ignore malformed analytics tokens; auth middleware handles protected routes.
-          }
-        }
-      }
-
       // @ts-ignore - Prisma client may take a moment to refresh types in some IDEs
       prisma.pageVisit.create({
         data: {

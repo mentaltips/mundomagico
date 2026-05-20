@@ -40,7 +40,7 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
         const text = await req.text() 
         body = text
         if (process.env.NODE_ENV !== 'production' && text) {
-          console.log(`[Proxy] Body: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`)
+          console.log(`[Proxy] Body received: ${text.length} bytes`)
         }
       } catch {}
     }
@@ -58,14 +58,21 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
       return new NextResponse(null, { status: response.status })
     }
 
+    if (process.env.NODE_ENV !== 'production' && response.status >= 400) {
+      const errorText = await response.clone().text()
+      console.error(`[Proxy] ${response.status} from backend on ${req.method} ${path}:`, errorText)
+    }
+
     const blob = await response.blob()
     const resContentType = response.headers.get('content-type') || 'application/json'
-    
+
     return new NextResponse(blob, {
       status: response.status,
       headers: { 
         'Content-Type': resContentType,
-        'Cache-Control': 'public, max-age=31536000, immutable' // Cache agressivo para imagens
+        'Cache-Control': resContentType.startsWith('image/')
+          ? 'public, max-age=31536000, immutable'
+          : 'private, no-store',
       },
     })
   } catch (err: any) {

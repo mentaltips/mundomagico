@@ -58,6 +58,46 @@ function runPermissionChecks() {
 }
 
 function runRouteInvariantChecks() {
+  const app = readApiFile('src/app.ts')
+  assert.match(app, /allowedOrigins\.includes\(origin\)/)
+  assert.match(app, /express\.json\(\{ limit: '1mb' \}\)/)
+  assert.match(app, /req\.headers\.authorization/)
+  assert.match(app, /req\.headers\.cookie/)
+  assert.match(app, /PUBLIC_UPLOADS_ENABLED === 'true'/)
+  assert.equal(app.includes('req.query.path'), false, 'API must not rewrite req.url from query path')
+
+  const authMiddleware = readApiFile('src/middleware/auth.ts')
+  assert.match(authMiddleware, /process\.env\.JWT_SECRET/)
+  assert.equal(authMiddleware.includes('process.env.NEXTAUTH_SECRET'), false, 'API tokens must not reuse NextAuth session secret')
+
+  const authService = readApiFile('src/modules/auth/auth.service.ts')
+  assert.match(authService, /ACCESS_TOKEN_EXPIRES_IN = '15m'/)
+  assert.match(authService, /REFRESH_TOKEN_EXPIRES_IN = '30d'/)
+  assert.match(authService, /process\.env\.JWT_SECRET/)
+  assert.match(authService, /hashToken\(token: string\)/)
+  assert.match(authService, /revokeRefreshTokenFamily\(payload\.familyId\)/)
+  assert.match(authService, /revokeRefreshToken\(storedRefreshToken\.id, newRefreshToken\.id\)/)
+  assert.match(authService, /revokeUserRefreshTokens\(user\.id\)/)
+
+  const authRepository = readApiFile('src/modules/auth/auth.repository.ts')
+  assert.match(authRepository, /prisma\.refreshToken\.create/)
+  assert.match(authRepository, /findRefreshTokenByHash/)
+  assert.match(authRepository, /revokeRefreshTokenFamily/)
+
+  const childrenController = readApiFile('src/modules/children/children.controller.ts')
+  assert.match(childrenController, /getChildAccess\(req\)/)
+
+  const childrenRepository = readApiFile('src/modules/children/children.repository.ts')
+  assert.match(childrenRepository, /listChildrenForGuardianUser/)
+  assert.match(childrenRepository, /findChildByIdForGuardianUser/)
+  assert.match(childrenRepository, /guardian:\s*\{\s*schoolId,\s*\r?\n\s*userId,/)
+
+  const uploadRoute = readApiFile('src/modules/upload/upload.routes.ts')
+  assert.match(uploadRoute, /multer\.memoryStorage\(\)/)
+  assert.match(uploadRoute, /detectImageExtension\(req\.file\.buffer\)/)
+  assert.equal(uploadRoute.includes('path.extname(file.originalname)'), false, 'uploads must not trust original filename extension')
+  assert.match(uploadRoute, /fs\.writeFileSync\(filepath, req\.file\.buffer, \{ flag: 'wx' \}\)/)
+
   const financeRoute = readApiFile('src/modules/finance/finance.routes.ts')
   assert.equal(financeRoute.includes('school: true'), false, 'finance route must not return full School with secrets')
   assert.match(financeRoute, /requirePermission\('canViewFinance'\)/)
@@ -82,8 +122,11 @@ function runRouteInvariantChecks() {
   const whatsappService = readApiFile('src/modules/whatsapp/whatsapp.service.ts')
   assert.match(whatsappService, /requeueWhatsAppMessage\(id, schoolId\)/)
 
-  const announcementsRoute = readApiFile('src/modules/announcements/announcements.routes.ts')
-  assert.match(announcementsRoute, /sendWhatsApp && !hasPermission\(req\.user\?\.role, 'canSendWhatsapp'\)/)
+  const announcementsController = readApiFile('src/modules/announcements/announcements.controller.ts')
+  assert.match(announcementsController, /hasPermission\(req\.user\?\.role, 'canSendWhatsapp'\)/)
+
+  const announcementsService = readApiFile('src/modules/announcements/announcements.service.ts')
+  assert.match(announcementsService, /input\.sendWhatsApp && !canSendWhatsapp/)
 
   const webhooksRoute = readApiFile('src/modules/webhooks/webhooks.routes.ts')
   assert.equal(webhooksRoute.includes('include: { school: true }'), false, 'webhook route must not load full School secrets')
@@ -91,6 +134,7 @@ function runRouteInvariantChecks() {
 
   const webhooksRepository = readApiFile('src/modules/webhooks/payment-webhooks.repository.ts')
   assert.equal(webhooksRepository.includes('include: { school: true }'), false, 'webhook repository must not load full School secrets')
+  assert.match(webhooksRepository, /integrationSecret/)
   assert.match(webhooksRepository, /mpAccessToken: true/)
   assert.match(webhooksRepository, /paymentId: payment\.id/)
 
@@ -103,11 +147,14 @@ function runRouteInvariantChecks() {
   assert.match(settingsRoute, /requirePermission\('canManageSchoolSettings'\)/)
 
   const settingsService = readApiFile('src/modules/settings/settings.service.ts')
-  assert.match(settingsService, /maskSecret\(school\.whatsappToken\)/)
-  assert.match(settingsService, /maskSecret\(school\.smtpPass\)/)
-  assert.match(settingsService, /maskSecret\(school\.mpAccessToken\)/)
-  assert.match(settingsService, /maskSecret\(school\.mpPublicKey\)/)
-  assert.match(settingsService, /isSecretMask\(value\)/)
+  assert.match(settingsService, /maskSecret\(secrets\.whatsappToken\)/)
+  assert.match(settingsService, /maskSecret\(secrets\.smtpPass\)/)
+  assert.match(settingsService, /maskSecret\(secrets\.mpAccessToken\)/)
+  assert.match(settingsService, /maskSecret\(secrets\.mpPublicKey\)/)
+  assert.match(settingsService, /isSecretMask\(whatsappToken\)/)
+  assert.match(settingsService, /isSecretMask\(smtpPass\)/)
+  assert.match(settingsService, /isSecretMask\(mpAccessToken\)/)
+  assert.match(settingsService, /isSecretMask\(mpPublicKey\)/)
 
   const cryptoUtil = readApiFile('src/shared/utils/crypto.ts')
   assert.match(cryptoUtil, /NODE_ENV === 'production'/)

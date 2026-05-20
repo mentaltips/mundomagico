@@ -12,7 +12,7 @@ const guardianDetailsInclude = {
 
 export function listGuardians(schoolId: string) {
   return prisma.guardian.findMany({
-    where: { schoolId },
+    where: { schoolId, archivedAt: null },
     include: guardianListInclude,
     orderBy: { fullName: 'asc' },
   })
@@ -20,14 +20,14 @@ export function listGuardians(schoolId: string) {
 
 export function findGuardianById(schoolId: string, id: string) {
   return prisma.guardian.findFirst({
-    where: { id, schoolId },
+    where: { id, schoolId, archivedAt: null },
     include: guardianDetailsInclude,
   })
 }
 
 export function findGuardianRecord(schoolId: string, id: string) {
   return prisma.guardian.findFirst({
-    where: { id, schoolId },
+    where: { id, schoolId, archivedAt: null },
   })
 }
 
@@ -137,23 +137,35 @@ export async function upsertGuardianUser(
 export async function deleteGuardian(schoolId: string, id: string) {
   return prisma.$transaction(async (tx) => {
     const guardian = await tx.guardian.findFirst({
-      where: { id, schoolId },
+      where: { id, schoolId, archivedAt: null },
     })
 
     if (!guardian) return null
 
-    await tx.childGuardian.deleteMany({ where: { guardianId: id } })
-    await tx.studentGuardian.deleteMany({ where: { guardianId: id } })
-    await tx.guardian.delete({ where: { id } })
+    await tx.guardian.updateMany({
+      where: { id, schoolId },
+      data: {
+        status: 'INATIVO',
+        archivedAt: new Date(),
+      },
+    })
 
     if (guardian.userId) {
       const [otherGuardians, staff] = await Promise.all([
-        tx.guardian.count({ where: { userId: guardian.userId } }),
+        tx.guardian.count({
+          where: {
+            userId: guardian.userId,
+            archivedAt: null,
+          },
+        }),
         tx.staff.count({ where: { userId: guardian.userId } }),
       ])
 
       if (otherGuardians === 0 && staff === 0) {
-        await tx.user.delete({ where: { id: guardian.userId } }).catch(() => undefined)
+        await tx.user.updateMany({
+          where: { id: guardian.userId, schoolId },
+          data: { active: false },
+        })
       }
     }
 

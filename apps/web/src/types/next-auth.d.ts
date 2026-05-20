@@ -7,6 +7,8 @@ declare module 'next-auth' {
       role: string
       schoolId: string
     } & DefaultSession['user']
+    accessToken?: string
+    error?: string
   }
 
   interface User {
@@ -19,5 +21,9 @@ declare module 'next-auth/jwt' {
   interface JWT {
     role: string
     schoolId: string
+    accessToken?: string
+    refreshToken?: string
+    accessTokenExpires?: number
+    error?: string
   }
 }

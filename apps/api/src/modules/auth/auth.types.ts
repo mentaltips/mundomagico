@@ -23,4 +23,6 @@ export interface AuthUserWithPassword extends AuthenticatedUser {
 export interface RefreshTokenPayload {
   sub: string
   type: 'refresh'
+  jti: string
+  familyId: string
 }

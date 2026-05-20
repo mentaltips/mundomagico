@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
+import { getErrorMessage } from '@/lib/utils'
 import Link from 'next/link'
 import {
   User, Heart, Baby, Shield, Plus, Trash2, AlertTriangle, Loader2
@@ -576,7 +577,7 @@ function GuardianLinker({ childId }: { childId: string }) {
         queryClient.invalidateQueries({ queryKey: ['child-guardians', childId] })
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Erro ao vincular')
+        toast.error(getErrorMessage(data, 'Erro ao vincular'))
       }
     } catch (err) {
       toast.error('Erro de conexão')
@@ -596,7 +597,7 @@ function GuardianLinker({ childId }: { childId: string }) {
         queryClient.invalidateQueries({ queryKey: ['child-guardians', childId] })
       } else {
         const data = await res.json()
-        toast.error(data.error || data.detail || 'Erro ao desvincular')
+        toast.error(getErrorMessage(data, 'Erro ao desvincular'))
       }
     } catch (err) {
       toast.error('Erro de conexão')

@@ -4,46 +4,23 @@ import { ERROR_CODES } from '../../shared/errors/error-codes'
 import { maskSecret } from '../../shared/security/school-secrets'
 import { isSecretMask, type UpdateInstitutionTypeInput, type UpdateSettingsInput } from './settings.schema'
 import * as settingsRepository from './settings.repository'
-
-function parseJsonField<T>(value: string | null | undefined, fallback: T): T {
-  if (!value) return fallback
-
-  try {
-    return JSON.parse(value) as T
-  } catch {
-    return fallback
-  }
-}
-
-function stringifyJsonInput(value: unknown, fallback: string) {
-  if (value === undefined) return undefined
-  if (value === null) return fallback
-  if (typeof value === 'string') return value || fallback
-  return JSON.stringify(value)
-}
-
-function applySecretField(data: Record<string, unknown>, field: string, value: string | null | undefined) {
-  if (value === undefined || isSecretMask(value)) return
-  data[field] = value ? encrypt(value) : null
-}
+import { Prisma } from '@mundo-magico/database'
 
 function formatSettings<T extends Record<string, any>>(school: T) {
+  const secrets = school.integrationSecret || {}
   return {
     ...school,
-    activeModules: parseJsonField(school.activeModules, []),
-    terminology: parseJsonField(school.terminology, {}),
-    whatsappToken: maskSecret(school.whatsappToken),
-    smtpPass: maskSecret(school.smtpPass),
-    mpAccessToken: maskSecret(school.mpAccessToken),
-    mpPublicKey: maskSecret(school.mpPublicKey),
+    integrationSecret: undefined,
+    whatsappToken: maskSecret(secrets.whatsappToken),
+    smtpPass: maskSecret(secrets.smtpPass),
+    mpAccessToken: maskSecret(secrets.mpAccessToken),
+    mpPublicKey: maskSecret(secrets.mpPublicKey),
   }
 }
 
-function formatInstitutionType<T extends { activeModules?: string | null; terminology?: string | null }>(school: T) {
+function formatInstitutionType<T extends Record<string, any>>(school: T) {
   return {
     ...school,
-    activeModules: parseJsonField(school.activeModules, []),
-    terminology: parseJsonField(school.terminology, {}),
   }
 }
 
@@ -65,12 +42,34 @@ export async function updateSettings(schoolId: string, input: UpdateSettingsInpu
     ...plainFields
   } = input
 
-  const data: Record<string, unknown> = { ...plainFields }
+  const secretData: Record<string, any> = {}
 
-  applySecretField(data, 'whatsappToken', whatsappToken)
-  applySecretField(data, 'smtpPass', smtpPass)
-  applySecretField(data, 'mpAccessToken', mpAccessToken)
-  applySecretField(data, 'mpPublicKey', mpPublicKey)
+  if (whatsappToken !== undefined && !isSecretMask(whatsappToken)) {
+    secretData.whatsappToken = whatsappToken ? encrypt(whatsappToken) : null
+  }
+  if (smtpPass !== undefined && !isSecretMask(smtpPass)) {
+    secretData.smtpPass = smtpPass ? encrypt(smtpPass) : null
+  }
+  if (mpAccessToken !== undefined && !isSecretMask(mpAccessToken)) {
+    secretData.mpAccessToken = mpAccessToken ? encrypt(mpAccessToken) : null
+  }
+  if (mpPublicKey !== undefined && !isSecretMask(mpPublicKey)) {
+    secretData.mpPublicKey = mpPublicKey ? encrypt(mpPublicKey) : null
+  }
+
+  const data: any = {
+    ...plainFields,
+    billingGenerationDay: plainFields.billingGenerationDay ?? undefined,
+  }
+
+  if (Object.keys(secretData).length > 0) {
+    data.integrationSecret = {
+      upsert: {
+        create: secretData,
+        update: secretData,
+      },
+    }
+  }
 
   const school = await settingsRepository.updateSettings(schoolId, data)
   return formatSettings(school)
@@ -86,13 +85,13 @@ export async function getInstitutionType(schoolId: string) {
 }
 
 export async function updateInstitutionType(schoolId: string, input: UpdateInstitutionTypeInput) {
-  const data = {
+  const data: any = {
     ...(input.institutionType && { institutionType: input.institutionType }),
     ...(input.activeModules !== undefined && {
-      activeModules: stringifyJsonInput(input.activeModules, '[]'),
+      activeModules: (input.activeModules ?? []) as Prisma.InputJsonValue,
     }),
     ...(input.terminology !== undefined && {
-      terminology: stringifyJsonInput(input.terminology, '{}'),
+      terminology: (input.terminology ?? {}) as Prisma.InputJsonValue,
     }),
   }
 

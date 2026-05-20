@@ -7,7 +7,7 @@ const studentListInclude = {
 
 export function listStudents(schoolId: string) {
   return prisma.student.findMany({
-    where: { schoolId },
+    where: { schoolId, archivedAt: null },
     include: studentListInclude,
     orderBy: { fullName: 'asc' },
   })
@@ -15,7 +15,7 @@ export function listStudents(schoolId: string) {
 
 export function findStudentById(schoolId: string, id: string) {
   return prisma.student.findFirst({
-    where: { id, schoolId },
+    where: { id, schoolId, archivedAt: null },
     include: studentListInclude,
   })
 }

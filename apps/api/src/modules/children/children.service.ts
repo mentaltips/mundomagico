@@ -1,7 +1,13 @@
 import { AppError } from '../../shared/errors/AppError'
 import { ERROR_CODES } from '../../shared/errors/error-codes'
+import { Prisma } from '@mundo-magico/database'
 import type { CreateAuthorizedPickupInput, CreateChildInput, UpdateChildInput } from './children.schema'
 import * as childrenRepository from './children.repository'
+
+type ChildAccessContext = {
+  userId?: string
+  role?: string
+}
 
 function toDate(value: string | null | undefined) {
   if (!value) return undefined
@@ -13,11 +19,28 @@ function toNullableDate(value: string | null | undefined) {
   return toDate(value)
 }
 
+function toNullableJson(value: string | null | undefined) {
+  if (value === null) return Prisma.JsonNull
+  return value
+}
+
 async function ensureChild(schoolId: string, id: string) {
   const child = await childrenRepository.findChildRecord(schoolId, id)
   if (!child) {
     throw new AppError('Crianca nao encontrada', 404, ERROR_CODES.NOT_FOUND)
   }
+  return child
+}
+
+async function ensureReadableChild(schoolId: string, id: string, access: ChildAccessContext = {}) {
+  const child = access.role === 'RESPONSAVEL' && access.userId
+    ? await childrenRepository.findChildRecordForGuardianUser(schoolId, id, access.userId)
+    : await childrenRepository.findChildRecord(schoolId, id)
+
+  if (!child) {
+    throw new AppError('Crianca nao encontrada', 404, ERROR_CODES.NOT_FOUND)
+  }
+
   return child
 }
 
@@ -31,7 +54,7 @@ async function ensureGroupBelongsToSchool(schoolId: string, groupId: string | nu
 }
 
 function buildChildCreateData(schoolId: string, input: CreateChildInput) {
-  const { birthDate, entryDate, exitDate, imageAuthDate, ...rest } = input
+  const { birthDate, entryDate, exitDate, imageAuthDate, allergies, continuousMeds, dietaryRestrictions, ...rest } = input
   return {
     ...rest,
     schoolId,
@@ -39,21 +62,32 @@ function buildChildCreateData(schoolId: string, input: CreateChildInput) {
     entryDate: toDate(entryDate),
     exitDate: toDate(exitDate),
     imageAuthDate: toDate(imageAuthDate),
+    allergies: toNullableJson(allergies),
+    continuousMeds: toNullableJson(continuousMeds),
+    dietaryRestrictions: toNullableJson(dietaryRestrictions),
   }
 }
 
 function buildChildUpdateData(input: UpdateChildInput) {
-  const { birthDate, entryDate, exitDate, imageAuthDate, ...rest } = input
+  const { birthDate, entryDate, exitDate, imageAuthDate, allergies, continuousMeds, dietaryRestrictions, ...rest } = input
   return {
     ...rest,
     ...(birthDate !== undefined && { birthDate: new Date(birthDate) }),
     ...(entryDate && { entryDate: toDate(entryDate) }),
     ...(exitDate !== undefined && { exitDate: toNullableDate(exitDate) }),
     ...(imageAuthDate !== undefined && { imageAuthDate: toNullableDate(imageAuthDate) }),
+    ...(allergies !== undefined && { allergies: toNullableJson(allergies) }),
+    ...(continuousMeds !== undefined && { continuousMeds: toNullableJson(continuousMeds) }),
+    ...(dietaryRestrictions !== undefined && { dietaryRestrictions: toNullableJson(dietaryRestrictions) }),
   }
 }
 
-export function listChildren(schoolId: string) {
+export function listChildren(schoolId: string, access: ChildAccessContext = {}) {
+  if (access.role === 'RESPONSAVEL') {
+    if (!access.userId) return []
+    return childrenRepository.listChildrenForGuardianUser(schoolId, access.userId)
+  }
+
   return childrenRepository.listChildren(schoolId)
 }
 
@@ -62,8 +96,10 @@ export async function createChild(schoolId: string, input: CreateChildInput) {
   return childrenRepository.createChild(buildChildCreateData(schoolId, input))
 }
 
-export async function getChild(schoolId: string, id: string) {
-  const child = await childrenRepository.findChildById(schoolId, id)
+export async function getChild(schoolId: string, id: string, access: ChildAccessContext = {}) {
+  const child = access.role === 'RESPONSAVEL' && access.userId
+    ? await childrenRepository.findChildByIdForGuardianUser(schoolId, id, access.userId)
+    : await childrenRepository.findChildById(schoolId, id)
   if (!child) {
     throw new AppError('Crianca nao encontrada', 404, ERROR_CODES.NOT_FOUND)
   }
@@ -81,17 +117,17 @@ export async function updateChild(schoolId: string, id: string, input: UpdateChi
 
 export async function deleteChild(schoolId: string, id: string) {
   const child = await ensureChild(schoolId, id)
-  await childrenRepository.deleteChildWithHistory(child.id)
+  await childrenRepository.archiveChild(schoolId, child.id)
   return { success: true }
 }
 
-export async function listGuardians(schoolId: string, id: string) {
-  const child = await ensureChild(schoolId, id)
+export async function listGuardians(schoolId: string, id: string, access: ChildAccessContext = {}) {
+  const child = await ensureReadableChild(schoolId, id, access)
   return childrenRepository.listGuardians(child.id)
 }
 
-export async function listAuthorizedPickups(schoolId: string, id: string) {
-  const child = await ensureChild(schoolId, id)
+export async function listAuthorizedPickups(schoolId: string, id: string, access: ChildAccessContext = {}) {
+  const child = await ensureReadableChild(schoolId, id, access)
   return childrenRepository.listAuthorizedPickups(child.id)
 }
 
@@ -116,7 +152,7 @@ export async function deleteAuthorizedPickup(schoolId: string, id: string, perso
   return { success: true }
 }
 
-export async function listDocuments(schoolId: string, id: string) {
-  const child = await ensureChild(schoolId, id)
+export async function listDocuments(schoolId: string, id: string, access: ChildAccessContext = {}) {
+  const child = await ensureReadableChild(schoolId, id, access)
   return childrenRepository.listDocuments(child.id)
 }

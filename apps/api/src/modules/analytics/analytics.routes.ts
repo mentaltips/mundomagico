@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { prisma } from '@mundo-magico/database'
+import { requireRole } from '../../middleware/requireRole'
 
 const router = Router()
 
@@ -26,7 +27,7 @@ router.post('/track', async (req, res) => {
 })
 
 // GET / - Get analytics summary
-router.get('/', async (req, res) => {
+router.get('/', requireRole('ADMIN', 'ADMIN_ESCOLA', 'DIRETOR'), async (req, res) => {
   try {
     const schoolId = req.user?.schoolId
     

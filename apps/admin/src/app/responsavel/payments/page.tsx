@@ -13,6 +13,8 @@ import {
   DollarSign, Loader2, Check
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { getErrorMessage } from '@/lib/utils'
+
 
 type Invoice = {
   id: string
@@ -99,7 +101,7 @@ function PaymentsContent() {
         body: JSON.stringify({ method, payerCpf }),
       })
       const data = await res.json()
-      if (!res.ok) { toast.error(data.error || 'Erro ao processar pagamento'); return }
+      if (!res.ok) { toast.error(getErrorMessage(data, 'Erro ao processar pagamento')); return }
 
       setPaymentResult(data)
 

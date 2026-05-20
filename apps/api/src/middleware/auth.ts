@@ -27,9 +27,8 @@ export function requireApiAuth(req: Request, _res: Response, next: NextFunction)
     return next(new AppError('Token de autenticacao nao fornecido', 401, ERROR_CODES.UNAUTHORIZED))
   }
 
-  const secret = process.env.NEXTAUTH_SECRET
+  const secret = process.env.JWT_SECRET
   if (!secret) {
-    console.error('[Auth] NEXTAUTH_SECRET nao configurado')
     return next(new AppError('Erro de configuracao do servidor', 500, ERROR_CODES.INTERNAL_SERVER_ERROR))
   }
 
@@ -38,7 +37,6 @@ export function requireApiAuth(req: Request, _res: Response, next: NextFunction)
     req.user = payload
     return next()
   } catch (err: any) {
-    console.error('[Auth] Erro na verificacao do token:', err.message)
     return next(new AppError('Token invalido ou expirado', 401, ERROR_CODES.UNAUTHORIZED))
   }
 }

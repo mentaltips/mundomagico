@@ -10,6 +10,8 @@
     "worker": "node dist/worker.js",
     "worker:dev": "tsx watch src/worker.ts",
     "test:security": "tsx scripts/security-regression.ts",
+    "test:children-ownership": "tsx scripts/children-ownership-regression.ts",
+    "test:boundaries": "tsx scripts/boundary-idempotency-tests.ts",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
