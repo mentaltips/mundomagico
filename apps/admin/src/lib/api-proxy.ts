@@ -24,18 +24,7 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
     ? {}
     : { 'Content-Type': 'application/json' }
 
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`
-  } else {
-    // Fallback: repassa o cookie de sessão diretamente para a API tentar autenticar
-    const sessionCookie =
-      req.cookies.get('next-auth.session-token') ||
-      req.cookies.get('__Secure-next-auth.session-token')
-    if (sessionCookie) {
-      headers['Cookie'] = `${sessionCookie.name}=${sessionCookie.value}`
-      console.warn(`[Proxy] Using raw session cookie fallback for ${new URL(req.url).pathname}`)
-    }
-  }
+  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`
 
   let body: BodyInit | undefined
   if (req.method !== 'GET' && req.method !== 'HEAD') {
