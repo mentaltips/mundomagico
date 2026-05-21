@@ -18,7 +18,8 @@ import { getErrorMessage } from '@/lib/utils'
 type Invoice = {
   id: string
   description: string
-  amount: number
+  amount: number | string | null
+  paidAmount?: number | string | null
   dueDate: string
   status: 'PENDENTE' | 'PAGO' | 'VENCIDO' | 'CANCELADO'
   referenceMonth?: string
@@ -47,6 +48,19 @@ const FILTERS = [
 
 const fmtBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+
+const moneyValue = (value: number | string | null | undefined) => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0
+  if (typeof value !== 'string') return 0
+  const raw = value.trim()
+  const normalized = raw.includes(',')
+    ? raw.replace(/\./g, '').replace(',', '.')
+    : raw
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+const invoiceAmount = (invoice: Invoice) => moneyValue(invoice.amount)
 
 const QUICK_CHARGES = [
   { label: 'Diária Meio Período', amount: '50', kind: 'EXTRA', color: 'orange' },
@@ -252,9 +266,9 @@ function FinancePageContent() {
   }
 
   const now = new Date()
-  const totalPaid    = invoices.filter(i => i.status === 'PAGO').reduce((s, i) => s + i.amount, 0)
-  const totalPending = invoices.filter(i => i.status === 'PENDENTE').reduce((s, i) => s + i.amount, 0)
-  const totalOverdue = invoices.filter(i => i.status === 'PENDENTE' && new Date(i.dueDate) < now).reduce((s, i) => s + i.amount, 0)
+  const totalPaid    = invoices.filter(i => i.status === 'PAGO').reduce((s, i) => s + invoiceAmount(i), 0)
+  const totalPending = invoices.filter(i => i.status === 'PENDENTE').reduce((s, i) => s + invoiceAmount(i), 0)
+  const totalOverdue = invoices.filter(i => i.status === 'PENDENTE' && new Date(i.dueDate) < now).reduce((s, i) => s + invoiceAmount(i), 0)
   const studentName  = (inv: Invoice) => inv.child?.fullName || inv.student?.fullName || '—'
 
   return (
@@ -384,7 +398,7 @@ function FinancePageContent() {
                       <p className="text-sm text-muted-foreground font-medium truncate max-w-xs">{inv.description}</p>
                     </td>
                     <td className="table-cell">
-                      <p className="font-black text-foreground">{fmtBRL(inv.amount)}</p>
+                      <p className="font-black text-foreground">{fmtBRL(invoiceAmount(inv))}</p>
                     </td>
                     <td className="table-cell hidden sm:table-cell">
                       <p className="text-xs font-bold text-muted-foreground">
