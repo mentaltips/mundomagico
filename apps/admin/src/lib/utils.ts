@@ -11,12 +11,14 @@ export function getSafeUrl(url: string | null | undefined): string | undefined {
   // 1. Substitui localhost:3333 pela URL real da API
   let safeUrl = url.replace(/https?:\/\/localhost:\d+/, 'https://api.mundomagicocajamar.com.br')
 
-  // 2. Garante que URLs da API usam HTTPS
-  safeUrl = safeUrl.replace(/http:\/\/api\.mundomagicocajamar\.com\.br/, 'https://api.mundomagicocajamar.com.br')
+  // 2. URLs absolutas da API com /uploads/ → proxy local (evita 401 do backend)
+  const uploadsMatch = safeUrl.match(/https?:\/\/(?:api\.mundomagicocajamar\.com\.br|localhost:\d+)\/uploads\/(.+)/)
+  if (uploadsMatch) {
+    return `/api/uploads/${uploadsMatch[1]}`
+  }
 
   // 3. Garante que se a URL começa com /upload ou /api/upload, ela aponte para o proxy local
   if (safeUrl.startsWith('/upload') || safeUrl.startsWith('/api/upload')) {
-    // Mantém como caminho relativo para ser tratado pelo proxy do Next.js
     if (!safeUrl.startsWith('/api/upload')) {
       safeUrl = `/api${safeUrl}`
     }
