@@ -5,12 +5,9 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
   const apiAuth = await getApiAuth(req)
   const accessToken = apiAuth?.token
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[Proxy] ${req.method} ${new URL(req.url).pathname}`)
-    console.log(`[Proxy] Auth found: ${!!apiAuth} | Token length: ${accessToken?.length || 0}`)
-    if (!accessToken) {
-      console.warn(`[Proxy] WARNING: No access token found for ${req.method} ${req.url}`)
-    }
+  console.log(`[Proxy] ${req.method} ${new URL(req.url).pathname} | auth=${!!apiAuth} token=${accessToken?.length || 0}chars`)
+  if (!accessToken) {
+    console.warn(`[Proxy] WARNING: No access token for ${req.method} ${new URL(req.url).pathname}`)
   }
 
   const apiUrl = (process.env.API_URL || 'http://127.0.0.1:3333').replace(/\/$/, '')
@@ -27,7 +24,18 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
     ? {}
     : { 'Content-Type': 'application/json' }
 
-  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`
+  } else {
+    // Fallback: repassa o cookie de sessão diretamente para a API tentar autenticar
+    const sessionCookie =
+      req.cookies.get('next-auth.session-token') ||
+      req.cookies.get('__Secure-next-auth.session-token')
+    if (sessionCookie) {
+      headers['Cookie'] = `${sessionCookie.name}=${sessionCookie.value}`
+      console.warn(`[Proxy] Using raw session cookie fallback for ${new URL(req.url).pathname}`)
+    }
+  }
 
   let body: BodyInit | undefined
   if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -58,7 +66,7 @@ export async function proxyRequest(req: NextRequest, pathOverride?: string) {
       return new NextResponse(null, { status: response.status })
     }
 
-    if (process.env.NODE_ENV !== 'production' && response.status >= 400) {
+    if (response.status >= 400) {
       const errorText = await response.clone().text()
       console.error(`[Proxy] ${response.status} from backend on ${req.method} ${path}:`, errorText)
     }
