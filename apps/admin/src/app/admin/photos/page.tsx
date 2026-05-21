@@ -34,18 +34,30 @@ export default function PhotosPage() {
   const [saving, setSaving]       = useState(false)
   const [uploading, setUploading] = useState(false)
   const [filterChild, setFilterChild] = useState('')
+  const [filterGroup, setFilterGroup] = useState('')
   const [form, setForm] = useState({
     url: '', caption: '', childId: '', isPrivate: false, sharedWithParents: false,
   })
 
   const { data: photos = [], isLoading } = useQuery<Photo[]>({
-    queryKey: ['photos', filterChild],
-    queryFn: () => fetch(`/api/photos${filterChild ? `?childId=${filterChild}` : ''}`).then(r => r.json()),
+    queryKey: ['photos', filterChild, filterGroup],
+    queryFn: () => {
+      const params = new URLSearchParams()
+      if (filterChild) params.set('childId', filterChild)
+      if (filterGroup) params.set('groupId', filterGroup)
+      const qs = params.toString()
+      return fetch(`/api/photos${qs ? `?${qs}` : ''}`).then(r => r.json())
+    },
   })
 
   const { data: children = [] } = useQuery<{ id: string; fullName: string }[]>({
     queryKey: ['children-list'],
     queryFn: () => fetch('/api/children').then(r => r.json()),
+  })
+
+  const { data: groups = [] } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ['groups-list'],
+    queryFn: () => fetch('/api/groups').then(r => r.json()),
   })
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,16 +158,37 @@ export default function PhotosPage() {
       {/* Filtro + Stats */}
       <div className="card p-4">
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-          <select
-            value={filterChild}
-            onChange={e => setFilterChild(e.target.value)}
-            className="select sm:w-64"
-          >
-            <option value="">Todas as crianças</option>
-            {Array.isArray(children) && (children as { id: string; fullName: string }[]).map(c => (
-              <option key={c.id} value={c.id}>{c.fullName}</option>
-            ))}
-          </select>
+          <div className="flex flex-wrap gap-2">
+            <select
+              value={filterGroup}
+              onChange={e => { setFilterGroup(e.target.value); setFilterChild('') }}
+              className="select w-44"
+            >
+              <option value="">Todas as turmas</option>
+              {Array.isArray(groups) && (groups as { id: string; name: string }[]).map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+            <select
+              value={filterChild}
+              onChange={e => { setFilterChild(e.target.value); setFilterGroup('') }}
+              className="select w-48"
+            >
+              <option value="">Todas as crianças</option>
+              {Array.isArray(children) && (children as { id: string; fullName: string }[]).map(c => (
+                <option key={c.id} value={c.id}>{c.fullName}</option>
+              ))}
+            </select>
+            {(filterChild || filterGroup) && (
+              <button
+                type="button"
+                onClick={() => { setFilterChild(''); setFilterGroup('') }}
+                className="btn-ghost text-xs px-3 gap-1"
+              >
+                <X size={12} /> Limpar
+              </button>
+            )}
+          </div>
           <div className="flex gap-4 text-sm">
             <span className="font-black text-foreground">{Array.isArray(photos) ? photos.length : 0} <span className="text-muted-foreground font-bold text-xs">fotos</span></span>
             <span className="font-black text-emerald-500">{Array.isArray(photos) ? photos.filter(p => p.sharedWithParents).length : 0} <span className="text-muted-foreground font-bold text-xs">compartilhadas</span></span>
