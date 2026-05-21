@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import NextImage from 'next/image'
 import { Settings as SettingsIcon, Save, Loader2, Building2, MessageCircle, Mail, CreditCard, Download, ArrowRight, AlertCircle, QrCode, LogOut, RefreshCw, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -34,6 +34,28 @@ type SchoolSettings = {
 }
 
 type Tab = 'institution' | 'whatsapp' | 'email' | 'payments' | 'export'
+
+function InputField({ fieldKey, label, type = 'text', placeholder = '', value, onChange }: {
+  fieldKey: string
+  label: string
+  type?: string
+  placeholder?: string
+  value?: string
+  onChange?: (key: string, val: string) => void
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="label">{label}</label>
+      <input
+        type={type}
+        value={value ?? ''}
+        onChange={(e) => onChange?.(fieldKey, e.target.value)}
+        placeholder={placeholder}
+        className="input"
+      />
+    </div>
+  )
+}
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('institution')
@@ -88,6 +110,10 @@ export default function SettingsPage() {
     if (settings) setForm(settings)
   }, [settings])
 
+  const handleFieldChange = useCallback((key: string, val: string) => {
+    setForm(p => ({ ...p, [key]: val }))
+  }, [])
+
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -132,24 +158,6 @@ export default function SettingsPage() {
     } catch { toast.error('Erro ao exportar') }
     finally { setExporting(false) }
   }
-
-  const InputField = ({ fieldKey, label, type = 'text', placeholder = '' }: {
-    fieldKey: keyof SchoolSettings
-    label: string
-    type?: string
-    placeholder?: string
-  }) => (
-    <div className="space-y-1.5">
-      <label className="label">{label}</label>
-      <input
-        type={type}
-        value={(form[fieldKey] as string) ?? ''}
-        onChange={(e) => setForm((p) => ({ ...p, [fieldKey]: e.target.value }))}
-        placeholder={placeholder}
-        className="input"
-      />
-    </div>
-  )
 
   const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: 'institution', label: 'Instituição',  icon: <Building2 size={16} /> },
@@ -236,23 +244,23 @@ export default function SettingsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <InputField fieldKey="name" label="Nome da Instituição *" placeholder="Ex: Creche Mundo Mágico" />
+                  <InputField fieldKey="name" label="Nome da Instituição *" placeholder="Ex: Creche Mundo Mágico" value={form.name ?? ''} onChange={handleFieldChange} />
                 </div>
-                <InputField fieldKey="cnpj" label="CNPJ" placeholder="00.000.000/0001-00" />
-                <InputField fieldKey="phone" label="Telefone" type="tel" placeholder="(11) 3000-0000" />
+                <InputField fieldKey="cnpj" label="CNPJ" placeholder="00.000.000/0001-00" value={form.cnpj ?? ''} onChange={handleFieldChange} />
+                <InputField fieldKey="phone" label="Telefone" type="tel" placeholder="(11) 3000-0000" value={form.phone ?? ''} onChange={handleFieldChange} />
                 <div className="md:col-span-2">
-                  <InputField fieldKey="email" label="E-mail Principal" type="email" placeholder="contato@escola.com.br" />
+                  <InputField fieldKey="email" label="E-mail Principal" type="email" placeholder="contato@escola.com.br" value={form.email ?? ''} onChange={handleFieldChange} />
                 </div>
                 <div className="md:col-span-2">
-                  <InputField fieldKey="address" label="Endereço Completo" placeholder="Rua das Flores, 123" />
+                  <InputField fieldKey="address" label="Endereço Completo" placeholder="Rua das Flores, 123" value={form.address ?? ''} onChange={handleFieldChange} />
                 </div>
-                <InputField fieldKey="city" label="Cidade" placeholder="São Paulo" />
+                <InputField fieldKey="city" label="Cidade" placeholder="São Paulo" value={form.city ?? ''} onChange={handleFieldChange} />
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField fieldKey="state" label="Estado" placeholder="SP" />
-                  <InputField fieldKey="zipCode" label="CEP" placeholder="00000-000" />
+                  <InputField fieldKey="state" label="Estado" placeholder="SP" value={form.state ?? ''} onChange={handleFieldChange} />
+                  <InputField fieldKey="zipCode" label="CEP" placeholder="00000-000" value={form.zipCode ?? ''} onChange={handleFieldChange} />
                 </div>
                 <div className="md:col-span-2">
-                  <InputField fieldKey="logoUrl" label="URL do Logotipo" type="url" placeholder="https://..." />
+                  <InputField fieldKey="logoUrl" label="URL do Logotipo" type="url" placeholder="https://..." value={form.logoUrl ?? ''} onChange={handleFieldChange} />
                   {form.logoUrl && (
                     <div className="mt-4 p-4 rounded-2xl bg-accent/20 border border-border inline-block">
                       <NextImage
@@ -403,7 +411,7 @@ export default function SettingsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-1">
-                  <InputField fieldKey="smtpHost" label="Host SMTP" placeholder="smtp.gmail.com" />
+                  <InputField fieldKey="smtpHost" label="Host SMTP" placeholder="smtp.gmail.com" value={form.smtpHost ?? ''} onChange={handleFieldChange} />
                 </div>
                 <div className="space-y-1.5">
                   <label className="label">Porta</label>
@@ -415,7 +423,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <InputField fieldKey="smtpUser" label="Usuário / E-mail Autenticação" type="email" placeholder="conta@gmail.com" />
+                  <InputField fieldKey="smtpUser" label="Usuário / E-mail Autenticação" type="email" placeholder="conta@gmail.com" value={form.smtpUser ?? ''} onChange={handleFieldChange} />
                 </div>
                 <div className="md:col-span-2 space-y-1.5">
                   <label className="label">Senha / App Password</label>
@@ -432,7 +440,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div className="md:col-span-2">
-                  <InputField fieldKey="smtpFrom" label="E-mail de Remetente (From)" type="email" placeholder="noreply@escola.com.br" />
+                  <InputField fieldKey="smtpFrom" label="E-mail de Remetente (From)" type="email" placeholder="noreply@escola.com.br" value={form.smtpFrom ?? ''} onChange={handleFieldChange} />
                 </div>
               </div>
             </div>
