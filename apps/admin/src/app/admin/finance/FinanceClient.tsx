@@ -8,7 +8,7 @@ import {
   Clock, CheckCircle2, AlertCircle, Barcode, QrCode, Printer,
   RefreshCw, Users, Banknote, Trash2, Search, Filter, ChevronRight
 } from 'lucide-react'
-import { format, addDays } from 'date-fns'
+import { format, addDays, endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { Modal, EmptyState, Badge, Skeleton, Avatar, PageHeader, StatCard, Alert } from '@/components/ui'
@@ -21,15 +21,26 @@ type Invoice = {
   amount: number | string | null
   paidAmount?: number | string | null
   dueDate: string
+  createdAt?: string
+  updatedAt?: string
   status: 'PENDENTE' | 'PAGO' | 'VENCIDO' | 'CANCELADO'
   referenceMonth?: string
   boletoUrl?: string
   pixCopyPaste?: string
   checkoutUrl?: string
   paidAt?: string
+  payments?: {
+    id: string
+    amount: number | string | null
+    method?: string | null
+    paidAt?: string | null
+    createdAt?: string | null
+  }[]
   child?: { id: string; fullName: string; photoUrl?: string }
   student?: { id: string; fullName: string; photoUrl?: string }
 }
+
+type SummaryPeriod = 'day' | 'week' | 'month' | 'all'
 
 const STATUS_CONFIG: Record<string, { label: string; variant: any; icon: any }> = {
   PENDENTE:  { label: 'Pendente',  variant: 'amber', icon: Clock },
@@ -44,6 +55,13 @@ const FILTERS = [
   { value: 'PAGO',      label: 'Pagas' },
   { value: 'VENCIDO',   label: 'Vencidas' },
   { value: 'CANCELADO', label: 'Canceladas' },
+]
+
+const SUMMARY_PERIODS: { value: SummaryPeriod; label: string; trend: string }[] = [
+  { value: 'day', label: 'Hoje', trend: 'hoje' },
+  { value: 'week', label: 'Semana', trend: 'na semana' },
+  { value: 'month', label: 'Mês', trend: 'no mês' },
+  { value: 'all', label: 'Tudo', trend: 'no total' },
 ]
 
 const fmtBRL = (v: number) =>
@@ -61,6 +79,52 @@ const moneyValue = (value: number | string | null | undefined) => {
 }
 
 const invoiceAmount = (invoice: Invoice) => moneyValue(invoice.amount)
+
+const invoicePaidAmount = (invoice: Invoice) => {
+  const paidAmount = moneyValue(invoice.paidAmount)
+  return paidAmount > 0 ? paidAmount : invoiceAmount(invoice)
+}
+
+const formatDateOnly = (value?: string | null) => {
+  if (!value) return '—'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '—' : format(date, 'dd/MM/yyyy')
+}
+
+const formatDateTime = (value?: string | null) => {
+  if (!value) return '—'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '—' : format(date, "dd/MM/yyyy 'às' HH:mm")
+}
+
+const transactionDate = (invoice: Invoice) => {
+  const paidAt = invoice.paidAt || invoice.payments?.find(payment => payment.paidAt)?.paidAt
+  if (paidAt) return { label: 'Pago em', value: paidAt }
+  return { label: invoice.status === 'CANCELADO' ? 'Cancelada em' : 'Criada em', value: invoice.updatedAt || invoice.createdAt }
+}
+
+const paidDateValue = (invoice: Invoice) =>
+  invoice.paidAt || invoice.payments?.find(payment => payment.paidAt)?.paidAt || null
+
+const parseValidDate = (value?: string | null) => {
+  if (!value) return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+const periodRange = (period: SummaryPeriod, now: Date) => {
+  if (period === 'day') return { start: startOfDay(now), end: endOfDay(now) }
+  if (period === 'week') return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) }
+  if (period === 'month') return { start: startOfMonth(now), end: endOfMonth(now) }
+  return null
+}
+
+const dateMatchesPeriod = (value: string | null | undefined, period: SummaryPeriod, now: Date) => {
+  if (period === 'all') return true
+  const date = parseValidDate(value)
+  const range = periodRange(period, now)
+  return Boolean(date && range && date >= range.start && date <= range.end)
+}
 
 const QUICK_CHARGES = [
   { label: 'Diária Meio Período', amount: '50', kind: 'EXTRA', color: 'orange' },
@@ -93,6 +157,7 @@ function FinancePageContent() {
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(false)
   const [filterStatus, setFilterStatus] = useState(searchParams.get('status') ?? '')
+  const [summaryPeriod, setSummaryPeriod] = useState<SummaryPeriod>('month')
   const [showModal, setShowModal]       = useState(false)
   const [showBatchModal, setShowBatchModal] = useState(false)
 
@@ -256,6 +321,7 @@ function FinancePageContent() {
       if (res.ok || res.status === 404) {
         // 204 = deletado agora | 404 = já havia sido deletado antes
         toast.success('Fatura excluída!')
+        setInvoices(current => current.filter(invoice => invoice.id !== id))
         fetchInvoices()
       } else {
         let msg = 'Erro ao excluir'
@@ -266,9 +332,15 @@ function FinancePageContent() {
   }
 
   const now = new Date()
-  const totalPaid    = invoices.filter(i => i.status === 'PAGO').reduce((s, i) => s + invoiceAmount(i), 0)
-  const totalPending = invoices.filter(i => i.status === 'PENDENTE').reduce((s, i) => s + invoiceAmount(i), 0)
-  const totalOverdue = invoices.filter(i => i.status === 'PENDENTE' && new Date(i.dueDate) < now).reduce((s, i) => s + invoiceAmount(i), 0)
+  const visibleInvoices = filterStatus ? invoices : invoices.filter(i => i.status !== 'CANCELADO')
+  const activeInvoices = invoices.filter(i => i.status !== 'CANCELADO')
+  const periodTrend = SUMMARY_PERIODS.find(period => period.value === summaryPeriod)?.trend ?? 'no periodo'
+  const paidInPeriod = activeInvoices.filter(i => i.status === 'PAGO' && dateMatchesPeriod(paidDateValue(i), summaryPeriod, now))
+  const pendingInPeriod = activeInvoices.filter(i => i.status === 'PENDENTE' && dateMatchesPeriod(i.dueDate, summaryPeriod, now))
+  const overdueInPeriod = activeInvoices.filter(i => i.status === 'PENDENTE' && new Date(i.dueDate) < now && dateMatchesPeriod(i.dueDate, summaryPeriod, now))
+  const totalPaid    = paidInPeriod.reduce((s, i) => s + invoicePaidAmount(i), 0)
+  const totalPending = pendingInPeriod.reduce((s, i) => s + invoiceAmount(i), 0)
+  const totalOverdue = overdueInPeriod.reduce((s, i) => s + invoiceAmount(i), 0)
   const studentName  = (inv: Invoice) => inv.child?.fullName || inv.student?.fullName || '—'
 
   return (
@@ -290,27 +362,50 @@ function FinancePageContent() {
       />
 
       {/* Summary Stats */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card/60 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Periodo do saldo</p>
+          <p className="text-xs font-bold text-muted-foreground">Recebidos usam a data real de pagamento.</p>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
+          {SUMMARY_PERIODS.map(period => (
+            <button
+              key={period.value}
+              type="button"
+              onClick={() => setSummaryPeriod(period.value)}
+              className={`h-10 rounded-xl border px-4 text-[10px] font-black uppercase tracking-widest transition-all ${
+                summaryPeriod === period.value
+                  ? 'border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                  : 'border-border bg-background text-muted-foreground hover:border-primary/50'
+              }`}
+            >
+              {period.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard 
           label="Recebido" 
           value={fmtBRL(totalPaid)} 
           icon={<CheckCircle2 size={20} />} 
           color="text-emerald-500 bg-emerald-500/10" 
-          trend={`${invoices.filter(i => i.status === 'PAGO').length} pagas`}
+          trend={`${paidInPeriod.length} entradas ${periodTrend}`}
         />
         <StatCard 
           label="A Receber" 
           value={fmtBRL(totalPending)} 
           icon={<Clock size={20} />} 
           color="text-amber-500 bg-amber-500/10" 
-          trend={`${invoices.filter(i => i.status === 'PENDENTE').length} abertas`}
+          trend={`${pendingInPeriod.length} abertas ${periodTrend}`}
         />
         <StatCard 
           label="Vencido" 
           value={fmtBRL(totalOverdue)} 
           icon={<AlertCircle size={20} />} 
           color="text-rose-500 bg-rose-500/10" 
-          trend={`${invoices.filter(i => i.status === 'VENCIDO').length} vencidas`}
+          trend={`${overdueInPeriod.length} vencidas ${periodTrend}`}
           trendUp={false}
         />
       </div>
@@ -355,7 +450,7 @@ function FinancePageContent() {
         <div className="space-y-4">
           {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 w-full" />)}
         </div>
-      ) : invoices.length === 0 ? (
+      ) : visibleInvoices.length === 0 ? (
         <EmptyState 
           icon={<Banknote size={32} />}
           title="Nenhuma fatura encontrada"
@@ -375,14 +470,16 @@ function FinancePageContent() {
                 <th className="table-header hidden md:table-cell">Descrição</th>
                 <th className="table-header">Valor</th>
                 <th className="table-header hidden sm:table-cell">Vencimento</th>
+                <th className="table-header hidden lg:table-cell">Transação</th>
                 <th className="table-header">Status</th>
                 <th className="table-header text-right">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {invoices.map((inv) => {
+              {visibleInvoices.map((inv) => {
                 const config = STATUS_CONFIG[inv.status] || STATUS_CONFIG.PENDENTE
                 const name = studentName(inv)
+                const transactedAt = transactionDate(inv)
                 return (
                   <tr key={inv.id} className="table-row group">
                     <td className="table-cell">
@@ -391,6 +488,7 @@ function FinancePageContent() {
                         <div className="min-w-0">
                           <p className="font-black text-foreground truncate">{name}</p>
                           <p className="text-[10px] text-muted-foreground font-medium md:hidden truncate">{inv.description}</p>
+                          <p className="text-[10px] text-primary font-bold lg:hidden truncate">{transactedAt.label}: {formatDateTime(transactedAt.value)}</p>
                         </div>
                       </div>
                     </td>
@@ -402,8 +500,12 @@ function FinancePageContent() {
                     </td>
                     <td className="table-cell hidden sm:table-cell">
                       <p className="text-xs font-bold text-muted-foreground">
-                        {format(new Date(inv.dueDate), 'dd/MM/yyyy')}
+                        {formatDateOnly(inv.dueDate)}
                       </p>
+                    </td>
+                    <td className="table-cell hidden lg:table-cell">
+                      <p className="text-xs font-black text-foreground">{formatDateTime(transactedAt.value)}</p>
+                      <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{transactedAt.label}</p>
                     </td>
                     <td className="table-cell">
                       <Badge 
