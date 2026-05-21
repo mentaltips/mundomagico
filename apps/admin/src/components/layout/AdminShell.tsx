@@ -303,11 +303,19 @@ function NotificationDropdown() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const { status } = useSession()
 
   const { data, refetch } = useQuery({
     queryKey: ['admin-notifications'],
-    queryFn: () => fetch('/api/notifications').then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch('/api/notifications')
+      if (res.status === 401) return { notifications: [], unreadCount: 0 }
+      if (!res.ok) throw new Error('Erro ao carregar notificacoes')
+      return res.json()
+    },
+    enabled: status === 'authenticated',
     refetchInterval: 30_000,
+    retry: false,
   })
 
   const notifications: any[] = data?.notifications ?? []

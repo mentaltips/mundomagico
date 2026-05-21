@@ -5,8 +5,8 @@ export const metadata: Metadata = {
   title: 'Mundo Mágico | Brinquedoteca & Escola Infantil',
   description: 'O melhor espaço para o seu pequeno aprender e brincar em Cajamar.',
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
   },
 }
 

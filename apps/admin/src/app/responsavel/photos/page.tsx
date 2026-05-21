@@ -32,11 +32,11 @@ export default function GuardianPhotosPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div>
-        <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+        <h1 className="page-title flex items-center gap-2">
           <Camera className="text-sky-500" size={24} />
           Galeria de Fotos
         </h1>
-        <p className="text-sm text-gray-500 mt-1">Momentos especiais do dia a dia da escola</p>
+        <p className="page-subtitle">Momentos especiais do dia a dia da escola</p>
       </div>
 
       {isLoading ? (
@@ -44,19 +44,19 @@ export default function GuardianPhotosPage() {
           <Loader2 className="text-sky-500 animate-spin" size={32} />
         </div>
       ) : photos.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-16 text-center">
-          <Camera className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-          <p className="text-gray-500 font-bold">Nenhuma foto compartilhada ainda</p>
-          <p className="text-xs text-gray-400 mt-1">A equipe da escola irá compartilhar fotos em breve</p>
+        <div className="card p-16 text-center">
+          <Camera className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+          <p className="text-muted-foreground font-bold">Nenhuma foto compartilhada ainda</p>
+          <p className="text-xs text-muted-foreground mt-1">A equipe da escola irá compartilhar fotos em breve</p>
         </div>
       ) : (
         <>
-          <p className="text-xs text-gray-400 font-bold">{photos.length} foto{photos.length !== 1 ? 's' : ''} compartilhada{photos.length !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-muted-foreground font-bold">{photos.length} foto{photos.length !== 1 ? 's' : ''} compartilhada{photos.length !== 1 ? 's' : ''}</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {photos.map((photo) => (
               <div
                 key={photo.id}
-                className="relative group cursor-pointer rounded-2xl overflow-hidden aspect-square bg-gray-100"
+                className="relative group cursor-pointer rounded-2xl overflow-hidden aspect-square bg-muted"
                 onClick={() => setPreview(photo)}
               >
                 <NextImage

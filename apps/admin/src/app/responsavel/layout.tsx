@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
@@ -55,11 +56,19 @@ function NotificationBell() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const { status } = useSession()
 
   const { data, refetch } = useQuery({
     queryKey: ['guardian-notifications'],
-    queryFn: () => fetch('/api/notifications').then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch('/api/notifications')
+      if (res.status === 401) return { notifications: [], unreadCount: 0 }
+      if (!res.ok) throw new Error('Erro ao carregar notificacoes')
+      return res.json()
+    },
+    enabled: status === 'authenticated',
     refetchInterval: 60_000,
+    retry: false,
   })
 
   const notifications: any[] = data?.notifications ?? []
@@ -179,9 +188,7 @@ export default function GuardianLayout({ children }: { children: React.ReactNode
         <div className="flex h-16 items-center justify-between px-4 md:px-8 max-w-2xl mx-auto w-full">
           {/* Brand */}
           <Link href="/responsavel" className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-black text-sm shadow-sm">
-              MM
-            </div>
+            <Image src="/icon.svg" alt="Mundo Magico" width={36} height={36} className="rounded-xl shadow-sm" />
             <div className="hidden sm:block">
               <p className="text-sm font-black text-foreground leading-none">Mundo Mágico</p>
               <p className="text-[10px] text-muted-foreground font-medium">Olá, {firstName}</p>

@@ -24,7 +24,7 @@ export default function GuardianHistoryPage() {
   return (
     <div className="animate-in space-y-5 pb-8 max-w-lg mx-auto">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-2xl bg-violet-50 flex items-center justify-center text-violet-600">
+        <div className="h-10 w-10 rounded-2xl bg-violet-500/10 flex items-center justify-center text-violet-500">
           <History className="h-5 w-5" />
         </div>
         <div>
@@ -42,14 +42,14 @@ export default function GuardianHistoryPage() {
             onClick={() => handleDayClick(day)}
             className="card-interactive w-full flex items-center gap-4 p-4 text-left"
           >
-            <div className="h-10 w-10 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 shrink-0">
+            <div className="h-10 w-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-500 shrink-0">
               <CalendarIcon className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-gray-900 capitalize text-sm">{formatDate(day)}</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Toque para ver o diário completo</p>
+              <h3 className="font-bold text-foreground capitalize text-sm">{formatDate(day)}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Toque para ver o diário completo</p>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
           </button>
         ))}
       </div>
