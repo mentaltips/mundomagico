@@ -105,7 +105,7 @@ export default function AnnouncementsClient() {
       const res = await fetch('/api/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, groupId: formData.groupId || null })
       })
 
       if (res.ok) {
