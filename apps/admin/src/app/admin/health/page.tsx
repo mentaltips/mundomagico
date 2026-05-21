@@ -38,7 +38,13 @@ export default function HealthPage() {
     try {
       setLoading(true)
       const res = await fetch('/api/health/medications?active=true')
-      if (res.ok) setMedications(await res.json())
+      if (res.ok) {
+        const data = await res.json()
+        setMedications(Array.isArray(data) ? data : [])
+      } else {
+        const err = await res.json().catch(() => ({}))
+        toast.error(`Erro ao carregar medicações (${res.status}): ${err?.error?.message || ''}`)
+      }
     } catch { toast.error('Erro ao carregar medicações') }
     finally { setLoading(false) }
   }
