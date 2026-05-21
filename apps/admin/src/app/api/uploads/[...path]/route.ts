@@ -11,8 +11,15 @@ export async function GET(req: NextRequest, { params }: { params: { path: string
   const apiUrl = process.env.API_URL || 'https://api.mundomagicocajamar.com.br'
   const url = `${apiUrl}/uploads/${fileName}`
 
+  // Get auth token from session
+  const sessionCookie = req.cookies.get('next-auth.session-token') || req.cookies.get('__Secure-next-auth.session-token')
+  const headers: HeadersInit = {}
+  if (sessionCookie) {
+    headers['Cookie'] = `${sessionCookie.name}=${sessionCookie.value}`
+  }
+
   try {
-    const response = await fetch(url)
+    const response = await fetch(url, { headers })
 
     if (!response.ok) {
       return new NextResponse('Not Found', { status: 404 })
