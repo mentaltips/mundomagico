@@ -51,3 +51,19 @@ export function findMonthlyStudentInvoice(schoolId: string, studentId: string, r
     select: { id: true },
   })
 }
+
+export function findInvoiceForPaymentLink(schoolId: string, invoiceId: string) {
+  return prisma.invoice.findFirst({
+    where: { id: invoiceId, schoolId },
+    include: {
+      child: { select: { fullName: true } },
+      student: { select: { fullName: true } },
+      school: {
+        select: {
+          name: true,
+          integrationSecret: { select: { mpAccessToken: true, mpPublicKey: true } },
+        },
+      },
+    },
+  })
+}

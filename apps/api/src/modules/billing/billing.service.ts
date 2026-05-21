@@ -1,4 +1,7 @@
 import { Prisma, type Child, type Student } from '@mundo-magico/database'
+import { MercadoPagoConfig, Preference } from 'mercadopago'
+import { decrypt } from '../../shared/utils/crypto'
+import { AppError } from '../../shared/errors/AppError'
 import type { GenerateMonthlyInput, PreviewMonthlyQuery } from './billing.schema'
 import * as billingRepository from './billing.repository'
 
@@ -61,6 +64,42 @@ export async function previewMonthly(schoolId: string, query: PreviewMonthlyQuer
       amount: person.monthlyFee,
       dueDay: person.dueDay,
     })),
+  }
+}
+
+export async function generatePaymentLink(schoolId: string, invoiceId: string) {
+  const invoice = await billingRepository.findInvoiceForPaymentLink(schoolId, invoiceId)
+  if (!invoice) throw new AppError('Fatura nao encontrada', 404)
+  if (invoice.status === 'PAGO') throw new AppError('Fatura ja esta paga', 400)
+
+  const encryptedToken = invoice.school.integrationSecret?.mpAccessToken
+  const accessToken = encryptedToken ? decrypt(encryptedToken) : null
+  if (!accessToken) throw new AppError('Access Token do Mercado Pago nao configurado', 400)
+
+  const payerName = invoice.child?.fullName || invoice.student?.fullName || 'Responsavel'
+  const client = new MercadoPagoConfig({ accessToken })
+  const preference = new Preference(client)
+
+  const result = await preference.create({
+    body: {
+      external_reference: invoice.id,
+      items: [{
+        id: invoice.id,
+        title: invoice.description || 'Mensalidade',
+        quantity: 1,
+        currency_id: 'BRL',
+        unit_price: Number(invoice.amount),
+      }],
+      payer: { name: payerName },
+      notification_url: `${process.env.API_BASE_URL}/api/webhooks/mercado-pago`,
+      auto_return: 'approved',
+    },
+  })
+
+  return {
+    preferenceId: result.id,
+    initPoint: result.init_point,
+    sandboxInitPoint: result.sandbox_init_point,
   }
 }
 

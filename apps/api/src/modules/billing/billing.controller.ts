@@ -29,3 +29,12 @@ export async function previewMonthly(req: Request, res: Response, next: NextFunc
     next(error)
   }
 }
+
+export async function generatePaymentLink(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params
+    res.json(await billingService.generatePaymentLink(getSchoolId(req), id))
+  } catch (error) {
+    next(error)
+  }
+}
