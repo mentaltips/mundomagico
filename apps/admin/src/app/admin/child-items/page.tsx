@@ -34,6 +34,8 @@ export default function ChildItemsPage() {
   const [saving, setSaving]       = useState(false)
   const [qty, setQty]             = useState(1)
   const [search, setSearch]       = useState('')
+  const [removedItemIds, setRemovedItemIds] = useState<Set<string>>(() => new Set())
+  const [removedChildIds, setRemovedChildIds] = useState<Set<string>>(() => new Set())
   const [form, setForm]           = useState({
     childId: '', itemType: 'FRALDA', quantityReceived: '10', alertThreshold: '5', notes: '',
   })
@@ -50,9 +52,13 @@ export default function ChildItemsPage() {
   })
   const children: { id: string; fullName: string }[] = Array.isArray(rawChildren) ? rawChildren : []
 
-  const filteredItems = items.filter(item => 
-    item.child?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-    item.itemType?.toLowerCase().includes(search.toLowerCase())
+  const filteredItems = items.filter(item =>
+    !removedItemIds.has(item.id) &&
+    !removedChildIds.has(item.childId) &&
+    (
+      item.child?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+      item.itemType?.toLowerCase().includes(search.toLowerCase())
+    )
   )
 
   // Group items by child
@@ -86,6 +92,11 @@ export default function ChildItemsPage() {
       if (res.ok) {
         toast.success('Item cadastrado!')
         setShowModal(false)
+        setRemovedChildIds(prev => {
+          const next = new Set(prev)
+          next.delete(form.childId)
+          return next
+        })
         setForm({ childId: '', itemType: 'FRALDA', quantityReceived: '10', alertThreshold: '5', notes: '' })
         queryClient.invalidateQueries({ queryKey: ['child-items'] })
       } else { 
@@ -143,6 +154,7 @@ export default function ChildItemsPage() {
       const res = await fetch(`/api/child-items/${item.id}`, { method: 'DELETE' })
       if (res.ok || res.status === 404) {
         toast.success(res.status === 404 ? 'Item já estava removido. Atualizando lista.' : 'Item removido do estoque.')
+        setRemovedItemIds(prev => new Set(prev).add(item.id))
         queryClient.setQueryData(['child-items'], (current: unknown) =>
           Array.isArray(current) ? current.filter((entry: ChildItem) => entry.id !== item.id) : current,
         )
@@ -169,8 +181,14 @@ export default function ChildItemsPage() {
       } else {
         toast.success(`${child.fullName} removido(a) dos itens.`)
         const removedIds = new Set(childItems.map(item => item.id))
+        setRemovedChildIds(prev => new Set(prev).add(child.id))
+        setRemovedItemIds(prev => {
+          const next = new Set(prev)
+          removedIds.forEach(id => next.add(id))
+          return next
+        })
         queryClient.setQueryData(['child-items'], (current: unknown) =>
-          Array.isArray(current) ? current.filter((entry: ChildItem) => !removedIds.has(entry.id)) : current,
+          Array.isArray(current) ? current.filter((entry: ChildItem) => entry.childId !== child.id && !removedIds.has(entry.id)) : current,
         )
       }
       queryClient.invalidateQueries({ queryKey: ['child-items'] })
