@@ -143,6 +143,9 @@ export default function ChildItemsPage() {
       const res = await fetch(`/api/child-items/${item.id}`, { method: 'DELETE' })
       if (res.ok) {
         toast.success('Item removido do estoque.')
+        queryClient.setQueryData(['child-items'], (current: unknown) =>
+          Array.isArray(current) ? current.filter((entry: ChildItem) => entry.id !== item.id) : current,
+        )
         queryClient.invalidateQueries({ queryKey: ['child-items'] })
       } else {
         const err = await res.json().catch(() => ({}))
@@ -165,6 +168,10 @@ export default function ChildItemsPage() {
         toast.error(`${failed} item(ns) não foram removidos.`)
       } else {
         toast.success(`${child.fullName} removido(a) dos itens.`)
+        const removedIds = new Set(childItems.map(item => item.id))
+        queryClient.setQueryData(['child-items'], (current: unknown) =>
+          Array.isArray(current) ? current.filter((entry: ChildItem) => !removedIds.has(entry.id)) : current,
+        )
       }
       queryClient.invalidateQueries({ queryKey: ['child-items'] })
     } catch {
