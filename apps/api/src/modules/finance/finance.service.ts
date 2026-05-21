@@ -2,6 +2,7 @@ import { AppError } from '../../shared/errors/AppError'
 import { ERROR_CODES } from '../../shared/errors/error-codes'
 import type { CreateInvoiceInput, ListInvoicesQuery, ManualPaymentInput, UpdateInvoiceInput } from './finance.schema'
 import * as financeRepository from './finance.repository'
+import * as billingService from '../billing/billing.service'
 
 async function validateChildStudentGuardianTenant(
   schoolId: string,
@@ -31,8 +32,22 @@ async function validateChildStudentGuardianTenant(
   }
 }
 
-export function listInvoices(schoolId: string, query: ListInvoicesQuery) {
-  return financeRepository.listInvoices(schoolId, query)
+export async function listInvoices(schoolId: string, query: ListInvoicesQuery) {
+  const invoices = await financeRepository.listInvoices(schoolId, query)
+
+  const reconciled = await Promise.all(
+    invoices.map(async (invoice) => {
+      if (invoice.status === 'PAGO' || !invoice.mpPaymentId) return invoice
+
+      try {
+        return await billingService.reconcileMercadoPagoPayment(schoolId, invoice.id) ?? invoice
+      } catch {
+        return invoice
+      }
+    }),
+  )
+
+  return query.status ? reconciled.filter((invoice) => invoice.status === query.status) : reconciled
 }
 
 export async function createInvoices(schoolId: string, input: CreateInvoiceInput | CreateInvoiceInput[]) {

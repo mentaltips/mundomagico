@@ -70,8 +70,8 @@ function PaymentsContent() {
     else if (statusParam === 'failure') toast.error('Pagamento não aprovado. Tente novamente.')
   }, [statusParam])
 
-  const fetchInvoices = useCallback(async () => {
-    setLoading(true)
+  const fetchInvoices = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) setLoading(true)
     try {
       const res = await fetch('/api/responsavel/invoices')
       if (res.ok) {
@@ -79,10 +79,29 @@ function PaymentsContent() {
         setInvoices(data)
       }
     } catch { console.error('Erro ao buscar faturas') }
-    finally { setLoading(false) }
+    finally { if (!options?.silent) setLoading(false) }
   }, [])
 
   useEffect(() => { fetchInvoices() }, [fetchInvoices])
+
+  useEffect(() => {
+    if (!showPayModal || !selectedInvoice || paymentResult?.method !== 'PIX') return
+
+    const paidInvoice = invoices.find(inv => inv.id === selectedInvoice.id && inv.status === 'PAGO')
+    if (paidInvoice) {
+      toast.success('Pagamento aprovado!')
+      setShowPayModal(false)
+      setPaymentResult(null)
+      setSelectedInvoice(null)
+      return
+    }
+
+    const interval = window.setInterval(() => {
+      fetchInvoices({ silent: true })
+    }, 5000)
+
+    return () => window.clearInterval(interval)
+  }, [fetchInvoices, invoices, paymentResult?.method, selectedInvoice, showPayModal])
 
   const formatBRL = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
@@ -112,7 +131,7 @@ function PaymentsContent() {
       if (method === 'BOLETO') toast.success('Boleto gerado! Clique para imprimir.')
       if (method === 'PIX') toast.success('PIX gerado! Escaneie o QR Code.')
 
-      fetchInvoices()
+      fetchInvoices({ silent: true })
     } catch { toast.error('Erro ao processar pagamento') }
     finally { setPaying(null) }
   }
