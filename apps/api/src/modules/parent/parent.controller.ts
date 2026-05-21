@@ -43,3 +43,38 @@ export async function getFeed(req: Request, res: Response, next: NextFunction) {
     next(error)
   }
 }
+
+export async function listMyInvoices(req: Request, res: Response, next: NextFunction) {
+  try {
+    const schoolId = req.user?.schoolId
+    const userId = req.user?.sub
+
+    if (!schoolId || !userId) {
+      throw new AppError('Missing user or school context', 400, ERROR_CODES.VALIDATION_ERROR)
+    }
+
+    const data = await parentService.getParentInvoices(schoolId, userId)
+    return res.json(data)
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function payMyInvoice(req: Request, res: Response, next: NextFunction) {
+  try {
+    const schoolId = req.user?.schoolId
+    const userId = req.user?.sub
+    const invoiceId = req.params.id
+    const { method, payerCpf } = req.body
+
+    if (!schoolId || !userId) {
+      throw new AppError('Missing user or school context', 400, ERROR_CODES.VALIDATION_ERROR)
+    }
+
+    const data = await parentService.payParentInvoice(schoolId, userId, invoiceId, method, payerCpf)
+    return res.json(data)
+  } catch (error) {
+    next(error)
+  }
+}
+

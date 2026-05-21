@@ -170,3 +170,53 @@ export async function getParentFeed(schoolId: string, userId: string, page = 1, 
     items: feed.slice(0, limit),
   }
 }
+
+export async function getParentInvoices(schoolId: string, userId: string) {
+  const guardian = await parentRepository.findGuardianByUserId(userId, schoolId)
+  if (!guardian) {
+    throw new AppError('Perfil de responsável não encontrado', 404, ERROR_CODES.NOT_FOUND)
+  }
+
+  const childGuardians = await parentRepository.findChildrenByGuardianId(guardian.id, schoolId)
+  const childIds = childGuardians.map((cg) => cg.childId)
+
+  if (childIds.length === 0) return []
+
+  return parentRepository.findAllInvoicesByChildIds(schoolId, childIds)
+}
+
+export async function payParentInvoice(
+  schoolId: string,
+  userId: string,
+  invoiceId: string,
+  method: string,
+  payerCpf?: string,
+) {
+  const guardian = await parentRepository.findGuardianByUserId(userId, schoolId)
+  if (!guardian) {
+    throw new AppError('Perfil de responsável não encontrado', 404, ERROR_CODES.NOT_FOUND)
+  }
+
+  const childGuardians = await parentRepository.findChildrenByGuardianId(guardian.id, schoolId)
+  const childIds = childGuardians.map((cg) => cg.childId)
+
+  // Verifica se a fatura pertence a um filho deste responsável
+  const invoice = await parentRepository.findInvoiceByIdForGuardian(schoolId, invoiceId, childIds)
+  if (!invoice) {
+    throw new AppError('Fatura não encontrada', 404, ERROR_CODES.NOT_FOUND)
+  }
+  if (invoice.status === 'PAGO') {
+    throw new AppError('Esta fatura já foi paga', 400, ERROR_CODES.VALIDATION_ERROR)
+  }
+
+  // Delega para o billing service que já tem toda a lógica do Mercado Pago
+  const { generatePaymentLink } = await import('../billing/billing.service')
+  const paymentLink = await generatePaymentLink(schoolId, invoiceId)
+
+  return {
+    method: 'CARTAO',
+    checkoutUrl: paymentLink.initPoint,
+    sandboxUrl: paymentLink.sandboxInitPoint,
+  }
+}
+

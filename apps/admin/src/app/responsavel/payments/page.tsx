@@ -73,7 +73,7 @@ function PaymentsContent() {
   const fetchInvoices = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/finance/invoices')
+      const res = await fetch('/api/responsavel/invoices')
       if (res.ok) {
         const data = await res.json()
         setInvoices(data)
@@ -95,7 +95,7 @@ function PaymentsContent() {
     }
     setPaying(method)
     try {
-      const res = await fetch(`/api/finance/invoices/${selectedInvoice.id}/pay`, {
+      const res = await fetch(`/api/responsavel/invoices/${selectedInvoice.id}/pay`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ method, payerCpf }),

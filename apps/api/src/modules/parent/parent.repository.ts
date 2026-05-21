@@ -62,6 +62,32 @@ export function findPendingInvoices(schoolId: string, childIds: string[]) {
   })
 }
 
+export function findAllInvoicesByChildIds(schoolId: string, childIds: string[]) {
+  return prisma.invoice.findMany({
+    where: {
+      schoolId,
+      childId: { in: childIds },
+    },
+    include: {
+      child: { select: { id: true, fullName: true } },
+      student: { select: { id: true, fullName: true } },
+      payments: true,
+    },
+    orderBy: { dueDate: 'desc' },
+  })
+}
+
+export function findInvoiceByIdForGuardian(schoolId: string, invoiceId: string, childIds: string[]) {
+  return prisma.invoice.findFirst({
+    where: {
+      id: invoiceId,
+      schoolId,
+      childId: { in: childIds },
+    },
+  })
+}
+
+
 export function findSharedPhotos(schoolId: string, childIds: string[]) {
   return prisma.childPhoto.findMany({
     where: {
