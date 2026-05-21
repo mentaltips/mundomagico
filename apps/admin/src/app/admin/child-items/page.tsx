@@ -141,8 +141,8 @@ export default function ChildItemsPage() {
 
     try {
       const res = await fetch(`/api/child-items/${item.id}`, { method: 'DELETE' })
-      if (res.ok) {
-        toast.success('Item removido do estoque.')
+      if (res.ok || res.status === 404) {
+        toast.success(res.status === 404 ? 'Item já estava removido. Atualizando lista.' : 'Item removido do estoque.')
         queryClient.setQueryData(['child-items'], (current: unknown) =>
           Array.isArray(current) ? current.filter((entry: ChildItem) => entry.id !== item.id) : current,
         )
@@ -163,7 +163,7 @@ export default function ChildItemsPage() {
       const results = await Promise.all(
         childItems.map(item => fetch(`/api/child-items/${item.id}`, { method: 'DELETE' })),
       )
-      const failed = results.filter(res => !res.ok).length
+      const failed = results.filter(res => !res.ok && res.status !== 404).length
       if (failed > 0) {
         toast.error(`${failed} item(ns) não foram removidos.`)
       } else {

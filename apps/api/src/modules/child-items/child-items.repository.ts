@@ -32,6 +32,12 @@ export function findFirst(id: string, schoolId: string) {
   })
 }
 
+export function findAnyById(id: string, schoolId: string) {
+  return prisma.childItem.findFirst({
+    where: { id, schoolId } as any,
+  })
+}
+
 export function create(data: any) {
   return prisma.childItem.create({
     data,

@@ -49,6 +49,10 @@ export async function updateItem(id: string, schoolId: string, input: UpdateChil
 export async function deleteItem(id: string, schoolId: string) {
   const result = await childItemsRepository.deleteById(id, schoolId)
   if (result.count === 0) {
+    const existing = await childItemsRepository.findAnyById(id, schoolId)
+    if (existing && existing.active === false) {
+      return { success: true, alreadyRemoved: true }
+    }
     throw new AppError('Item nao encontrado', 404, ERROR_CODES.NOT_FOUND)
   }
   return { success: true }
