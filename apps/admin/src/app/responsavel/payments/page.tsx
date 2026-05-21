@@ -85,6 +85,14 @@ function PaymentsContent() {
   useEffect(() => { fetchInvoices() }, [fetchInvoices])
 
   useEffect(() => {
+    const interval = window.setInterval(() => {
+      fetchInvoices({ silent: true })
+    }, 15_000)
+
+    return () => window.clearInterval(interval)
+  }, [fetchInvoices])
+
+  useEffect(() => {
     if (!showPayModal || !selectedInvoice || paymentResult?.method !== 'PIX') return
 
     const paidInvoice = invoices.find(inv => inv.id === selectedInvoice.id && inv.status === 'PAGO')

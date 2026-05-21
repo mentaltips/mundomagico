@@ -55,6 +55,62 @@ router.get('/', async (req, res) => {
           href: '/admin/finance'
         })
       })
+
+      const paidSince = new Date()
+      paidSince.setDate(paidSince.getDate() - 7)
+
+      const recentPaidInvoices = await prisma.invoice.findMany({
+        where: {
+          schoolId,
+          status: 'PAGO',
+          paidAt: { gte: paidSince },
+        },
+        include: {
+          child: { select: { fullName: true } },
+          student: { select: { fullName: true } },
+        },
+        orderBy: { paidAt: 'desc' },
+        take: 10,
+      })
+
+      recentPaidInvoices.forEach((inv: any) => {
+        notifications.push({
+          id: `paid-${inv.id}`,
+          type: 'payment',
+          priority: 'NORMAL',
+          title: 'Pagamento Confirmado',
+          body: `${inv.child?.fullName || inv.student?.fullName || 'Aluno'} pagou "${inv.description}"`,
+          time: inv.paidAt || inv.updatedAt,
+          createdAt: inv.paidAt || inv.updatedAt,
+          href: '/admin/finance?status=PAGO'
+        })
+      })
+
+      const failedWebhookSince = new Date()
+      failedWebhookSince.setDate(failedWebhookSince.getDate() - 3)
+
+      const failedWebhooks = await prisma.paymentWebhookEvent.findMany({
+        where: {
+          schoolId,
+          status: 'FAILED',
+          createdAt: { gte: failedWebhookSince },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      })
+
+      failedWebhooks.forEach((event: any) => {
+        notifications.push({
+          id: `webhook-failed-${event.id}`,
+          type: 'alert',
+          priority: 'URGENTE',
+          title: 'Webhook de Pagamento Falhou',
+          body: event.error || 'Falha ao processar retorno do Mercado Pago',
+          time: event.createdAt,
+          createdAt: event.createdAt,
+          href: '/admin/finance'
+        })
+      })
     }
 
     const recentDate = new Date()
@@ -87,7 +143,8 @@ router.get('/', async (req, res) => {
     })
 
     notifications.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-    res.json(notifications.slice(0, 20))
+    const sliced = notifications.slice(0, 20)
+    res.json({ notifications: sliced, unreadCount: sliced.length })
   } catch (error) {
     req.log.error(error)
     res.status(500).json({ error: 'Internal server error' })
