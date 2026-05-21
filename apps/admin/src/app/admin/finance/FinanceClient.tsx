@@ -125,11 +125,13 @@ function FinancePageContent() {
       const res = await fetch('/api/finance/invoices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          ...form, 
+        body: JSON.stringify({
+          childId: form.childId,
+          ...(form.guardianId && { guardianId: form.guardianId }),
+          description: form.description,
           amount: parseFloat(form.amount),
+          dueDate: form.dueDate,
           referenceMonth: form.invoiceKind === 'EXTRA' ? null : form.referenceMonth,
-          invoiceKind: undefined,
           ...(form.boletoUrl && { boletoUrl: form.boletoUrl }),
           ...(form.boletoBarcode && { boletoBarcode: form.boletoBarcode }),
         }),
