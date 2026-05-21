@@ -1,5 +1,56 @@
 # Changelog
 
+## v1.2.2 - 2026-05-21
+
+### Financeiro
+
+- Corrigido o total de `Recebido` para somar somente valores efetivamente pagos dentro do periodo selecionado.
+- Adicionados filtros de periodo no resumo financeiro: hoje, semana, mes e tudo.
+- Ajustado o calculo de recebidos para considerar a data de pagamento quando disponivel, mantendo vencimento para pendentes e vencidos.
+- Corrigida a listagem de faturas para nao exibir cobrancas canceladas na aba `Todas`.
+- Adicionada exibicao de data e horario das transacoes financeiras na tabela.
+- Melhorado o seletor de aluno/crianca na criacao de fatura com campo de pesquisa para facilitar uso com muitos cadastros.
+
+### Itens das criancas / estoque
+
+- Adicionado botao para excluir item individual do estoque da crianca.
+- Adicionada acao para remover uma crianca da tela de `Itens das Criancas` sem apagar o cadastro principal da crianca.
+- Ajustada a remocao para preservar historico e marcar itens como inativos em vez de apagar fisicamente.
+- Criado proxy explicito no admin para `DELETE /api/child-items/:id`, evitando erro 404 quando a chamada passa pelo frontend.
+- Tornada a exclusao de item idempotente: se o item ja estava removido, o backend considera a operacao concluida.
+- Corrigida a tela para remover imediatamente itens e criancas do cache local apos exclusao.
+- Adicionada protecao para impedir que itens/criancas removidos reaparecam depois de um refetch do React Query.
+- Ajustada a listagem da API para retornar apenas itens ativos de criancas nao arquivadas e com status operacional.
+- Ajustada a validacao de crianca ao criar item para ignorar criancas arquivadas/inativas.
+
+### Criancas, turmas e rotina diaria
+
+- Corrigida a rotina diaria para listar apenas criancas ativas, em adaptacao ou pendentes de pagamento, ignorando arquivadas/inativas.
+- Corrigida validacao ao registrar rotina diaria para bloquear criancas arquivadas/inativas.
+- Corrigido o total de alunos em `Gestao de Turmas` para contar apenas criancas/alunos ativos e nao arquivados.
+- Corrigida a ocupacao exibida no card de turma para somar corretamente criancas e alunos ativos.
+
+### Notificacoes
+
+- Ajustado o sininho de notificacoes para marcar notificacoes como lidas ao clicar.
+- Adicionada acao para marcar notificacoes como lidas.
+- Persistida localmente a leitura de notificacoes para evitar que o contador continue mostrando itens ja lidos na mesma instalacao do navegador.
+
+### Uploads e imagens
+
+- Ajustado o proxy `/api/uploads/...` do admin para retornar um placeholder quando uma imagem antiga nao existir mais no backend.
+- Reduzido o impacto visual de fotos ausentes, evitando imagem quebrada na interface.
+
+### Deploy e validacao
+
+- Publicados os commits `ba3038d`, `2a4e95a`, `0dd38eb` e `16fcf13` em `origin/main`.
+- Executado deploy na VPS Ubuntu via SSH para atualizar API e worker.
+- Confirmado `migrate deploy` do Prisma sem migrations pendentes.
+- Confirmado healthcheck da API em producao respondendo `ok`.
+- Validado build da API com `pnpm.cmd --filter @mundo-magico/api build`.
+- Validado build do admin com `pnpm.cmd --filter @mundo-magico/admin build`.
+- Observacao: `deploy-vps.sh` atualiza API e worker; alteracoes do `apps/admin` dependem do deploy do frontend/admin pegar o commit mais recente.
+
 ## v1.2.1 - 2026-05-19
 
 ### Seguranca multi-tenant
