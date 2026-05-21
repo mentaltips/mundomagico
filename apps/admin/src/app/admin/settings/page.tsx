@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import NextImage from 'next/image'
-import { Settings as SettingsIcon, Save, Loader2, Building2, MessageCircle, Mail, CreditCard, Download, ArrowRight, AlertCircle, QrCode, LogOut, RefreshCw, CheckCircle2 } from 'lucide-react'
+import { Settings as SettingsIcon, Save, Loader2, Building2, MessageCircle, Mail, CreditCard, Download, ArrowRight, AlertCircle, QrCode, LogOut, RefreshCw, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
@@ -27,6 +27,7 @@ type SchoolSettings = {
   smtpUser: string | null
   smtpFrom: string | null
   mpPublicKey: string | null
+  mpAccessToken: string | null
   autoGenerateInvoices: boolean
   billingGenerationDay: number
   invoiceDescription: string
@@ -40,6 +41,9 @@ export default function SettingsPage() {
   const [exporting, setExporting] = useState(false)
   const [form, setForm]           = useState<Partial<SchoolSettings>>({})
 
+  const [showMpAccessToken, setShowMpAccessToken] = useState(false)
+  const [showMpPublicKey, setShowMpPublicKey] = useState(false)
+  const [showSmtpPass, setShowSmtpPass] = useState(false)
   const [whatsappStatus, setWhatsappStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
   const [whatsappQr, setWhatsappQr] = useState<string | null>(null)
   const [whatsappLoading, setWhatsappLoading] = useState(true)
@@ -415,12 +419,17 @@ export default function SettingsPage() {
                 </div>
                 <div className="md:col-span-2 space-y-1.5">
                   <label className="label">Senha / App Password</label>
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    onChange={(e) => setForm((p) => ({ ...p, smtpPass: e.target.value } as Partial<SchoolSettings>))}
-                    className="input"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showSmtpPass ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      onChange={(e) => setForm((p) => ({ ...p, smtpPass: e.target.value } as Partial<SchoolSettings>))}
+                      className="input pr-10"
+                    />
+                    <button type="button" onClick={() => setShowSmtpPass(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showSmtpPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="md:col-span-2">
                   <InputField fieldKey="smtpFrom" label="E-mail de Remetente (From)" type="email" placeholder="noreply@escola.com.br" />
@@ -442,15 +451,35 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-6">
-                <InputField fieldKey="mpPublicKey" label="Public Key" placeholder="APP_USR-..." />
+                <div className="space-y-1.5">
+                  <label className="label">Public Key</label>
+                  <div className="relative">
+                    <input
+                      type={showMpPublicKey ? 'text' : 'password'}
+                      value={form.mpPublicKey ?? ''}
+                      onChange={(e) => setForm((p) => ({ ...p, mpPublicKey: e.target.value }))}
+                      placeholder="APP_USR-..."
+                      className="input pr-10"
+                    />
+                    <button type="button" onClick={() => setShowMpPublicKey(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showMpPublicKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
                 <div className="space-y-1.5">
                   <label className="label">Access Token</label>
-                  <input
-                    type="password"
-                    placeholder="APP_USR-..."
-                    onChange={(e) => setForm((p) => ({ ...p, mpAccessToken: e.target.value } as Partial<SchoolSettings>))}
-                    className="input"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showMpAccessToken ? 'text' : 'password'}
+                      value={form.mpAccessToken ?? ''}
+                      onChange={(e) => setForm((p) => ({ ...p, mpAccessToken: e.target.value } as Partial<SchoolSettings>))}
+                      placeholder="APP_USR-..."
+                      className="input pr-10"
+                    />
+                    <button type="button" onClick={() => setShowMpAccessToken(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showMpAccessToken ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="bg-blue-500/10 rounded-2xl p-5 border border-blue-500/20">
                   <p className="text-xs text-blue-800 font-bold flex items-center gap-2">
@@ -458,7 +487,7 @@ export default function SettingsPage() {
                     Webhook URL para notificações:
                   </p>
                   <code className="block mt-2 text-[11px] font-black text-blue-900 bg-white/50 p-2 rounded-lg border border-blue-200">
-                    /api/webhooks/mercadopago
+                    https://api.mundomagicocajamar.com.br/api/webhooks/mercado-pago
                   </code>
                 </div>
 
