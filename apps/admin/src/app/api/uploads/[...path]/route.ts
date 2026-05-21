@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getApiAuth } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,25 +9,24 @@ export async function GET(req: NextRequest, { params }: { params: { path: string
     return new NextResponse('Not Found', { status: 404 })
   }
 
-  const apiUrl = process.env.API_URL || 'https://api.mundomagicocajamar.com.br'
+  const apiUrl = (process.env.API_URL || 'https://api.mundomagicocajamar.com.br').replace(/\/$/, '')
   const url = `${apiUrl}/uploads/${fileName}`
 
-  // Get auth token from session
-  const sessionCookie = req.cookies.get('next-auth.session-token') || req.cookies.get('__Secure-next-auth.session-token')
-  const headers: HeadersInit = {}
-  if (sessionCookie) {
-    headers['Cookie'] = `${sessionCookie.name}=${sessionCookie.value}`
+  const apiAuth = await getApiAuth(req)
+  const headers: Record<string, string> = {}
+  if (apiAuth?.token) {
+    headers['Authorization'] = `Bearer ${apiAuth.token}`
   }
 
   try {
     const response = await fetch(url, { headers })
 
     if (!response.ok) {
-      return new NextResponse('Not Found', { status: 404 })
+      return new NextResponse('Not Found', { status: response.status })
     }
 
     const buffer = await response.arrayBuffer()
-    const contentType = response.headers.get('content-type') || 'image/png'
+    const contentType = response.headers.get('content-type') || 'image/jpeg'
 
     return new NextResponse(buffer, {
       status: 200,
