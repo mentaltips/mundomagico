@@ -47,6 +47,7 @@ services:
       PORT: 3333
       API_PORT: 3333
       API_BASE_URL: https://api.mundomagicocajamar.com.br
+      PUBLIC_UPLOADS_ENABLED: "true"
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
