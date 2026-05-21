@@ -1,6 +1,7 @@
 import { AppError } from '../../shared/errors/AppError'
 import { ERROR_CODES } from '../../shared/errors/error-codes'
 import * as parentRepository from './parent.repository'
+import * as billingService from '../billing/billing.service'
 
 export async function getParentDashboard(schoolId: string, userId: string) {
   const guardian = await parentRepository.findGuardianByUserId(userId, schoolId)
@@ -210,8 +211,7 @@ export async function payParentInvoice(
   }
 
   // Delega para o billing service que já tem toda a lógica do Mercado Pago
-  const { generatePaymentLink } = await import('../billing/billing.service')
-  const paymentLink = await generatePaymentLink(schoolId, invoiceId)
+  const paymentLink = await billingService.generatePaymentLink(schoolId, invoiceId)
 
   return {
     method: 'CARTAO',
