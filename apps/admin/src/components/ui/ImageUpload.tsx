@@ -20,7 +20,12 @@ export function ImageUpload({ value, onChange, label = 'Foto', size = 'md' }: Im
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const safeValue = getSafeUrl(value) || null
-  const unoptimized = (safeValue?.includes('api.mundomagicocajamar.com.br') ?? false) || (safeValue?.startsWith('/api/uploads/') ?? false)
+  const unoptimized = !!safeValue && (
+    safeValue.includes('api.mundomagicocajamar.com.br') ||
+    safeValue.includes('/api/uploads/') ||
+    safeValue.includes('/api/upload/') ||
+    safeValue.includes('/uploads/')
+  )
   const [preview, setPreview] = useState<string | null>(safeValue)
   const [imgError, setImgError] = useState(false)
 

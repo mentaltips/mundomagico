@@ -11,6 +11,9 @@ import { PageHeader, EmptyState, LoadingState, Modal } from '@/components/ui'
 import { useSession } from 'next-auth/react'
 import { getSafeUrl } from '@/lib/utils'
 
+const isBackendUrl = (u?: string) =>
+  !!u && (u.includes('api.mundomagicocajamar.com.br') || u.includes('/api/uploads/') || u.includes('/api/upload/') || u.includes('/uploads/'))
+
 type Photo = {
   id: string
   childId: string | null
@@ -183,6 +186,7 @@ export default function PhotosPage() {
                 alt={photo.caption ?? 'Foto'}
                 fill
                 sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, 50vw"
+                unoptimized={isBackendUrl(safeUrl)}
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
                 onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=Foto' }}
               />
@@ -222,7 +226,7 @@ export default function PhotosPage() {
               </div>
             ) : (
               <div className="relative rounded-2xl overflow-hidden aspect-video bg-accent group">
-                <NextImage src={getSafeUrl(form.url) || 'https://placehold.co/800x450?text=Foto'} alt="Preview" fill sizes="640px" className="object-cover" />
+                <NextImage src={getSafeUrl(form.url) || 'https://placehold.co/800x450?text=Foto'} alt="Preview" fill sizes="640px" unoptimized={isBackendUrl(getSafeUrl(form.url))} className="object-cover" />
                 <button type="button" onClick={() => setForm(p => ({ ...p, url: '' }))} className="absolute top-3 right-3 p-2 bg-rose-500 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
                   <Trash2 size={14} />
                 </button>
@@ -290,6 +294,7 @@ export default function PhotosPage() {
                   alt={preview.caption ?? 'Foto'}
                   width={1200}
                   height={800}
+                  unoptimized={isBackendUrl(getSafeUrl(preview.url))}
                   className="max-w-full max-h-[60vh] object-contain"
                   onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/1200x800?text=Erro' }}
                 />
