@@ -184,7 +184,22 @@ export async function getParentInvoices(schoolId: string, userId: string) {
 
   if (childIds.length === 0) return []
 
-  return parentRepository.findAllInvoicesByChildIds(schoolId, childIds)
+  const invoices = await parentRepository.findAllInvoicesByChildIds(schoolId, childIds)
+  const pendingMercadoPagoInvoices = invoices.filter((invoice) =>
+    invoice.status !== 'PAGO' && invoice.mpPaymentId,
+  )
+
+  await Promise.all(pendingMercadoPagoInvoices.map(async (invoice) => {
+    try {
+      await billingService.reconcileMercadoPagoPayment(schoolId, invoice.id)
+    } catch (error) {
+      console.warn(`[Parent] Falha ao reconciliar pagamento Mercado Pago invoice=${invoice.id}`, error)
+    }
+  }))
+
+  return pendingMercadoPagoInvoices.length > 0
+    ? parentRepository.findAllInvoicesByChildIds(schoolId, childIds)
+    : invoices
 }
 
 export async function getParentCalendar(schoolId: string, userId: string, query: ParentCalendarQuery) {

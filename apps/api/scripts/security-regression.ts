@@ -131,6 +131,7 @@ function runRouteInvariantChecks() {
   const webhooksRoute = readApiFile('src/modules/webhooks/webhooks.routes.ts')
   assert.equal(webhooksRoute.includes('include: { school: true }'), false, 'webhook route must not load full School secrets')
   assert.match(webhooksRoute, /router\.post\('\/mercadopago', webhooksController\.mercadoPago\)/)
+  assert.match(webhooksRoute, /router\.post\('\/mercado-pago', webhooksController\.mercadoPago\)/)
 
   const webhooksRepository = readApiFile('src/modules/webhooks/payment-webhooks.repository.ts')
   assert.equal(webhooksRepository.includes('include: { school: true }'), false, 'webhook repository must not load full School secrets')

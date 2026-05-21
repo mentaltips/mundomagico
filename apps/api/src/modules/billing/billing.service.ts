@@ -1,5 +1,6 @@
 import { Prisma, type Child, type Student } from '@mundo-magico/database'
 import { MercadoPagoConfig, Payment, Preference } from 'mercadopago'
+import { isSameMoneyValue } from '../../shared/security/payment-webhook-policy'
 import { decrypt } from '../../shared/utils/crypto'
 import { AppError } from '../../shared/errors/AppError'
 import type { GenerateMonthlyInput, PreviewMonthlyQuery } from './billing.schema'
@@ -224,6 +225,40 @@ export async function generatePixPayment(
     if (error instanceof AppError) throw error
     throw new AppError(getMercadoPagoErrorMessage(error), 400)
   }
+}
+
+export async function reconcileMercadoPagoPayment(schoolId: string, invoiceId: string) {
+  const invoice = await billingRepository.findInvoiceForPaymentLink(schoolId, invoiceId)
+  if (!invoice || invoice.status === 'PAGO' || !invoice.mpPaymentId) return invoice
+
+  const accessToken = getMercadoPagoAccessToken(invoice.school.integrationSecret?.mpAccessToken)
+  const client = new MercadoPagoConfig({ accessToken })
+  const payment = new Payment(client)
+  const mpData = await payment.get({ id: invoice.mpPaymentId })
+
+  if (mpData.status !== 'approved') {
+    await billingRepository.updateInvoiceCheckoutData(schoolId, invoice.id, {
+      mpPaymentStatus: mpData.status,
+    })
+    return invoice
+  }
+
+  const amount = mpData.transaction_amount || invoice.amount
+  if (!isSameMoneyValue(amount, invoice.amount)) {
+    throw new AppError('Valor aprovado no Mercado Pago diverge da fatura', 400)
+  }
+
+  await billingRepository.applyApprovedMercadoPagoPayment({
+    schoolId,
+    invoiceId: invoice.id,
+    paymentId: String(mpData.id || invoice.mpPaymentId),
+    paymentMethod: mpData.payment_method_id,
+    amount,
+    mpStatus: mpData.status,
+    raw: JSON.parse(JSON.stringify(mpData)),
+  })
+
+  return billingRepository.findInvoiceForPaymentLink(schoolId, invoiceId)
 }
 
 export async function generateMonthly(schoolId: string, input: GenerateMonthlyInput) {

@@ -4,6 +4,6 @@ import * as webhooksController from './webhooks.controller'
 const router = Router()
 
 router.post('/mercadopago', webhooksController.mercadoPago)
+router.post('/mercado-pago', webhooksController.mercadoPago)
 
 export default router
-

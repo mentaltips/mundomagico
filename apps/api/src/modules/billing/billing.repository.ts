@@ -71,7 +71,7 @@ export function findInvoiceForPaymentLink(schoolId: string, invoiceId: string) {
 export function updateInvoiceCheckoutData(
   schoolId: string,
   invoiceId: string,
-  data: { mpPreferenceId?: string; checkoutUrl?: string | null },
+  data: { mpPreferenceId?: string; checkoutUrl?: string | null; mpPaymentStatus?: string | null },
 ) {
   return prisma.invoice.updateMany({
     where: { id: invoiceId, schoolId },
@@ -127,6 +127,62 @@ export function savePixPaymentData(input: {
         mpPaymentId: input.paymentId,
         mpStatus: input.mpStatus,
         amount: input.amount as any,
+        webhookData: input.raw as any,
+      },
+    })
+  })
+}
+
+export function applyApprovedMercadoPagoPayment(input: {
+  schoolId: string
+  invoiceId: string
+  paymentId: string
+  paymentMethod?: string | null
+  amount: unknown
+  mpStatus?: string | null
+  raw: unknown
+}) {
+  const paidAt = new Date()
+
+  return prisma.$transaction(async (tx) => {
+    await tx.invoice.updateMany({
+      where: { id: input.invoiceId, schoolId: input.schoolId },
+      data: {
+        status: 'PAGO',
+        mpPaymentId: input.paymentId,
+        mpPaymentStatus: input.mpStatus,
+        paidAt,
+        paidAmount: input.amount as any,
+      },
+    })
+
+    return tx.payment.upsert({
+      where: {
+        gateway_gatewayPaymentId: {
+          gateway: 'MERCADO_PAGO',
+          gatewayPaymentId: input.paymentId,
+        },
+      },
+      update: {
+        schoolId: input.schoolId,
+        invoiceId: input.invoiceId,
+        method: input.paymentMethod?.toUpperCase() || 'PIX',
+        mpPaymentId: input.paymentId,
+        mpStatus: input.mpStatus,
+        amount: input.amount as any,
+        paidAt,
+        webhookData: input.raw as any,
+      },
+      create: {
+        schoolId: input.schoolId,
+        invoiceId: input.invoiceId,
+        method: input.paymentMethod?.toUpperCase() || 'PIX',
+        gateway: 'MERCADO_PAGO',
+        gatewayPaymentId: input.paymentId,
+        mpPaymentId: input.paymentId,
+        mpStatus: input.mpStatus,
+        amount: input.amount as any,
+        paidAt,
         webhookData: input.raw as any,
       },
     })
