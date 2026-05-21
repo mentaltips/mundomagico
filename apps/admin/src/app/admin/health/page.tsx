@@ -8,6 +8,7 @@ import {
   Thermometer, AlertTriangle, Loader2, X
 } from 'lucide-react'
 import { Modal, PageHeader, EmptyState, Badge, LoadingState, Avatar } from '@/components/ui'
+import { useSession } from 'next-auth/react'
 import toast from 'react-hot-toast'
 
 const FREQ_LABEL: Record<string, string> = {
@@ -16,6 +17,7 @@ const FREQ_LABEL: Record<string, string> = {
 }
 
 export default function HealthPage() {
+  const { data: session } = useSession()
   const [medications, setMedications] = useState<any[]>([])
   const [children, setChildren]       = useState<any[]>([])
   const [loading, setLoading]         = useState(true)
@@ -34,10 +36,17 @@ export default function HealthPage() {
     endDate: '', instructions: '',
   })
 
+  const authHeaders = (): Record<string, string> => {
+    const token = (session as any)?.accessToken
+    return token ? { 'Authorization': `Bearer ${token}` } : {}
+  }
+
   const fetchMedications = async () => {
     try {
       setLoading(true)
-      const res = await fetch('/api/health/medications?active=true')
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api$/, '').replace(/\/$/, '')
+      const url = apiUrl ? `${apiUrl}/api/health/medications?active=true` : '/api/health/medications?active=true'
+      const res = await fetch(url, { headers: authHeaders() })
       if (res.ok) {
         const data = await res.json()
         setMedications(Array.isArray(data) ? data : [])
@@ -59,7 +68,7 @@ export default function HealthPage() {
     } catch {}
   }
 
-  useEffect(() => { fetchMedications(); fetchChildren() }, [])
+  useEffect(() => { if (session !== undefined) { fetchMedications(); fetchChildren() } }, [session])
 
   const handleAdminister = async (e: React.FormEvent) => {
     e.preventDefault()
