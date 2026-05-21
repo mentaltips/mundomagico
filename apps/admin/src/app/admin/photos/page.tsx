@@ -99,8 +99,11 @@ export default function PhotosPage() {
     if (!confirm('Excluir esta foto?')) return
     try {
       const res = await fetch(`/api/photos/${id}`, { method: 'DELETE' })
-      if (res.ok) {
-        toast.success('Foto excluída')
+      if (res.ok || res.status === 404) {
+        queryClient.setQueriesData({ queryKey: ['photos'] }, (old: Photo[] | undefined) =>
+          Array.isArray(old) ? old.filter(photo => photo.id !== id) : old
+        )
+        toast.success(res.ok ? 'Foto excluída' : 'Foto já removida')
         setPreview(null)
         queryClient.invalidateQueries({ queryKey: ['photos'] })
       } else {
