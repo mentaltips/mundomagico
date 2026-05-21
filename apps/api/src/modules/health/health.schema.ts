@@ -24,15 +24,21 @@ const medicationBaseSchema = z.object({
   active: z.boolean().optional(),
 })
 
-export const createMedicationSchema = medicationBaseSchema.transform((data) => ({
-  ...data,
-  notes: data.instructions,
-}))
+export const createMedicationSchema = medicationBaseSchema.transform((data) => {
+  const { instructions, ...rest } = data
+  return {
+    ...rest,
+    ...(instructions !== undefined && instructions !== null && { notes: instructions }),
+  }
+})
 
-export const updateMedicationSchema = medicationBaseSchema.partial().transform((data) => ({
-  ...data,
-  ...(data.instructions !== undefined && { notes: data.instructions }),
-}))
+export const updateMedicationSchema = medicationBaseSchema.partial().transform((data) => {
+  const { instructions, ...rest } = data
+  return {
+    ...rest,
+    ...(instructions !== undefined && { notes: instructions }),
+  }
+})
 
 export const administerMedicationSchema = z.object({
   administeredAt: z.string().optional(),

@@ -252,8 +252,8 @@ export default function HealthPage() {
                 <p className="text-xs font-bold text-muted-foreground flex items-center gap-1">
                   <Thermometer size={11} className="text-primary" /> {med.dosage}
                 </p>
-                {med.instructions && (
-                  <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2">{med.instructions}</p>
+                {(med.notes || med.instructions) && (
+                  <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2">{med.notes || med.instructions}</p>
                 )}
               </div>
 
