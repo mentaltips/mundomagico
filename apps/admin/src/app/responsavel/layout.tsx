@@ -54,9 +54,11 @@ function timeAgo(date: string | Date) {
 
 function NotificationBell() {
   const [open, setOpen] = useState(false)
+  const [readIds, setReadIds] = useState<string[]>([])
   const ref = useRef<HTMLDivElement>(null)
   const router = useRouter()
-  const { status } = useSession()
+  const { data: session, status } = useSession()
+  const storageKey = `guardian-notifications-read:${session?.user?.schoolId || 'school'}:${session?.user?.id || session?.user?.email || 'user'}`
 
   const { data, refetch } = useQuery({
     queryKey: ['guardian-notifications'],
@@ -71,8 +73,30 @@ function NotificationBell() {
     retry: false,
   })
 
-  const notifications: any[] = data?.notifications ?? []
-  const unread: number = data?.unreadCount ?? 0
+  const allNotifications: any[] = data?.notifications ?? []
+  const notifications = allNotifications.filter(n => !readIds.includes(n.id))
+  const unread = notifications.length
+
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    try {
+      const stored = window.localStorage.getItem(storageKey)
+      setReadIds(stored ? JSON.parse(stored) : [])
+    } catch {
+      setReadIds([])
+    }
+  }, [status, storageKey])
+
+  const saveReadIds = (ids: string[]) => {
+    const unique = Array.from(new Set(ids)).slice(-200)
+    setReadIds(unique)
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(unique))
+    } catch {}
+  }
+
+  const markAsRead = (id: string) => saveReadIds([...readIds, id])
+  const markAllAsRead = () => saveReadIds([...readIds, ...allNotifications.map(n => n.id)])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -134,7 +158,7 @@ function NotificationBell() {
                   return (
                     <button
                       key={n.id}
-                      onClick={() => { setOpen(false); if (n.href) router.push(n.href) }}
+                      onClick={() => { markAsRead(n.id); setOpen(false); if (n.href) router.push(n.href) }}
                       className={`w-full flex items-start gap-3 px-5 py-4 text-left hover:bg-accent transition-colors ${isUrgent ? 'bg-rose-500/5' : ''}`}
                     >
                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${color}`}>
@@ -153,11 +177,20 @@ function NotificationBell() {
               )}
             </div>
 
-            {notifications.length > 0 && (
-              <div className="border-t border-gray-50 px-5 py-3">
+            {allNotifications.length > 0 && (
+              <div className="flex items-center justify-between gap-3 border-t border-gray-50 px-5 py-3">
                 <Link href="/responsavel/messages" onClick={() => setOpen(false)} className="text-xs font-black text-sky-600 hover:text-sky-700">
                   Ver todos os comunicados →
                 </Link>
+                {unread > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllAsRead}
+                    className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                  >
+                    Marcar lidas
+                  </button>
+                )}
               </div>
             )}
           </motion.div>

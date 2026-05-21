@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense, useCallback } from 'react'
+import { useState, useEffect, Suspense, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -158,6 +158,7 @@ function FinancePageContent() {
   const [saving, setSaving]     = useState(false)
   const [filterStatus, setFilterStatus] = useState(searchParams.get('status') ?? '')
   const [summaryPeriod, setSummaryPeriod] = useState<SummaryPeriod>('month')
+  const [childSearch, setChildSearch] = useState('')
   const [showModal, setShowModal]       = useState(false)
   const [showBatchModal, setShowBatchModal] = useState(false)
 
@@ -194,6 +195,25 @@ function FinancePageContent() {
   useEffect(() => { fetchInvoices() }, [fetchInvoices])
   useEffect(() => { fetchChildren() }, [])
 
+  const selectedChild = useMemo(
+    () => children.find(c => c.id === form.childId),
+    [children, form.childId],
+  )
+
+  const filteredChildren = useMemo(() => {
+    const query = childSearch.trim().toLowerCase()
+    const list = query
+      ? children.filter(c => String(c.fullName || '').toLowerCase().includes(query))
+      : children
+    return list.slice(0, 30)
+  }, [children, childSearch])
+
+  const selectChild = (child: any) => {
+    const firstGuardianId = child?.guardians?.[0]?.guardianId || ''
+    setForm(p => ({ ...p, childId: child.id, guardianId: firstGuardianId }))
+    setChildSearch(child.fullName || '')
+  }
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.childId || !form.description || !form.amount) {
@@ -226,6 +246,7 @@ function FinancePageContent() {
           invoiceKind: 'MONTHLY',
           boletoUrl: '', boletoBarcode: '' 
         })
+        setChildSearch('')
         fetchInvoices()
       } else toast.error(getErrorMessage(data, 'Erro ao criar fatura'))
     } catch { toast.error('Erro ao criar fatura') }
@@ -576,19 +597,46 @@ function FinancePageContent() {
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
             <label className="label">Aluno *</label>
-            <select 
-              value={form.childId} 
-              onChange={e => {
-                const childId = e.target.value
-                const child = children.find(c => c.id === childId)
-                const firstGuardianId = child?.guardians?.[0]?.guardianId || ''
-                setForm(p => ({ ...p, childId, guardianId: firstGuardianId }))
-              }} 
-              className="select"
-            >
-              <option value="">Selecione o aluno...</option>
-              {children.map(c => <option key={c.id} value={c.id}>{c.fullName}</option>)}
-            </select>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="search"
+                value={childSearch}
+                onChange={e => {
+                  const value = e.target.value
+                  setChildSearch(value)
+                  if (selectedChild && value !== selectedChild.fullName) {
+                    setForm(p => ({ ...p, childId: '', guardianId: '' }))
+                  }
+                }}
+                placeholder="Buscar aluno pelo nome..."
+                className="input pl-11"
+              />
+            </div>
+            <div className="mt-2 max-h-56 overflow-y-auto rounded-2xl border border-border bg-card divide-y divide-border custom-scrollbar">
+              {filteredChildren.length === 0 ? (
+                <div className="px-4 py-5 text-center text-xs font-bold text-muted-foreground">
+                  Nenhum aluno encontrado.
+                </div>
+              ) : filteredChildren.map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => selectChild(c)}
+                  className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent ${
+                    form.childId === c.id ? 'bg-primary/10 text-primary' : 'text-foreground'
+                  }`}
+                >
+                  <Avatar name={c.fullName} photoUrl={c.photoUrl} size="sm" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black">{c.fullName}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      {c.guardians?.length ? `${c.guardians.length} responsavel(is)` : 'Sem responsavel vinculado'}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
           {form.childId && (
             <div>
@@ -599,7 +647,7 @@ function FinancePageContent() {
                 className="select"
               >
                 <option value="">Selecione o responsável...</option>
-                {children.find(c => c.id === form.childId)?.guardians?.map((g: any) => (
+                {selectedChild?.guardians?.map((g: any) => (
                   <option key={g.guardianId} value={g.guardianId}>{g.guardian.fullName}</option>
                 ))}
               </select>

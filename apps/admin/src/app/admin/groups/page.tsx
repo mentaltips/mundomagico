@@ -177,7 +177,7 @@ export default function GroupsPage() {
   }
 
   const filtered = groups.filter(g => (g.name || '').toLowerCase().includes(search.toLowerCase()))
-  const totalStudents = groups.reduce((acc, g) => acc + (g._count?.children || 0), 0)
+  const totalStudents = groups.reduce((acc, g) => acc + (g._count?.children || 0) + (g._count?.students || 0), 0)
   const totalCapacity = groups.reduce((acc, g) => acc + (g.capacity || 0), 0)
   const occupancyRate = totalCapacity > 0 ? Math.round((totalStudents / totalCapacity) * 100) : 0
 
@@ -212,7 +212,7 @@ export default function GroupsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((group, i) => {
-            const count = group._count?.children || 0
+            const count = (group._count?.children || 0) + (group._count?.students || 0)
             const cap = group.capacity || 20
             const percent = Math.min(100, Math.round((count / cap) * 100))
             const previews: any[] = group.children || []

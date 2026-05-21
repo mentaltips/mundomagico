@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Package, AlertTriangle, Plus, X, Check, Loader2, Minus, RefreshCw, Box } from 'lucide-react'
+import { Package, AlertTriangle, Plus, X, Check, Loader2, Minus, RefreshCw, Box, Trash2 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ITEM_TYPE_LABELS, ITEM_TYPE_EMOJIS, ITEM_TYPES } from '@mundo-magico/types'
 import { PageHeader, EmptyState, Modal, Alert, LoadingState, Avatar } from '@/components/ui'
@@ -135,6 +135,43 @@ export default function ChildItemsPage() {
     finally { setSaving(false) }
   }
 
+  const handleDeleteItem = async (item: ChildItem) => {
+    const label = ITEM_TYPE_LABELS[item.itemType as keyof typeof ITEM_TYPE_LABELS] ?? item.itemType
+    if (!confirm(`Deseja excluir o item "${label}" de ${item.child.fullName}? Ele sairá do estoque atual, mas o histórico será preservado.`)) return
+
+    try {
+      const res = await fetch(`/api/child-items/${item.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Item removido do estoque.')
+        queryClient.invalidateQueries({ queryKey: ['child-items'] })
+      } else {
+        const err = await res.json().catch(() => ({}))
+        toast.error(getErrorMessage(err, 'Erro ao excluir item'))
+      }
+    } catch {
+      toast.error('Erro de conexão com o servidor')
+    }
+  }
+
+  const handleRemoveChildFromStock = async (child: ChildItem['child'], childItems: ChildItem[]) => {
+    if (!confirm(`Deseja remover ${child.fullName} da tela de itens? Todos os itens atuais dessa criança serão removidos do estoque, mas a criança continuará cadastrada.`)) return
+
+    try {
+      const results = await Promise.all(
+        childItems.map(item => fetch(`/api/child-items/${item.id}`, { method: 'DELETE' })),
+      )
+      const failed = results.filter(res => !res.ok).length
+      if (failed > 0) {
+        toast.error(`${failed} item(ns) não foram removidos.`)
+      } else {
+        toast.success(`${child.fullName} removido(a) dos itens.`)
+      }
+      queryClient.invalidateQueries({ queryKey: ['child-items'] })
+    } catch {
+      toast.error('Erro de conexão com o servidor')
+    }
+  }
+
   return (
     <div className="page animate-in pb-24">
       <PageHeader
@@ -207,6 +244,13 @@ export default function ChildItemsPage() {
                   {hasLow && (
                     <span className="shrink-0 px-2 py-0.5 bg-amber-500/15 text-amber-500 text-[10px] font-black rounded-full uppercase tracking-widest">Estoque baixo</span>
                   )}
+                  <button
+                    onClick={() => handleRemoveChildFromStock(child, childItems)}
+                    className="shrink-0 p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"
+                    title="Remover criança dos itens"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
 
                 {/* Items list */}
@@ -254,6 +298,13 @@ export default function ChildItemsPage() {
                               className="px-2.5 py-1 bg-primary text-primary-foreground rounded-lg text-[10px] font-black flex items-center gap-1 hover:bg-primary/90 transition-colors"
                             >
                               <RefreshCw size={10} /> Repor
+                            </button>
+                            <button
+                              onClick={() => handleDeleteItem(item)}
+                              className="px-2.5 py-1 bg-rose-500/10 text-rose-500 rounded-lg text-[10px] font-black flex items-center gap-1 hover:bg-rose-500 hover:text-white transition-colors"
+                              title="Excluir item do estoque"
+                            >
+                              <Trash2 size={10} /> Excluir
                             </button>
                           </div>
                         </div>

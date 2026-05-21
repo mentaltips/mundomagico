@@ -5,6 +5,10 @@ export function findMany(schoolId: string, childId?: string) {
     where: {
       schoolId,
       active: true,
+      child: {
+        archivedAt: null,
+        status: { in: ['ATIVO', 'ADAPTACAO', 'PENDENTE_PAGAMENTO'] },
+      },
       ...(childId && { childId }),
     } as any,
     include: {
@@ -50,7 +54,12 @@ export function deleteById(id: string, schoolId: string) {
 
 export function verifyChild(childId: string, schoolId: string) {
   return prisma.child.findFirst({
-    where: { id: childId, schoolId },
+    where: {
+      id: childId,
+      schoolId,
+      archivedAt: null,
+      status: { in: ['ATIVO', 'ADAPTACAO', 'PENDENTE_PAGAMENTO'] },
+    },
   })
 }
 
@@ -79,4 +88,3 @@ export function replenishStock(id: string, schoolId: string, quantity: number, n
     } as any,
   })
 }
-

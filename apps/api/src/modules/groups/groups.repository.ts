@@ -2,8 +2,27 @@ import { Prisma, prisma } from '@mundo-magico/database'
 import type { ListGroupsQuery } from './groups.schema'
 
 const groupListInclude = {
-  _count: { select: { children: true } },
+  _count: {
+    select: {
+      children: {
+        where: {
+          archivedAt: null,
+          status: { in: ['ATIVO', 'ADAPTACAO', 'PENDENTE_PAGAMENTO'] },
+        },
+      },
+      students: {
+        where: {
+          archivedAt: null,
+          status: { in: ['ATIVO', 'ADAPTACAO', 'PENDENTE_PAGAMENTO'] },
+        },
+      },
+    },
+  },
   children: {
+    where: {
+      archivedAt: null,
+      status: { in: ['ATIVO', 'ADAPTACAO', 'PENDENTE_PAGAMENTO'] },
+    },
     take: 3,
     select: { id: true, fullName: true, photoUrl: true },
   },
@@ -28,7 +47,23 @@ export function findGroupById(schoolId: string, id: string) {
   return prisma.group.findFirst({
     where: { id, schoolId },
     include: {
-      _count: { select: { children: true, students: true, staffAssignments: true } },
+      _count: {
+        select: {
+          children: {
+            where: {
+              archivedAt: null,
+              status: { in: ['ATIVO', 'ADAPTACAO', 'PENDENTE_PAGAMENTO'] },
+            },
+          },
+          students: {
+            where: {
+              archivedAt: null,
+              status: { in: ['ATIVO', 'ADAPTACAO', 'PENDENTE_PAGAMENTO'] },
+            },
+          },
+          staffAssignments: true,
+        },
+      },
     },
   })
 }

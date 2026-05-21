@@ -301,9 +301,11 @@ export function AdminBottomNav() {
 
 function NotificationDropdown() {
   const [open, setOpen] = useState(false)
+  const [readIds, setReadIds] = useState<string[]>([])
   const ref = useRef<HTMLDivElement>(null)
   const router = useRouter()
-  const { status } = useSession()
+  const { data: session, status } = useSession()
+  const storageKey = `admin-notifications-read:${session?.user?.schoolId || 'school'}:${session?.user?.id || session?.user?.email || 'user'}`
 
   const { data, refetch } = useQuery({
     queryKey: ['admin-notifications'],
@@ -318,8 +320,30 @@ function NotificationDropdown() {
     retry: false,
   })
 
-  const notifications: any[] = data?.notifications ?? []
-  const unread: number = data?.unreadCount ?? 0
+  const allNotifications: any[] = data?.notifications ?? []
+  const notifications = allNotifications.filter(n => !readIds.includes(n.id))
+  const unread = notifications.length
+
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    try {
+      const stored = window.localStorage.getItem(storageKey)
+      setReadIds(stored ? JSON.parse(stored) : [])
+    } catch {
+      setReadIds([])
+    }
+  }, [status, storageKey])
+
+  const saveReadIds = (ids: string[]) => {
+    const unique = Array.from(new Set(ids)).slice(-200)
+    setReadIds(unique)
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(unique))
+    } catch {}
+  }
+
+  const markAsRead = (id: string) => saveReadIds([...readIds, id])
+  const markAllAsRead = () => saveReadIds([...readIds, ...allNotifications.map(n => n.id)])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -394,7 +418,7 @@ function NotificationDropdown() {
                   return (
                     <button
                       key={n.id}
-                      onClick={() => { setOpen(false); if (n.href) router.push(n.href) }}
+                      onClick={() => { markAsRead(n.id); setOpen(false); if (n.href) router.push(n.href) }}
                       className={`w-full flex items-start gap-4 px-6 py-5 text-left hover:bg-accent transition-colors ${isUrgent ? 'bg-rose-500/5' : ''}`}
                     >
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${color}`}>
@@ -419,8 +443,8 @@ function NotificationDropdown() {
               )}
             </div>
 
-            {notifications.length > 0 && (
-              <div className="border-t border-border px-6 py-4 bg-accent/20">
+            {allNotifications.length > 0 && (
+              <div className="flex items-center justify-between gap-3 border-t border-border px-6 py-4 bg-accent/20">
                 <Link
                   href="/admin/announcements"
                   onClick={() => setOpen(false)}
@@ -428,6 +452,15 @@ function NotificationDropdown() {
                 >
                   Ver todos os comunicados <ChevronRight size={12} />
                 </Link>
+                {unread > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllAsRead}
+                    className="text-[10px] font-black text-muted-foreground hover:text-foreground uppercase tracking-widest"
+                  >
+                    Marcar lidas
+                  </button>
+                )}
               </div>
             )}
           </motion.div>

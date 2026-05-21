@@ -16,9 +16,14 @@ router.get('/', async (req, res) => {
     // Normalize date to midnight UTC to ensure consistency with POST
     const reportDate = normalizeUtcDate(date as string | undefined)
 
-    // Fetch all children and include their daily reports for the target UTC date
+    // Only operational children should appear in the daily routine board.
+    // Archived/cancelled records are historical and stay out of the daily workflow.
     const children = await prisma.child.findMany({
-      where: { schoolId },
+      where: {
+        schoolId,
+        archivedAt: null,
+        status: { in: ['ATIVO', 'ADAPTACAO', 'PENDENTE_PAGAMENTO'] },
+      },
       include: {
         group: true,
         guardians: {
@@ -76,7 +81,12 @@ router.post('/', async (req, res) => {
     const dateKey = toDateKey(reportDate)
 
     const child = await prisma.child.findFirst({
-      where: { id: childId, schoolId },
+      where: {
+        id: childId,
+        schoolId,
+        archivedAt: null,
+        status: { in: ['ATIVO', 'ADAPTACAO', 'PENDENTE_PAGAMENTO'] },
+      },
       select: { id: true }
     })
 
