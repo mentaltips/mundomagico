@@ -1,4 +1,4 @@
-import { prisma } from '@mundo-magico/database'
+import { Prisma, prisma } from '@mundo-magico/database'
 import { schoolPublicSelect } from '../../shared/security/school-secrets'
 import type { CreateInvoiceInput, ListInvoicesQuery, UpdateInvoiceInput } from './finance.schema'
 
@@ -95,6 +95,19 @@ export function findStudentById(schoolId: string, studentId: string) {
 
 export function findGuardianById(schoolId: string, guardianId: string) {
   return prisma.guardian.findFirst({ where: { id: guardianId, schoolId } })
+}
+
+export function isUniqueInvoiceError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === 'P2002' &&
+    Array.isArray(error.meta?.target) &&
+    (
+      error.meta.target.includes('schoolId') &&
+      (error.meta.target.includes('childId') || error.meta.target.includes('studentId')) &&
+      error.meta.target.includes('referenceMonth')
+    )
+  )
 }
 
 export function payInvoiceManually(

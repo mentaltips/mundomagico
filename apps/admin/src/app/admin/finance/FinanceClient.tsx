@@ -12,6 +12,7 @@ import { format, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { Modal, EmptyState, Badge, Skeleton, Avatar, PageHeader, StatCard, Alert } from '@/components/ui'
+import { getErrorMessage } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Invoice = {
@@ -47,6 +48,20 @@ const FILTERS = [
 const fmtBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
+const QUICK_CHARGES = [
+  { label: 'Diária Meio Período', amount: '50', kind: 'EXTRA', color: 'orange' },
+  { label: 'Diária Integral', amount: '70', kind: 'EXTRA', color: 'sky' },
+  { label: 'Pacote Mensal Integral', amount: '850', kind: 'MONTHLY', color: 'violet' },
+  { label: 'Pacote Mensal Meio Período', amount: '550', kind: 'MONTHLY', color: 'green' },
+] as const
+
+const QUICK_CHARGE_STYLES = {
+  orange: 'border-orange-200 bg-orange-50 text-orange-600',
+  sky: 'border-sky-200 bg-sky-50 text-sky-600',
+  violet: 'border-violet-200 bg-violet-50 text-violet-600',
+  green: 'border-green-200 bg-green-50 text-green-600',
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 // ── Main Page Wrapper ─────────────────────────────────────────────────────────
 export default function FinanceClient() {
@@ -71,6 +86,7 @@ function FinancePageContent() {
     childId: '', guardianId: '', description: '',
     amount: '', dueDate: format(addDays(new Date(), 10), 'yyyy-MM-dd'),
     referenceMonth: format(new Date(), 'yyyy-MM'),
+    invoiceKind: 'MONTHLY',
     boletoUrl: '', boletoBarcode: '',
   })
 
@@ -112,10 +128,13 @@ function FinancePageContent() {
         body: JSON.stringify({ 
           ...form, 
           amount: parseFloat(form.amount),
+          referenceMonth: form.invoiceKind === 'EXTRA' ? null : form.referenceMonth,
+          invoiceKind: undefined,
           ...(form.boletoUrl && { boletoUrl: form.boletoUrl }),
           ...(form.boletoBarcode && { boletoBarcode: form.boletoBarcode }),
         }),
       })
+      const data = await res.json().catch(() => null)
       if (res.ok) {
         toast.success('Fatura criada!')
         setShowModal(false)
@@ -123,10 +142,11 @@ function FinancePageContent() {
           childId: '', guardianId: '', description: '', amount: '', 
           dueDate: format(addDays(new Date(), 10), 'yyyy-MM-dd'),
           referenceMonth: format(new Date(), 'yyyy-MM'),
+          invoiceKind: 'MONTHLY',
           boletoUrl: '', boletoBarcode: '' 
         })
         fetchInvoices()
-      } else toast.error('Erro ao criar fatura')
+      } else toast.error(getErrorMessage(data, 'Erro ao criar fatura'))
     } catch { toast.error('Erro ao criar fatura') }
     finally { setSaving(false) }
   }
@@ -468,8 +488,68 @@ function FinancePageContent() {
             </div>
           )}
           <div>
+            <label className="label">Tipo de cobranca</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setForm(p => ({ ...p, invoiceKind: 'MONTHLY' }))}
+                className={`rounded-3xl border-2 p-4 text-left transition-all ${
+                  form.invoiceKind === 'MONTHLY'
+                    ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
+                    : 'border-border bg-card hover:border-primary/30'
+                }`}
+              >
+                <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <CreditCard size={18} />
+                </span>
+                <span className="block text-sm font-black text-foreground">Mensalidade</span>
+                <span className="mt-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Uma por mes
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm(p => ({ ...p, invoiceKind: 'EXTRA' }))}
+                className={`rounded-3xl border-2 p-4 text-left transition-all ${
+                  form.invoiceKind === 'EXTRA'
+                    ? 'border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/10'
+                    : 'border-border bg-card hover:border-amber-500/30'
+                }`}
+              >
+                <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
+                  <Plus size={18} />
+                </span>
+                <span className="block text-sm font-black text-foreground">Encargo avulso</span>
+                <span className="mt-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Evento, diaria, item
+                </span>
+              </button>
+            </div>
+          </div>
+          <div>
             <label className="label">Descrição *</label>
-            <input type="text" placeholder="Ex: Mensalidade Junho/2025"
+            <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {QUICK_CHARGES.map(charge => (
+                <button
+                  key={charge.label}
+                  type="button"
+                  onClick={() => setForm(p => ({
+                    ...p,
+                    invoiceKind: charge.kind,
+                    description: charge.label,
+                    amount: charge.amount,
+                  }))}
+                  className={`rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md ${QUICK_CHARGE_STYLES[charge.color]}`}
+                >
+                  <span className="block text-[10px] font-black uppercase tracking-widest opacity-80">
+                    {charge.kind === 'EXTRA' ? 'Avulso' : 'Mensal'}
+                  </span>
+                  <span className="mt-1 block text-sm font-black text-foreground">{charge.label}</span>
+                  <span className="mt-2 block text-lg font-black">{fmtBRL(Number(charge.amount))}</span>
+                </button>
+              ))}
+            </div>
+            <input type="text" placeholder={form.invoiceKind === 'EXTRA' ? 'Ex: Uniforme, material, passeio' : 'Ex: Mensalidade Junho/2025'}
               value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
               className="input" />
           </div>
@@ -486,11 +566,17 @@ function FinancePageContent() {
                 onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} className="input" />
             </div>
           </div>
-          <div>
-            <label className="label">Mês de Referência</label>
-            <input type="month" value={form.referenceMonth}
-              onChange={e => setForm(p => ({ ...p, referenceMonth: e.target.value }))} className="input" />
-          </div>
+          {form.invoiceKind === 'MONTHLY' ? (
+            <div>
+              <label className="label">Mes de Referencia</label>
+              <input type="month" value={form.referenceMonth}
+                onChange={e => setForm(p => ({ ...p, referenceMonth: e.target.value }))} className="input" />
+            </div>
+          ) : (
+            <Alert variant="info">
+              Encargos avulsos nao usam mes de referencia e podem existir junto da mensalidade do aluno.
+            </Alert>
+          )}
 
           <div className="pt-4 border-t space-y-4">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Boleto Externo (Opcional)</p>

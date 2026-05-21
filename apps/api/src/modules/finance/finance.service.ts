@@ -55,7 +55,18 @@ export async function createInvoices(schoolId: string, input: CreateInvoiceInput
   }
 
   await validateChildStudentGuardianTenant(schoolId, input.childId, input.studentId, input.guardianId)
-  return financeRepository.createInvoice(schoolId, input)
+  try {
+    return await financeRepository.createInvoice(schoolId, input)
+  } catch (error) {
+    if (financeRepository.isUniqueInvoiceError(error)) {
+      throw new AppError(
+        'Ja existe uma mensalidade para este aluno neste mes. Para encargos ou cobranças extras, crie como cobranca avulsa sem mes de referencia.',
+        409,
+        ERROR_CODES.VALIDATION_ERROR,
+      )
+    }
+    throw error
+  }
 }
 
 export async function deleteInvoice(schoolId: string, id: string) {
