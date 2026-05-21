@@ -1,5 +1,6 @@
 import { AppError } from '../../shared/errors/AppError'
 import { ERROR_CODES } from '../../shared/errors/error-codes'
+import type { ParentCalendarQuery } from './parent.schema'
 import * as parentRepository from './parent.repository'
 import * as billingService from '../billing/billing.service'
 
@@ -186,11 +187,46 @@ export async function getParentInvoices(schoolId: string, userId: string) {
   return parentRepository.findAllInvoicesByChildIds(schoolId, childIds)
 }
 
+export async function getParentCalendar(schoolId: string, userId: string, query: ParentCalendarQuery) {
+  const guardian = await parentRepository.findGuardianByUserId(userId, schoolId)
+  if (!guardian) {
+    throw new AppError('Perfil de responsavel nao encontrado', 404, ERROR_CODES.NOT_FOUND)
+  }
+
+  const childGuardians = await parentRepository.findChildrenByGuardianId(guardian.id, schoolId)
+  const groupIds = Array.from(new Set(childGuardians.map((cg) => cg.child.groupId).filter(Boolean))) as string[]
+
+  let startDate: Date | undefined
+  let endDate: Date | undefined
+  if (query.month) {
+    const [year, month] = query.month.split('-').map(Number)
+    startDate = new Date(year, month - 1, 1)
+    endDate = new Date(year, month, 0, 23, 59, 59, 999)
+  }
+
+  return parentRepository.findCalendarEventsForParent(schoolId, groupIds, startDate, endDate)
+}
+
+export async function getParentPhotos(schoolId: string, userId: string) {
+  const guardian = await parentRepository.findGuardianByUserId(userId, schoolId)
+  if (!guardian) {
+    throw new AppError('Perfil de responsavel nao encontrado', 404, ERROR_CODES.NOT_FOUND)
+  }
+
+  const childGuardians = await parentRepository.findChildrenByGuardianId(guardian.id, schoolId)
+  const childIds = childGuardians.map((cg) => cg.childId)
+  const groupIds = Array.from(new Set(childGuardians.map((cg) => cg.child.groupId).filter(Boolean))) as string[]
+
+  if (childIds.length === 0 && groupIds.length === 0) return []
+
+  return parentRepository.findSharedPhotosForParent(schoolId, childIds, groupIds)
+}
+
 export async function payParentInvoice(
   schoolId: string,
   userId: string,
   invoiceId: string,
-  method: string,
+  method: 'BOLETO' | 'PIX' | 'CARTAO',
   payerCpf?: string,
 ) {
   const guardian = await parentRepository.findGuardianByUserId(userId, schoolId)
@@ -210,13 +246,20 @@ export async function payParentInvoice(
     throw new AppError('Esta fatura já foi paga', 400, ERROR_CODES.VALIDATION_ERROR)
   }
 
-  // Delega para o billing service que já tem toda a lógica do Mercado Pago
-  const paymentLink = await billingService.generatePaymentLink(schoolId, invoiceId)
+  // PIX precisa retornar QR Code/copia-e-cola; boleto e cartao usam Checkout Pro.
+  if (method === 'PIX') {
+    return billingService.generatePixPayment(schoolId, invoiceId, {
+      cpf: payerCpf,
+      email: guardian.email,
+      name: guardian.fullName,
+    })
+  }
+
+  const paymentLink = await billingService.generatePaymentLink(schoolId, invoiceId, method)
 
   return {
-    method: 'CARTAO',
+    method,
     checkoutUrl: paymentLink.initPoint,
     sandboxUrl: paymentLink.sandboxInitPoint,
   }
 }
-

@@ -77,6 +77,48 @@ export function findAllInvoicesByChildIds(schoolId: string, childIds: string[]) 
   })
 }
 
+export function findCalendarEventsForParent(
+  schoolId: string,
+  groupIds: string[],
+  startDate?: Date,
+  endDate?: Date,
+) {
+  return prisma.calendarEvent.findMany({
+    where: {
+      schoolId,
+      OR: [
+        { groupId: null },
+        ...(groupIds.length > 0 ? [{ groupId: { in: groupIds } }] : []),
+      ],
+      ...(startDate && endDate && {
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      }),
+    },
+    orderBy: { date: 'asc' },
+  })
+}
+
+export function findSharedPhotosForParent(schoolId: string, childIds: string[], groupIds: string[]) {
+  return prisma.childPhoto.findMany({
+    where: {
+      schoolId,
+      sharedWithParents: true,
+      isPrivate: false,
+      OR: [
+        ...(childIds.length > 0 ? [{ childId: { in: childIds } }] : []),
+        ...(groupIds.length > 0 ? [{ groupId: { in: groupIds } }] : []),
+      ],
+    },
+    include: {
+      child: { select: { id: true, fullName: true } },
+    },
+    orderBy: { date: 'desc' },
+  })
+}
+
 export function findInvoiceByIdForGuardian(schoolId: string, invoiceId: string, childIds: string[]) {
   return prisma.invoice.findFirst({
     where: {

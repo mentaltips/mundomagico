@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { getFeedSchema } from './parent.schema'
+import { getFeedSchema, parentCalendarQuerySchema, payInvoiceSchema } from './parent.schema'
 import * as parentService from './parent.service'
 import { AppError } from '../../shared/errors/AppError'
 import { ERROR_CODES } from '../../shared/errors/error-codes'
@@ -60,12 +60,45 @@ export async function listMyInvoices(req: Request, res: Response, next: NextFunc
   }
 }
 
+export async function listMyCalendar(req: Request, res: Response, next: NextFunction) {
+  try {
+    const schoolId = req.user?.schoolId
+    const userId = req.user?.sub
+
+    if (!schoolId || !userId) {
+      throw new AppError('Missing user or school context', 400, ERROR_CODES.VALIDATION_ERROR)
+    }
+
+    const query = parentCalendarQuerySchema.parse(req.query)
+    const data = await parentService.getParentCalendar(schoolId, userId, query)
+    return res.json(data)
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function listMyPhotos(req: Request, res: Response, next: NextFunction) {
+  try {
+    const schoolId = req.user?.schoolId
+    const userId = req.user?.sub
+
+    if (!schoolId || !userId) {
+      throw new AppError('Missing user or school context', 400, ERROR_CODES.VALIDATION_ERROR)
+    }
+
+    const data = await parentService.getParentPhotos(schoolId, userId)
+    return res.json(data)
+  } catch (error) {
+    next(error)
+  }
+}
+
 export async function payMyInvoice(req: Request, res: Response, next: NextFunction) {
   try {
     const schoolId = req.user?.schoolId
     const userId = req.user?.sub
     const invoiceId = req.params.id
-    const { method, payerCpf } = req.body
+    const { method, payerCpf } = payInvoiceSchema.parse(req.body)
 
     if (!schoolId || !userId) {
       throw new AppError('Missing user or school context', 400, ERROR_CODES.VALIDATION_ERROR)
@@ -77,4 +110,3 @@ export async function payMyInvoice(req: Request, res: Response, next: NextFuncti
     next(error)
   }
 }
-

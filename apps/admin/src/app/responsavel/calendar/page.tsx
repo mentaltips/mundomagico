@@ -35,7 +35,12 @@ export default function GuardianCalendarPage() {
 
   const { data: events = [], isLoading } = useQuery<CalendarEvent[]>({
     queryKey: ['guardian-calendar', month],
-    queryFn: () => fetch(`/api/calendar?month=${month}`).then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/responsavel/calendar?month=${month}`)
+      if (!res.ok) return []
+      const data = await res.json()
+      return Array.isArray(data) ? data : []
+    },
   })
 
   const days = eachDayOfInterval({ start: startOfMonth(current), end: endOfMonth(current) })

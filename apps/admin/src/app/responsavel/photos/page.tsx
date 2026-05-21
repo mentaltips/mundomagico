@@ -21,7 +21,12 @@ export default function GuardianPhotosPage() {
 
   const { data: photos = [], isLoading } = useQuery<Photo[]>({
     queryKey: ['guardian-photos'],
-    queryFn: () => fetch('/api/photos?sharedWithParents=true').then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch('/api/responsavel/photos')
+      if (!res.ok) return []
+      const data = await res.json()
+      return Array.isArray(data) ? data : []
+    },
   })
 
   return (

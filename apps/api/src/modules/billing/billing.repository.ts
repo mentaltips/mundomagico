@@ -67,3 +67,68 @@ export function findInvoiceForPaymentLink(schoolId: string, invoiceId: string) {
     },
   })
 }
+
+export function updateInvoiceCheckoutData(
+  schoolId: string,
+  invoiceId: string,
+  data: { mpPreferenceId?: string; checkoutUrl?: string | null },
+) {
+  return prisma.invoice.updateMany({
+    where: { id: invoiceId, schoolId },
+    data,
+  })
+}
+
+export function savePixPaymentData(input: {
+  schoolId: string
+  invoiceId: string
+  paymentId: string
+  amount: unknown
+  mpStatus?: string | null
+  qrCodeBase64: string
+  copyPaste: string
+  expiresAt?: Date
+  raw: unknown
+}) {
+  return prisma.$transaction(async (tx) => {
+    await tx.invoice.updateMany({
+      where: { id: input.invoiceId, schoolId: input.schoolId },
+      data: {
+        mpPaymentId: input.paymentId,
+        mpPaymentStatus: input.mpStatus,
+        pixQrCode: input.qrCodeBase64,
+        pixCopyPaste: input.copyPaste,
+        pixExpiry: input.expiresAt,
+      },
+    })
+
+    return tx.payment.upsert({
+      where: {
+        gateway_gatewayPaymentId: {
+          gateway: 'MERCADO_PAGO',
+          gatewayPaymentId: input.paymentId,
+        },
+      },
+      update: {
+        schoolId: input.schoolId,
+        invoiceId: input.invoiceId,
+        method: 'PIX',
+        mpPaymentId: input.paymentId,
+        mpStatus: input.mpStatus,
+        amount: input.amount as any,
+        webhookData: input.raw as any,
+      },
+      create: {
+        schoolId: input.schoolId,
+        invoiceId: input.invoiceId,
+        method: 'PIX',
+        gateway: 'MERCADO_PAGO',
+        gatewayPaymentId: input.paymentId,
+        mpPaymentId: input.paymentId,
+        mpStatus: input.mpStatus,
+        amount: input.amount as any,
+        webhookData: input.raw as any,
+      },
+    })
+  })
+}

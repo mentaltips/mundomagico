@@ -106,7 +106,7 @@ function PaymentsContent() {
       setPaymentResult(data)
 
       // Cartão → redirecionar
-      if (method === 'CARTAO' && data.checkoutUrl) {
+      if (data.checkoutUrl) {
         window.open(data.checkoutUrl, '_blank')
       }
       if (method === 'BOLETO') toast.success('Boleto gerado! Clique para imprimir.')
