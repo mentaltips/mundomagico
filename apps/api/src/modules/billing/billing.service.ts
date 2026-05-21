@@ -80,6 +80,8 @@ export async function generatePaymentLink(schoolId: string, invoiceId: string) {
   const client = new MercadoPagoConfig({ accessToken })
   const preference = new Preference(client)
 
+  const adminUrl = process.env.ADMIN_URL || 'https://admin.mundomagicocajamar.com.br'
+
   const result = await preference.create({
     body: {
       external_reference: invoice.id,
@@ -92,9 +94,14 @@ export async function generatePaymentLink(schoolId: string, invoiceId: string) {
       }],
       payer: { name: payerName },
       notification_url: `${process.env.API_BASE_URL}/api/webhooks/mercado-pago`,
-      auto_return: 'approved',
+      back_urls: {
+        success: `${adminUrl}/responsavel/payments?status=sucesso`,
+        failure: `${adminUrl}/responsavel/payments?status=erro`,
+        pending: `${adminUrl}/responsavel/payments?status=pendente`,
+      },
     },
   })
+
 
   return {
     preferenceId: result.id,
