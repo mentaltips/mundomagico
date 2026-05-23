@@ -135,9 +135,16 @@ services:
       /bin/sh -c '
         echo "🔒 Serviço de backup iniciado. Próximo backup às 03:00.";
         while true; do
-          NEXT=$$(date -d "tomorrow 03:00" +%s 2>/dev/null || date -v+1d -v3H -v0M -v0S +%s);
-          NOW=$$(date +%s);
-          SLEEP_SEC=$$((NEXT - NOW));
+          H=$$(date +%H); H=$${H#0}; H=$${H:-0}
+          M=$$(date +%M); M=$${M#0}; M=$${M:-0}
+          S=$$(date +%S); S=$${S#0}; S=$${S:-0}
+          NOW_SEC=$$((H * 3600 + M * 60 + S))
+          TARGET_SEC=10800
+          if [ $$NOW_SEC -lt $$TARGET_SEC ]; then
+            SLEEP_SEC=$$((TARGET_SEC - NOW_SEC))
+          else
+            SLEEP_SEC=$$((86400 + TARGET_SEC - NOW_SEC))
+          fi
           echo "[Backup] Aguardando $${SLEEP_SEC}s até 03:00...";
           sleep $$SLEEP_SEC;
           DATE=$$(date +"%Y-%m-%d_%H-%M-%S");
