@@ -32,7 +32,7 @@ export function listGroups(schoolId: string, query: ListGroupsQuery) {
   return prisma.group.findMany({
     where: {
       schoolId,
-      ...(query.active !== undefined && { active: query.active }),
+      active: query.active !== undefined ? query.active : true,
     },
     include: groupListInclude,
     orderBy: { name: 'asc' },
