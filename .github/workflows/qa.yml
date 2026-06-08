@@ -1,0 +1,118 @@
+name: QA Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ═══════════════════════════════════════════════════════════
+  # UNIT + INTEGRATION TESTS
+  # ═══════════════════════════════════════════════════════════
+  test:
+    name: Unit + Integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm --filter @mundo-magico/database build && pnpm --filter @mundo-magico/types build
+
+      - name: Run tests
+        run: cd apps/api && pnpm test
+        env:
+          JWT_SECRET: test-secret-ci
+
+      - name: Coverage report
+        run: cd apps/api && pnpm test:coverage
+
+  # ═══════════════════════════════════════════════════════════
+  # SECURITY AUDIT
+  # ═══════════════════════════════════════════════════════════
+  audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: pnpm audit
+
+  # ═══════════════════════════════════════════════════════════
+  # TYPE CHECK
+  # ═══════════════════════════════════════════════════════════
+  types:
+    name: Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm --filter @mundo-magico/database build && pnpm --filter @mundo-magico/types build
+
+      - name: Type check API
+        run: cd apps/api && npx tsc --noEmit
+
+  # ═══════════════════════════════════════════════════════════
+  # BUILD CHECK (garante que admin/web compilam)
+  # ═══════════════════════════════════════════════════════════
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build API
+        run: cd apps/api && pnpm build
+
+      - name: Build Admin
+        run: cd apps/admin && pnpm build

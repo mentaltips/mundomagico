@@ -43,12 +43,14 @@ import whatsappRoutes from './modules/whatsapp/whatsapp.routes'
 
 // Rate limit para endpoints sensíveis de autenticação.
 // Brute-force em /api/auth/login: 10 tentativas / 15 min / IP.
+// Desligado quando DISABLE_RATE_LIMIT=true (testes)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: process.env.DISABLE_RATE_LIMIT === 'true' ? 1_000_000 : 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { code: 'TOO_MANY_REQUESTS', message: 'Muitas tentativas de login. Tente novamente em alguns minutos.' } },
+  skip: () => process.env.DISABLE_RATE_LIMIT === 'true',
 })
 
 export const app = express()

@@ -12,6 +12,9 @@
     "test:security": "tsx scripts/security-regression.ts",
     "test:children-ownership": "tsx scripts/children-ownership-regression.ts",
     "test:boundaries": "tsx scripts/boundary-idempotency-tests.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
@@ -37,6 +40,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -44,7 +48,11 @@
     "@types/multer": "^2.1.0",
     "@types/node": "^20.14.11",
     "@types/qrcode": "^1.5.6",
+    "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.8",
+    "supertest": "^7.2.2",
     "tsx": "^4.16.2",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "vitest": "^4.1.8"
   }
 }
